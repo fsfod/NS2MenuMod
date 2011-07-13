@@ -82,19 +82,17 @@ function MainMenuButton:SetHeight(height)
 end
 
 function MainMenuButton:OnClick(button, down, x, y)
-	ButtonMixin.OnClick(self, button, down)
-	Draggable.OnClick(self, button, down, x, y)
-
-	return self
+	if(not Draggable.OnClick(self, button, down, x, y)) then
+	  ButtonMixin.OnClick(self, button, down)
+	end
 end
 
 function MainMenuButton:OnEnter()
-		self.InnerSquare:SetBorderColour(ControlHighlightColor)
-		
-		self.LabelBG:SetTexture("ui/MainMenuButtonBg.dds")
-		self.LabelBG.RootFrame:SetColor(Color(1, 1, 1, 1))
-		PlayerUI_PlayButtonEnterSound()
-	return self
+  self.InnerSquare:SetBorderColour(ControlHighlightColor)
+  
+  self.LabelBG:SetTexture("ui/MainMenuButtonBg.dds")
+  self.LabelBG.RootFrame:SetColor(Color(1, 1, 1, 1))
+  PlayerUI_PlayButtonEnterSound()
 end
 
 function MainMenuButton:OnLeave()
@@ -159,7 +157,9 @@ function MenuMainPage:__init()
   BaseControl.Initialize(self, buttonOffset*4, (buttonHeight*2)+20)
   Draggable.__init(self)
  
-  self.RootFrame:SetColor(Color(1,1,1, 0))
+  self.TraverseChildFirst = true
+ 
+  self:SetColor(Color(1,1,1, 0))
   
   self.Buttons = {}
   
@@ -180,13 +180,23 @@ function MenuMainPage:__init()
     self:AddChild(returnToGame)
     returnToGame:SetPoint("Bottom", 30, -15, "BottomLeft")
   self.ReturnToGame = returnToGame
+  self.Buttons.ReturnToGame = returnToGame
 
   local disconnect = MainMenuButton(ButtonList.Disconnect)
     self:AddChild(disconnect)
     disconnect:SetPoint("Bottom", -30, -15, "BottomRight")
   self.Disconnect = disconnect
+  self.Buttons.Disconnect = disconnect
   
   self:UpdateButtons()
+end
+
+function MenuMainPage:OnScreenSizeChanged(width, height)
+  
+  local buttonHeight = height*0.2
+  
+  
+  
 end
 
 function MenuMainPage:UpdateButtons()
@@ -201,16 +211,6 @@ function MenuMainPage:UpdateButtons()
 end
 
 function MenuMainPage:OnClick(button, down, x, y)
-	
-	if(down) then
-		local frame = self:ContainerOnClick(button, down, x,y)
-	
-	  --one of our buttons or slider was clicked
-		if(frame) then
-			return frame
-		end
-  end
-
 	return Draggable.OnClick(self, button, down, x, y)
 end
 

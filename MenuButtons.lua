@@ -31,7 +31,7 @@ function MainMenuPageButton:Initialize(labelText, width, height)
 	 center:SetAnchor(GUIItem.Center, GUIItem.Middle)
 	 center:SetColor(self.CenterColor)
 	 self.CenterSquare = center
-	self.RootFrame:AddChild(center)
+	self:AddGUIItemChild(center)
 	
 	local label = PageButtonFont:CreateFontString()
 	 label:SetText(labelText or "some text")  
@@ -70,7 +70,6 @@ function MainMenuPageButton:OnEnter()
   self.CenterSquare:SetTexture("ui/MainMenuButtonBg.dds")
 	self.CenterSquare:SetColor(Color(1, 1, 1, 1))
 	PlayerUI_PlayButtonEnterSound()
- return self
 end
 
 function MainMenuPageButton:OnLeave()

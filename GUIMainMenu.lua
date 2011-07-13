@@ -1,22 +1,35 @@
 class'GUIMainMenu'(BaseControl)
 
+GUIMainMenu.MenuLayer = 20
+
+//just overrride since we don't want the BaseControl:Initialize() being called twice
+function GUIMainMenu:Initialize()
+  
+end
+
 function GUIMainMenu:__init()
   BaseControl.Initialize(self, Client.GetScreenWidth(), Client.GetScreenHeight())
   Draggable.__init(self)
 
+  GetGUIManager():SetMainMenu(self)
+
 	self.Pages = {}
 
-  self.RootFrame:SetColor(Color(0,0,0, 0))
+  self:SetColor(Color(0,0,0, 0))
+ 
+  self:SetLayer(self.MenuLayer)
  
   self.MainPage = self:GetPage("Main")
+  self.CurrentPageName = "Main"
   self.CurrentPage = self.MainPage
   
   msgBox = MenuMessageBox()
     msgBox:SetPoint("Center", 0, 0, "Center")
-    self:AddChild(msgBox)
+    msgBox:Hide()
+  self:AddChild(msgBox)
   self.MsgBox = msgBox
   
-  self.MsgBox:Hide()
+  self.DefaultMsgBox = msgBox
   
   local optionsMenu = OptionsPageSelector()
     //optionsMenu:Hide()
@@ -30,7 +43,7 @@ function GUIMainMenu:RecreatePage(pageName)
   local page = self.Pages[pageName]
   
   if(page) then
-		Print("GUIMainMenu RecreatingPage "..pageName)
+		RawPrint("GUIMainMenu RecreatingPage "..pageName)
 		
     pcall(function()
       page:Hide()
@@ -54,7 +67,7 @@ function GUIMainMenu:RecreatePage(pageName)
       end
     end
 	else
-    Print("GUIMainMenu:RecreatePage Could not find a pageinfo for page"..pageName)
+    RawPrint("GUIMainMenu:RecreatePage Could not find a pageinfo for page"..pageName)
   end
 end
 
@@ -67,14 +80,14 @@ function GUIMainMenu:GetPage(name)
   local info = MainMenuMod:GetPageInfo(name)
   
   if(not info) then
-    Print("GUIMainMenu:CreatePage unknown page " .. (name or "nil"))
+    RawPrint("GUIMainMenu:CreatePage unknown page " .. (name or "nil"))
    return nil
   end
 
   local creator = _G[info.ClassName]
 
   if(not creator) then
-    Print("GUIMainMenu:CreatePage could not get page creator for " .. (name or "nil"))
+    RawPrint("GUIMainMenu:CreatePage could not get page creator for " .. (name or "nil"))
    return nil
   end
 
@@ -95,41 +108,64 @@ function GUIMainMenu:GetPage(name)
   return page
 end
 
-function GUIMainMenu:MsgBoxClosed()
+function GUIMainMenu:ShowMessageBox(msgBox)
+  self:CheckCloseMsgBox()
   
+  if(msgBox.Parent ~= self) then
+    GetGUIManager():ParentToMainMenu(msgBox)
+  end
+  msgBox:SetPoint("Center", 0, 0, "Center")
+
+  self.MsgBox = msgBox
+  msgBox:Show()
+end
+
+function GUIMainMenu:MsgBoxClosed()
+  assert(self.MsgBox.Hidden)
+  self.MsgBox = nil
+end
+
+function GUIMainMenu:CheckCloseMsgBox()
+  if(self.MsgBox) then
+    self.MsgBox:Close()
+    self.MsgBox = nil
+  end
 end
 
 function GUIMainMenu:SwitchToPage(page)
+ 
+  self:CheckCloseMsgBox()
   
-  self.MsgBox:Hide()
-  
-  local PageFrame 
-
   if(not page or page == "Main" or page == "") then
     self:ReturnToMainPage()
-  else
-    PageFrame = self:GetPage(page)
+   return
   end
+  
+  local PageFrame = self:GetPage(page)
 
-  if(PageFrame) then   
-    if(self.CurrentPage == self.MainPage) then
-      self:LeaveMainPage()
-    else
-      self.CurrentPage:Hide()
-    end
+  if(not PageFrame) then
+   --GetPage will have placed error in the console so we have nothing todo
+    return
+  end
+       
+  if(self.CurrentPage == self.MainPage) then
+    self:LeaveMainPage()
+  else
+    self.CurrentPage:Hide()
+  end
+  
+  self.CurrentPage = PageFrame
+  self.CurrentPageName = page
+  
+  PageFrame:Show()
+
+  if(MainMenuMod:GetPageInfo(page).OptionPage) then
+    self.OptionsMenu:Show()
+    self.OptionsMenu:SetPageButtonActive(page)
     
-    self.CurrentPage = PageFrame
-    
-    PageFrame:Show()
-    
-    if(MainMenuMod:GetPageInfo(page).OptionPage) then
-      self.OptionsMenu:Show()
-      self.OptionsMenu:SetPageButtonActive(page)
-      
-      self.OptionsMenu:SetPoint("Left", PageFrame:GetLeft()-2, 0, "Right")
-    else
-      self.OptionsMenu:Hide()
-    end
+    self.OptionsMenu:SetPoint("Left", PageFrame:GetLeft()-2, 0, "Right")
+  else
+    self.OptionsMenu:Hide()
   end
 end
 
@@ -145,14 +181,18 @@ function GUIMainMenu:ReturnToMainPage()
 
   self.OptionsMenu:Hide()
   
-  self.MsgBox:Hide()
+  self:CheckCloseMsgBox()
 
   self.CurrentPage = self.MainPage
+  self.CurrentPageName = "Main"
   self.MainPage:UpdateButtons()
   self.MainPage:Show()
 end
 
+
 function GUIMainMenu:Show(Message)
+  --clear focus incase a frame like chat has focus
+  GetGUIManager():ClearFocus()
 
   local hidden = self.Hidden
   
@@ -165,24 +205,32 @@ function GUIMainMenu:Show(Message)
   end
 end
 
+
+function GUIMainMenu:ShowMessage(Message, ...)  
+  local msgString = Message
+  
+  if(select('#', ...) ~= 0) then
+    msgString = string.format(Message, ...)
+  end
+
+  self.MsgBox = self.DefaultMsgBox
+  self.MsgBox:Open("SimpleMsg", msgString)
+end
+
 function GUIMainMenu:OnScreenSizeChanged(width, height)
   self:SetSize(width, height)
   
   for k,page in pairs(self.Pages) do
     page:UpdatePosition()
+    
+    if(page.OnScreenSizeChanged) then
+      page:OnScreenSizeChanged(width, height)
+    end
   end
   
-end
-
-function GUIMainMenu:ShowMessage(Message, ...)
-  
-  if(select('#', ...) == 0) then
-    self.MsgBox:SetMsg(Message)
-  else
-    self.MsgBox:SetMsg(string.format(Message, ...))
+  if(not self.OptionsMenu.Hidden) then
+    self.OptionsMenu:SetPoint("Left", self.CurrentPage:GetLeft()-2, 0, "Right")
   end
-  
-  self.MsgBox:Show()
 end
 
 function GUIMainMenu:Update(...)  
@@ -193,15 +241,43 @@ function GUIMainMenu:Update(...)
   end
 end
 
+function GUIMainMenu:SendKeyEvent(key, down)
+  if not self.Hidden and down and key == InputKey.Escape and not GetGUIManager():IsFocusedSet() then
+    if(self.CurrentPageName == "Main") then
+      if(Client.GetIsConnected()) then
+        MainMenuMod:CloseMenu()
+      else
+        return false
+      end
+    else
+      self:ReturnToMainPage()
+    end
+   return true
+  end
+  
+  return false
+end
+
+function GUIMainMenu:GetFrameList()
+  
+  if(self.MsgBox and not self.MsgBox.Hidden) then
+	  return {self.MsgBox}
+	else
+	  return self.ChildControls
+	end
+end
+
+/*
 function GUIMainMenu:OnEnter(x, y)
 	
 	local ControlList = {} 
 	
-	if(not self.MsgBox.Hidden) then
+	if(self.MsgBox and not self.MsgBox.Hidden) then
 	  ControlList[1] = self.MsgBox
 	else
-	  ControlList[1] = self.OptionsMenu
-	  ControlList[2] = self.CurrentPage
+	  //ControlList[1] = self.OptionsMenu
+	  //ControlList[2] = self.CurrentPage
+	  ControlList = self.ChildControls
 	end
 
 	return self:ContainerOnEnter(x, y, ControlList) or false
@@ -211,35 +287,82 @@ function GUIMainMenu:OnClick(button, down, x, y)
 	
 	local ControlList = {} 
 	
-	if(not self.MsgBox.Hidden) then
+	if(self.MsgBox and not self.MsgBox.Hidden) then
 	  ControlList[1] = self.MsgBox
 	else
-	  ControlList[1] = self.OptionsMenu
-	  ControlList[2] = self.CurrentPage
+	  //ControlList[1] = self.OptionsMenu
+	  //ControlList[2] = self.CurrentPage
+	  ControlList = self.ChildControls
 	end
 	
 	return self:ContainerOnClick(button, down, x, y, ControlList) or self
 end
-
+*/
 class'MenuMessageBox'(BorderedSquare)
 
 function MenuMessageBox:__init()
   BorderedSquare.__init(self, 600, 100, 4)
+
+  self:SetLayer(GUIMainMenu.MenuLayer+1)
 
   local msgString = self:CreateFontString(19, "Top", 0, 20)
     msgString:SetTextAlignmentX(GUIItem.Align_Center)
     msgString:SetText("some long really long error message no longer and longer still not long enough")
   self.MsgString = msgString
   
+  self.CloseAction = {self.Close, self}
+  
   local okButton = MainMenuPageButton("OK")
    okButton:SetPoint("Bottom", 0, -10, "Bottom")
-   okButton.ClickAction = function() 
-    self:Hide() 
-    self.Parent:MsgBoxClosed()
-   end
+   okButton.ClickAction = self.CloseAction
   self:AddChild(okButton)
+  self.OKButton = okButton
+  
+  local cancelButton = MainMenuPageButton("Cancel")
+   cancelButton:SetPoint("Bottom", -100, -10, "Bottom")
+   cancelButton.ClickAction = self.CloseAction
+   cancelButton:Hide()
+  self:AddChild(okButton)
+  self.CancelBtn = cancelButton
+  
+  
+  local textBox = TextBox(150, 20, 19)
+    textBox:SetPoint("Right", -30, 0, "Right")
+    textBox:Hide()
+  self:AddChild(textBox)
+  self.TextBox = textBox
+  
+  
+  self.Mode = "SimpleMsg"  
 end
 
-function MenuMessageBox:SetMsg(msg)
-  self.MsgString:SetText(msg)
+function MenuMessageBox:Open(mode, modeData)
+  self:SetMode(mode, modeData)
+  self:Show()
 end
+
+function MenuMessageBox:SetMode(mode, modeData)
+
+  if(mode == "SimpleMsg") then
+    self.MsgString:SetIsVisible(true)
+    self.CancelBtn:Hide()
+    self.TextBox:Hide()
+    
+    self.MsgString:SetText(modeData)
+    
+    self.OKButton.ClickAction = self.CloseAction
+  else
+    self.MsgString:SetIsVisible(false)
+    self.CancelBtn:Show()
+    self.TextBox:Show()
+  end
+
+end
+
+function MenuMessageBox:Close()
+  if(not self.Hidden) then
+   self:Hide() 
+   self.Parent:MsgBoxClosed()
+  end
+end
+

@@ -41,8 +41,6 @@ function OptionsPage:__init()
  
   ResHelper:Init()
 
-  self.RootFrame:SetColor(PageBgColour)
-
   local topSpaceing = 35
   
   local nickName = TextBox(100, 20)
@@ -72,6 +70,7 @@ function OptionsPage:__init()
   local mouseSensitivity = Slider(250, 20, 0.01, 2)
     mouseSensitivity:SetPoint("Top", 0, 160, "Top")
     mouseSensitivity:SetConfigBinding(Client.GetMouseSensitivity, Client.SetMouseSensitivity)
+    mouseSensitivity:SetStepSize(0.05)
     mouseSensitivity.NoValueChangedWhileDraging = true
     mouseSensitivity:SetLabel("Mouse Sensitivity")
   self:AddChild(mouseSensitivity)
@@ -97,7 +96,7 @@ function OptionsPage:__init()
    screenRes:SetPoint("Top", -60, 300, "Top")
    screenRes:SetLabel("Resolution")
    GfxOptionBindings[1] = screenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
-                                                          {kGraphicsYResolutionOptionsKey, 800, "integer"}}, self.ResConfigConverter):SetDelaySave(true)
+                                                      {kGraphicsYResolutionOptionsKey, 800, "integer"}}, self.ResConfigConverter):SetDelaySave(true)
   self:AddChild(screenRes)
  
   local windowed = CheckBox("Run Windowed")

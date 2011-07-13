@@ -53,7 +53,7 @@ function OptionsPageSelector:SetPageButtonActive(pageName)
     end
   end
   
-  Print("OptionsPageSelector:SetPageButtonActive could not find a button for page "..pageName)
+  RawPrint("OptionsPageSelector:SetPageButtonActive could not find a button for page "..pageName)
 end
 
 function OptionsPageSelector:ButtonClicked(button)
@@ -81,7 +81,7 @@ function OptionsPageButton:Initialize(pageName, width, height)
 	 label:SetAnchor(GUIItem.Center, GUIItem.Middle)
 	 label:SetTextAlignmentX(GUIItem.Align_Center)
 	 label:SetTextAlignmentY(GUIItem.Align_Center)
-	self:AddChild(label)
+	self:AddGUIItemChild(label)
 	self.Label = label
 	
 	self:SetupHitRec()
@@ -130,8 +130,6 @@ function OptionsPageButton:OnEnter()
   if(not self.Active) then
     self:SetColor(0.8666, 0.3843, 0, 0.7)
   end
-
-  return self
 end
 
 function OptionsPageButton:OnLeave()

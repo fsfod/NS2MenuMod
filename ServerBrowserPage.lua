@@ -36,8 +36,8 @@ function SBListHeader:__init(fieldName, label, startDescending)
   BaseControl.Initialize(self, text:GetTextWidth(label)+8, text:GetTextHeight(label)+4)
   ButtonMixin.__init(self)
   
-  self.RootFrame:SetColor(Color(1,1,1,0.2))
-  self.RootFrame:AddChild(text)
+  self:SetColor(Color(1,1,1,0.2))
+  self:AddGUIItemChild(text)
   
   self.ServerInfoField = fieldName
   
@@ -54,7 +54,6 @@ end
 function SBListHeader:OnEnter()
 	self.Label:SetColor(Color(0.8666, 0.3843, 0, 1))
 	PlayerUI_PlayButtonEnterSound()
- return self
 end
 
 function SBListHeader:OnLeave()
@@ -92,7 +91,7 @@ ServerListEntry.PingColour250 = Color(0.8588, 0.8588, 0, 1)
 ServerListEntry.PingColour600 = Color(1, 0.4901, 0, 1)
 ServerListEntry.PingColourWorst = Color(1, 0, 0, 1)
 
-function ServerListEntry:__init()
+function ServerListEntry:__init(owner, width, height)
   
   local passwordIcon = GUIManager:CreateGraphicItem()
     passwordIcon:SetSize(Vector(10,12, 0))
@@ -148,7 +147,7 @@ function ServerListEntry:__init()
   
   self.PositionVector = Vector(0,0,0)
   
-  self:SetWidth(300)
+  self:SetWidth(width)
 end
 
 function ServerListEntry:OnHide()
@@ -163,7 +162,7 @@ function ServerListEntry:OnShow()
   end
 end
 
-function ServerListEntry:SetPos(x,y)
+function ServerListEntry:SetPosition(x,y)
   local vec = self.PositionVector
    vec.x = x
    vec.y = y
@@ -229,6 +228,8 @@ function ServerBrowserPage:__init()
 
   BasePage.__init(self, 740, 500, "Server Browser")
 
+  MapList:Init()
+
   self.CurrentCount = 0
   self.Servers = {}
   self.Filters = {}
@@ -237,7 +238,7 @@ function ServerBrowserPage:__init()
 
   self:Hide()
 
-  self.RootFrame:SetColor(PageBgColour)
+  self:SetColor(PageBgColour)
 
   self.ServerCountDisplay = self:CreateFontString(17, nil, 30, 12)
   
@@ -310,6 +311,15 @@ function ServerBrowserPage:__init()
   self:AddChild(notFull)
 end
 
+function ListView:Uninitialize()
+  BaseControl.Uninitialize(self)
+  
+  if(self.PasswordPrompt) then
+    self.PasswordPrompt:Close()
+    self.PasswordPrompt:Uninitialize()
+  end
+end
+
 function ServerBrowserPage:SetNotFullFilter(filter)
   
   if(filter) then
@@ -338,11 +348,24 @@ function ServerBrowserPage:SetEmptyServersFilter(filter)
   end
 end
 
-function ServerBrowserPage:Connect(index) 
-	--the games server indexs are 0 based
-	index = index+1
+function ServerBrowserPage:Connect(server, password)
+  
+  if(type(server) == "number") then 
+	  --the games server indexs are 0 based
+	  server = self.Servers[server+1]
+  end
 	
-  MainMenu_SBJoinServer(self.Servers[index].Address)
+	if(server.Passworded and not password) then
+	  self.PasswordPrompt = self.PasswordPrompt or ServerPasswordPrompt(self)
+  
+    self.PasswordPrompt.Server = server
+    MainMenuMod:ShowMessageBox(self.PasswordPrompt)
+   return
+	end
+	
+	MapList:CheckMountMap(server.Map)
+	
+  MainMenu_SBJoinServer(server.Address, password)
 end
 
 function ServerBrowserPage:RemoveFilter(filter)
@@ -581,7 +604,7 @@ function ServerBrowserPage:TrySelectServer(server)
 end
 
 function ServerBrowserPage:Update()
-  
+ 
   local NewCount = Client.GetNumServers()
   
   if(self.Refreshing and self.CurrentCount ~= NewCount) then
@@ -617,7 +640,49 @@ function ServerBrowserPage:Update()
   end
 end
 
+class'ServerPasswordPrompt'(BorderedSquare)
 
+function ServerPasswordPrompt:__init(owner)
+  BorderedSquare.__init(self, 400, 100, 4)
+  self:Hide()
+
+  self:SetLayer(GUIMainMenu.MenuLayer+1)
+
+  local connectButton = MainMenuPageButton("Connect")
+   connectButton:SetPoint("Bottom", 100, -10, "Bottom")
+   connectButton.ClickAction = function()
+     owner:Connect(self.Server, self.PasswordBox:GetText())
+     self.Server = nil
+   end
+  self:AddChild(connectButton)
+  self.Connect = connectButton
+ 
+  local cancelButton = MainMenuPageButton("Cancel")
+   cancelButton:SetPoint("Bottom", -100, -10, "Bottom")
+   cancelButton.ClickAction = {self.Close, self}
+  self:AddChild(cancelButton)
+  self.CancelBtn = cancelButton
+ 
+  local passwordBox = TextBox(150, 20, 19)
+    passwordBox:SetPoint("Top", 20, 20, "Top")
+    passwordBox:SetLabel("Enter Password")
+  self:AddChild(passwordBox)
+  self.PasswordBox = passwordBox
+end
+
+function ServerPasswordPrompt:Show()
+  self.PasswordBox:ClearText()
+  
+  BaseControl.Show(self)
+  self.PasswordBox:SetFocus()
+end
+
+function ServerPasswordPrompt:Close()
+  if(not self.Hidden) then
+   self:Hide(self) 
+   self.Parent:MsgBoxClosed()
+  end
+end
 
 
 if(HotReload) then

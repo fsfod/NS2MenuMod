@@ -9,7 +9,7 @@ function CreateServerPage:__init()
   BasePage.__init(self, 600, 400, "Create Listen Server")
   BaseControl.Hide(self)
   
-  self.RootFrame:SetColor(Color(0.1, 0.1, 0.1,0.7))
+  self:SetColor(Color(0.1, 0.1, 0.1,0.7))
 
   local gameName = TextBox(200, 22)
     gameName:SetPoint("Top", 0, 50, "Top")
@@ -74,14 +74,12 @@ function CreateServerPage:CreateServer()
   
   local mapEntry = self.MapComboBox:GetSelectedItem()
   local mapName
-
+  
+  
   if(mapEntry) then
     if(mapEntry.archiveType) then
+      MapList:CheckMountMap(mapEntry.name)
       mapName = mapEntry.name..".level"
-      
-      local archive = NS2_IO.OpenArchive("maps/"..mapEntry.fileName)
-      
-      NS2_IO.MountMapArchive(archive)
     else
       mapName = mapEntry.fileName
     end

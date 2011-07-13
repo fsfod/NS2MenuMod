@@ -1,4 +1,7 @@
-MapList = {}
+
+if(not MapList) then
+  MapList = {}
+end
 
 function MapList:Init()
   if(not self.Maps) then
@@ -17,7 +20,7 @@ function MapList:RefreshMapList()
       local ext = GetExtension(MapName)
       local name, ArchiveExt
 
-      if(ext ~= "level") then
+      if(ext ~= ".level") then
         local dot = string.find(MapName, ".level")
         name = string.sub(MapName, 0, dot-1)
         
@@ -61,20 +64,51 @@ function MapList:GetFileEntryIndex(name)
   
   return nil
 end
+
+function MapList:GetEntry(name)
   
+  for i,entry in ipairs(self.Maps) do
+    if(entry.name == name) then
+      return entry
+    end
+  end
+  
+  return nil
+end
+
 function MapList:CheckMountMap(name)
   
-  local entry = self:GetMapEntry(name)
+  local entry = self:GetEntry(name)
   
+  if(not entry) then
+    error("there is no map named named "..name)
+  end
+    
   if(entry and entry.archiveType) then
-   local archive = NS2_IO.OpenArchive("maps/"..fileName)
+   local archive = NS2_IO.OpenArchive("maps/"..entry.fileName)
    
-    if(not archive:FileExists("maps/"..fileName)) then
-      error("could not find matching map with the same name as the archive")
+    if(archive:FileExists("ns2/maps/"..name..".level")) then
+      archive:MountFiles("ns2/", "")
+    else
+      if(not archive:FileExists("maps/"..name..".level")) then
+        error("could not find matching map with the same name as the archive")
+      end
+      
+      NS2_IO.MountMapArchive(archive)
     end
-   
-    NS2_IO.MountMapArchive(archive)
 
     self.MapArchive = archive
   end
 end
+
+Event.Hook("Console_m", function() 
+  local archive = NS2_IO.OpenArchive("maps/ns2_summit_b1.zip")
+  archive:MountFile("ns2/maps/ns2_summit_b1.level", "maps/ns2_summit_b1.level")
+  
+  //NS2_IO.MountArchiveFilesToPath(archive, "ns2/", "")
+end)
+
+Event.Hook("Console_um", function() 
+
+  NS2_IO.MountArchiveFilesToPath(archive, "ns2/", "")
+end)

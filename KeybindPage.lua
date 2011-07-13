@@ -34,8 +34,8 @@ class 'KeybindListEntry'(BaseControl)
 KeybindListEntry.FontSize = 20
 KeybindListEntry.KeyNameOffset = 300
 
-function KeybindListEntry:__init(owner)
-  BaseControl.Initialize(self, 200, 20)
+function KeybindListEntry:__init(owner, width, height)
+  BaseControl.Initialize(self, width, height)
 
   self.Parent = owner
 
@@ -43,7 +43,7 @@ function KeybindListEntry:__init(owner)
 
   local name = GUIManager:CreateTextItem()
    name:SetFontSize(self.FontSize)
-   name:SetPosition(Vector(30, 0, 0))
+   name:SetPosition(Vector(38, 0, 0))
    //name:SetAnchor(GUIItem.Left, GUIItem.Center)
    name:SetTextAlignmentX(GUIItem.Align_Min)
    name:SetTextAlignmentY(GUIItem.Align_Min)
@@ -65,17 +65,17 @@ function KeybindListEntry:__init(owner)
   self.BoundKey = boundKey
   
   local groupLabel = GUIManager:CreateTextItem()
-   groupLabel:SetPosition(Vector(0, 0, 0))
+   groupLabel:SetPosition(Vector(8, 0, 0))
    groupLabel:SetFontSize(self.FontSize)
    groupLabel:SetColor(Color(0.8666, 0.3843, 0, 1))
    groupLabel:SetTextAlignmentX(GUIItem.Align_Min)
    groupLabel:SetTextAlignmentY(GUIItem.Align_Min)
   self.GroupLabel = groupLabel
 
-  self.RootFrame:AddChild(name)
-  self.RootFrame:AddChild(bindModeOverlay)
-  self.RootFrame:AddChild(boundKey)
-  self.RootFrame:AddChild(groupLabel)
+  self:AddGUIItemChild(name)
+  self:AddGUIItemChild(bindModeOverlay)
+  self:AddGUIItemChild(boundKey)
+  self:AddGUIItemChild(groupLabel)
 end
 
 function KeybindListEntry:OnHide()
@@ -88,10 +88,6 @@ function KeybindListEntry:OnShow()
   if(not self.Hidden) then
     self:Show()
   end
-end
-
-function KeybindListEntry:SetPos(x,y)
-  self:SetPosition(x,y)
 end
 
 function KeybindListEntry:GetRoot()
@@ -188,7 +184,7 @@ function KeybindPage:__init()
   BasePage.__init(self, 600, 500, "Keybinds")
   BaseControl.Hide(self)
 
-  self.RootFrame:SetColor(PageBgColour)
+  assert(KeyBindInfo, "Keybinds mod is not loaded")
 
   KeyBindInfo:Init(true)
 
@@ -224,7 +220,7 @@ function KeybindPage:__init()
    warningString:SetTextAlignmentX(GUIItem.Align_Center)
    warningString:SetPosition(Vector(0, -80, 0))
    warningString:SetAnchor(GUIItem.Middle, GUIItem.Bottom)
-   self.RootFrame:AddChild(warningString)
+   self:AddGUIItemChild(warningString)
   self.WarningString = warningString
 end
 

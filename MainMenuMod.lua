@@ -1,3 +1,8 @@
+
+local HotReload = MainMenuMod
+
+if(not MainMenuMod) then
+  
 MainMenuMod = {
   DisableMenuCinematic = true,
   PageInfos = {},
@@ -9,6 +14,8 @@ MainMenuMod = {
     CreateServer = "CreateServerPage",
   },
 }
+
+end
 
 ClassHooker:Mixin("MainMenuMod")
 
@@ -24,6 +31,9 @@ function MainMenuMod:OnLoad()
   
   Event.Hook("Console_flashmenu", function() self:SwitchToFlash() end)
   Event.Hook("Console_newmenu", function() self:DisableFlashMenu() end)
+  
+  Event.Hook("Console_showmenu", function() self:ShowMenu() end)
+  Event.Hook("Console_hidemenu", function() self:CloseMenu() end)
 end
 
 function MainMenuMod:SetHooks()
@@ -36,22 +46,16 @@ function MainMenuMod:SetHooks()
   self:ReplaceFunction("ShowInGameMenu")
   self:ReplaceFunction("MainMenu_SetAlertMessage")
   
+  self:HookLibraryFunction(HookType.Replace, "MenuManager", "GetMenu", function() return (self:IsMenuOpen() and "") or nil end)
+  
   //self:HookLibraryFunction(HookType.Replace, "MenuManager", "PlayMusic", function() end)
 end
 
 function MainMenuMod:OnClientLuaFinished()
-
-  //local arch = NS2_IO.OpenArchive("Mods/GUIMainMenu/Textures.rar")
-
-  //NS2_IO.MountArchiveFile(arch, "options.dds", "ui/options.dds")
-  //NS2_IO.MountArchiveFile(arch, "join.dds", "ui/join.dds")
-  //NS2_IO.MountArchiveFile(arch, "exitgame.dds", "ui/exitgame.dds")
-  //NS2_IO.MountArchiveFile(arch, "createserver.dds", "ui/createserver.dds")
-  
   self:RegisterDefaultPages()
   
   self.MainMenu = GetGUIManager():CreateGUIScript("GUIMainMenu")
-  MainMenu_Loaded()  
+  MainMenu_Loaded() 
   //self:SwitchToPage("ServerBrowser")
 end
 
@@ -69,6 +73,7 @@ function MainMenuMod:RegisterDefaultPages()
   
   self:RegisterOptionPage("MainOptions", "Options", "OptionsPage")
   self:RegisterOptionPage("Keybinds", "Keybinds", "KeybindPage")
+  self:RegisterOptionPage("Mods", "Mods", "ModsPage")
 end
 
 function MainMenuMod:RegisterOptionPage(name, label, className)
@@ -102,7 +107,8 @@ function MainMenuMod:SetMenuCinematic(cinematic)
 end
 
 function MainMenuMod:MainMenu_SetAlertMessage(msg)
-  self:ShowMenu()
+  self:ShowMenu() 
+  MouseStateTracker:ClearStack()
   
   self.MainMenu.MainPage:UpdateButtons()
   self.MainMenu:ShowMessage(msg)
@@ -111,18 +117,22 @@ function MainMenuMod:MainMenu_SetAlertMessage(msg)
 end
 
 function MainMenuMod:ShowInGameMenu()
-
   if not Shared.GetIsRunningPrediction() then
-    Client.SetCursor("ui/Cursor_MenuDefault.dds")
-    Client.SetMouseVisible(true)
-    Client.SetMouseCaptured(false)
-    
     self:ShowMenu()
   end
 end
 
-function MainMenuMod:LeaveMenu()
+function MainMenuMod:CloseMenu()
+  if(Client.GetIsConnected()) then
+    MainMenu_ReturnToGame()
+  else
+    LeaveMenu()
+  end
+end
+
+function MainMenuMod:LeaveMenu() 
   self.MainMenu:Hide()
+  MouseStateTracker:ClearMainMenuState()
 end
 
 function MainMenuMod:SetMenu(filename)
@@ -135,9 +145,15 @@ function MainMenuMod:IsMenuOpen()
   return not self.MainMenu.Hidden
 end
 
+function MainMenuMod:ShowMessageBox(msgBox)
+  self.MainMenu:ShowMessageBox(msgBox)
+end
+
 function MainMenuMod:ShowMenu()
   if(not self:IsMenuOpen()) then
     self.MainMenu:Show()
+    
+    MouseStateTracker:SetMainMenuState()
   end
 end
 
@@ -151,10 +167,6 @@ function MainMenuMod:DisableFlashMenu()
   self.MainMenu:ReturnToMainPage()
   
   self.Flashmenu = false
-  
-  Client.SetCursor("ui/Cursor_MenuDefault.dds")
-  Client.SetMouseVisible(true)
-  Client.SetMouseCaptured(false)
 end
 
 function MainMenuMod:SwitchToFlash()
@@ -165,10 +177,6 @@ function MainMenuMod:SwitchToFlash()
   
   MenuManager.SetMenu(kMainMenuFlash)
   self.Flashmenu = true
-  
-  Client.SetCursor("ui/Cursor_MenuDefault.dds")
-  Client.SetMouseVisible(true)
-  Client.SetMouseCaptured(false)
 end
 
 function MainMenuMod:Disconnected()
@@ -185,4 +193,12 @@ end
 
 function MainMenuMod:RecreatePage(pageName)
   self.MainMenu:RecreatePage(pageName)
+end
+
+if(HotReload) then
+  MainMenuMod:SetHooks()
+else
+  Event.Hook("Console_menulayer", function()
+    MainMenuMod.MainMenu.RootFrame:SetLayer(GUIMainMenu.MenuLayer)
+  end)
 end
