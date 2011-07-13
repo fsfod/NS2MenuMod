@@ -121,7 +121,7 @@ local ButtonList ={
 		"ui/createserver.dds",
 	},
 	Options = {
-		function() end,
+		function() MainMenuMod:SwitchToPage("KeybindPage") end,
 		"Options",
 		"ui/options.dds",
 	},

@@ -257,9 +257,15 @@ function ServerBrowserPage:__init()
     pingfilter.ItemPicked = {self.SetPingFilter, self}
   self:AddChild(pingfilter)
 
-  //local notEmpty = CheckBox(25, 25, false)
-  //notEmpty:SetPoint("BottomLeft", 580, -55, "BottomLeft")
-  //self:AddChild(notEmpty)
+  local hasPlayers = CheckBox("Has Players", false)
+		hasPlayers:SetPoint("BottomLeft", 580, -55, "BottomLeft")
+		hasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
+  self:AddChild(hasPlayers)
+  
+  local notFull = CheckBox("Not Full", false)
+		notFull:SetPoint("BottomLeft", 580, -20, "BottomLeft")
+		notFull.CheckChanged = {self.SetNotFullFilter, self}
+  self:AddChild(notFull)
 
   self.CurrentCount = 0
   self.Servers = {}
@@ -272,6 +278,34 @@ function ServerBrowserPage:__init()
   
 end
 
+function ServerBrowserPage:SetNotFullFilter(filter)
+  
+  if(filter) then
+    self.FullFiltered = function(server) 
+      return server.PlayerCount >= server.MaxPlayers 
+    end
+    
+    self:AddFilter(self.FullFiltered)
+  else
+    self:RemoveFilter(self.FullFiltered)
+    self.FullFiltered = nil
+  end
+end
+
+function ServerBrowserPage:SetEmptyServersFilter(filter)
+  
+  if(filter) then
+    self.EmptyFiltered = function(server) 
+      return server.PlayerCount == 0 
+    end
+    
+    self:AddFilter(self.EmptyFiltered)
+  else
+    self:RemoveFilter(self.EmptyFiltered)
+    self.EmptyFiltered = nil
+  end
+end
+
 function ServerBrowserPage:Connect(index) 
 	--the games server indexs are 0 based
 	index = index+1
@@ -280,7 +314,13 @@ function ServerBrowserPage:Connect(index)
 end
 
 function ServerBrowserPage:RemoveFilter(filter)
-  return self:ReplaceFilter(filter, nil)
+  local removed = self:ReplaceFilter(filter, nil)
+  
+  if(removed) then
+    self:FiltersChanged()
+  end
+  
+  return removed
 end
 
 function ServerBrowserPage:ReplaceFilter(old, new)

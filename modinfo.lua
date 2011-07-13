@@ -8,6 +8,9 @@ ScriptList = {
   "MainPage.lua",
   "MenuButtons.lua",
   "ServerBrowserPage.lua",
+  "KeyBindInfo.lua",
+  "InputKeyHelper.lua",
+  "KeybindPage.lua",
 }
 
 Dependencys = {

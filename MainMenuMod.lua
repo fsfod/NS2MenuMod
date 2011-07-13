@@ -11,6 +11,7 @@ function MainMenuMod:OnLoad()
   self.PageCreators = {
    ServerBrowser = ServerBrowserPage,
    Main = MenuMainPage,
+   ["KeybindPage"] = KeybindPage
   }
   
   Event.Hook("Console_flashmenu", function() self:SwitchToFlash() end)
