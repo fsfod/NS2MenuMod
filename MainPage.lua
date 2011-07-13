@@ -89,7 +89,7 @@ function MainMenuButton:OnClick(button, down, x, y)
 end
 
 function MainMenuButton:OnEnter()
-		self.InnerSquare:SetBorderColour(Color(0.8666, 0.3843, 0, 1))
+		self.InnerSquare:SetBorderColour(ControlHighlightColor)
 		
 		self.LabelBG:SetTexture("ui/MainMenuButtonBg.dds")
 		self.LabelBG.RootFrame:SetColor(Color(1, 1, 1, 1))
@@ -116,12 +116,12 @@ local ButtonList ={
 	  "ui/join.dds",
 	},
 	CreateServer = {
-		function() end,
+		function() MainMenuMod:SwitchToPage("CreateServer") end,
 		"Create",
 		"ui/createserver.dds",
 	},
 	Options = {
-		function() MainMenuMod:SwitchToPage("KeybindPage") end,
+		function() MainMenuMod:SwitchToPage("MainOptions") end,
 		"Options",
 		"ui/options.dds",
 	},
@@ -132,7 +132,7 @@ local ButtonList ={
 	},
 	Disconnect = {
 		function()
-		  //Client.Disconnect() seems to break the menu cinematic
+		  //Client.Disconnect()// seems to break the menu cinematic
       Client.ConsoleCommand("disconnect") 
 		end,
 		"Disconnect",

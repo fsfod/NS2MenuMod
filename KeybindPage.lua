@@ -27,6 +27,8 @@ local FriendlyNames = {
 	JoystickButton10 = "",
 }
 
+HotReload = KeybindListEntry
+
 class 'KeybindListEntry'(BaseControl)
 
 KeybindListEntry.FontSize = 20
@@ -102,6 +104,24 @@ end
 
 //self.SelectBG:SetIsVisible(true)
 
+function KeybindListEntry:OnFocusLost()
+  if(self.InBindMode) then
+    self:ExitBindingMode()
+  end
+end
+
+function KeybindListEntry:SendKeyEvent(key, down)
+
+  if(self.InBindMode and down and key ~= InputKey.MouseX and key ~= InputKey.MouseY) then
+    self.Parent.Parent:SetKeybind(self.Data[1], key)
+    self:ExitBindingMode()
+
+    GetGUIManager():ClearFocus()
+    
+    return true
+  end
+end
+
 function KeybindListEntry:OnClick(button, down, x, y)
   
   if(down and button == InputKey.MouseButton0 and not self.Data.Keybinds) then
@@ -110,11 +130,12 @@ function KeybindListEntry:OnClick(button, down, x, y)
       return
     end
     
-    if(self.LastClicked and (Client.GetTime()-self.LastClicked) < MouseTracker.DblClickSpeed) then
+    if(self.LastClicked and (Client.GetTime()-self.LastClicked) < GUIManager.DblClickSpeed) then
+       self.InBindMode = true
        self.BindModeOverlay:SetColor(Color(0.8666, 0.3843, 0, 1))
        self.BindModeOverlay:SetIsVisible(true)
        
-       self.Parent.Parent:EnterBindMode(self, self.Data[1])
+       GetGUIManager():SetFocus(self)
     end
     
     self.LastClicked = Client.GetTime()
@@ -123,6 +144,7 @@ end
 
 function KeybindListEntry:ExitBindingMode()
 	self.BindModeOverlay:SetIsVisible(false)
+	self.InBindMode = false
 	
 	local keyname = KeyBindInfo:GetBoundKey(self.Data[1]) or ""
 	self.BoundKey:SetText(FriendlyNames[keyname] or keyname )
@@ -160,18 +182,18 @@ function KeybindListEntry:SetData(data)
 
 end
 
-class'KeybindPage'(BaseControl)
+class'KeybindPage'(BasePage)
 
 function KeybindPage:__init()
+  BasePage.__init(self, 600, 500, "Keybinds")
+  BaseControl.Hide(self)
 
-  BaseControl.Initialize(self, 540, 500)
-
-  self.RootFrame:SetColor(Color(0.1, 0.1, 0.1,0.3))
+  self.RootFrame:SetColor(PageBgColour)
 
   KeyBindInfo:Init(true)
 
-  local keybindList = ListView(500, 350, KeybindListEntry, 20, 4)
-    keybindList:SetPosition(20, 60)
+  local keybindList = ListView(500, 400, KeybindListEntry, 20, 4)
+    keybindList:SetPoint("Center", 0, -40, "Center")
     keybindList.RootFrame:SetColor(Color(0, 0, 0, 1))
     keybindList:SetDataList(KeyBindInfo:GetBindingDialogTable())
     keybindList:SetScrollBarWidth(23)
@@ -179,25 +201,26 @@ function KeybindPage:__init()
     self:AddChild(keybindList)
   self.KeybindList = keybindList
 
-  local backButton = MainMenuPageButton("Back to menu")
-    backButton:SetPoint("BottomLeft", 20, -15, "BottomLeft")
-    backButton.ClickAction = function() self.Parent:ReturnToMainPage() end
-  self:AddChild(backButton)
-  
-  local resetButton = MainMenuPageButton("Reset Keybinds")
-    resetButton:SetPoint("BottomLeft", 200, -15, "BottomLeft")
-    resetButton.ClickAction = {self.ResetKeybinds, self}
-  self:AddChild(resetButton)
-  
+
   local clearButton = MainMenuPageButton("Clear Key")
-    clearButton:SetPoint("BottomLeft", 350, -15, "BottomLeft")
+    clearButton:SetPoint("BottomLeft", 120, -15, "BottomLeft")
     clearButton.ClickAction = {self.ClearBind, self}
   self:AddChild(clearButton)
-  
+
+/*
+  local resetGroupButton = MainMenuPageButton("Reset Group")
+    resetGroupButton:SetPoint("BottomLeft", 230, -15, "BottomLeft")
+    resetGroupButton.ClickAction = {self.ResetSelectedGroup, self}
+  self:AddChild(resetGroupButton)
+*/  
+  local resetButton = MainMenuPageButton("Reset Keybinds")
+    resetButton:SetPoint("BottomLeft", 450, -15, "BottomLeft")
+    resetButton.ClickAction = {self.ResetKeybinds, self}
+  self:AddChild(resetButton)
+
   local warningString = GUIManager:CreateTextItem()
    warningString:SetColor(Color(0.3, 0, 0, 1))
    warningString:SetFontSize(25)
-   //warningString:SetText("bind % that was set to key % was unbound")
    warningString:SetTextAlignmentX(GUIItem.Align_Center)
    warningString:SetPosition(Vector(0, -80, 0))
    warningString:SetAnchor(GUIItem.Middle, GUIItem.Bottom)
@@ -207,33 +230,28 @@ end
 
 function KeybindPage:EnterBindMode(item, bindname)
   self.ItemBinding = item
-  MouseTracker:SettingKeybindHook(self.SetKeybind, self)
+  GetGUIManager():SettingKeybindHook(self.SetKeybind, self)
 end
 
-function KeybindPage:SetKeybind(key)
+function KeybindPage:SetKeybind(BindName, key)
 
   if(key ~= InputKey.Escape) then
-    local BindName = self.ItemBinding.Data[1]
     key = InputKeyHelper:ConvertToKeyName(key)
     
     local old, isConsoleCmd = KeyBindInfo:GetKeyInfo(key)
     
-    if(old and old ~= BindName) then
+    if(not KeyBindInfo:IsBindOverrider(BindName) and old and old ~= BindName) then
       self.WarningString:SetText(string.format("%s was unbound", old))
     else
       self.WarningString:SetText("")
     end
     
-    KeyBindInfo:SetKeybind(key, self.ItemBinding.Data[1], true)
+    KeyBindInfo:SetKeybind(key, BindName, true)
     
     self.KeybindList:ListDataModifed()
   else
     self.WarningString:SetText("")
   end
-
-  self.ItemBinding:ExitBindingMode()
-
-  self.ItemBinding = nil
 end
 
 function KeybindPage:ClearBind()
@@ -243,6 +261,30 @@ function KeybindPage:ClearBind()
     KeyBindInfo:ClearBind(bindinfo[1])
     
     self.KeybindList:ListDataModifed()
+  end
+end
+
+function KeybindPage:ResetSelectedGroup()
+  
+  local bindinfo = self.KeybindList:GetSelectedIndexData()
+  
+  local OverrideGroup
+  
+  if(bindinfo) then
+    if(bindinfo.Keybinds) then
+      OverrideGroup = bindinfo.OverrideGroup and bindinfo.Name
+    else
+      local key, group, isOverride = KeyBindInfo:GetBindinfo(bindinfo[1])
+      
+      OverrideGroup = isOverride and group
+    end
+    
+    if(OverrideGroup) then
+      KeyBindInfo:ResetOverrideGroup(OverrideGroup)
+      self.KeybindList:ListDataModifed()
+    else
+      self.WarningString:SetText(bindinfo.Name.." is not an override group")
+    end
   end
 end
 
@@ -262,5 +304,9 @@ function KeybindPage:Hide()
   
   KeyBindInfo:OnBindingsUIExited()
   
-  //Client.ReloadKeyOptions()
+  Client.ReloadKeyOptions()
+end
+
+if(HotReload) then
+  MainMenuMod:RecreatePage("Keybinds")
 end

@@ -6,18 +6,61 @@ local PingLimits = {
   250,
 }
 
+local NameOffset = 0
+local GameModeOffset = 0.4
+local MapOffset = 0.15
+local PlayerOffset = 0.2
+local PingOffset = 0.15
 
-local ServerField ={
-  Name = 1,
-  GameMode = 2,
-  Map = 3,
-  PlayerCount = 4,
-  MaxPlayers = 5,
-  Ping = 6,
-  Passworded = 7,
-  Index = 8,
-  PlayerCountString = 9,
+local Headers = {
+  {"Name",    NameOffset},
+  {"Game",    GameModeOffset, "GameMode"},
+  {"Map",     MapOffset},
+  {"Players", PlayerOffset,  "PlayerCount", true},
+  {"Ping",    PingOffset},
 }
+
+local headerFont = FontTemplate(19)
+headerFont:SetCenterAlignAndAnchor()
+
+class'SBListHeader'(BaseControl)
+
+ButtonMixin:Mixin(SBListHeader)
+
+function SBListHeader:__init(fieldName, label, startDescending)
+  
+  local text = headerFont:CreateFontString()
+   text:SetText(label)
+  self.Label = text
+  
+  BaseControl.Initialize(self, text:GetTextWidth(label)+8, text:GetTextHeight(label)+4)
+  ButtonMixin.__init(self)
+  
+  self.RootFrame:SetColor(Color(1,1,1,0.2))
+  self.RootFrame:AddChild(text)
+  
+  self.ServerInfoField = fieldName
+  
+  self.Ascending = not startDescending
+  
+  self.ClickAction = {self.ButtonClicked, self}
+end
+
+function SBListHeader:ButtonClicked()
+  self.Parent:SetServerSorting(self.ServerInfoField, self.Ascending)
+  self.Ascending = not self.Ascending
+end
+
+function SBListHeader:OnEnter()
+	self.Label:SetColor(Color(0.8666, 0.3843, 0, 1))
+	PlayerUI_PlayButtonEnterSound()
+ return self
+end
+
+function SBListHeader:OnLeave()
+	self.Label:SetColor(Color(1, 1, 1, 1))
+end
+
 
 local function GetServerRecord(serverIndex)
     
@@ -39,6 +82,7 @@ local function GetServerRecord(serverIndex)
         }
 end
 
+local HotReload = ServerListEntry
 
 class'ServerListEntry'
 
@@ -131,16 +175,6 @@ function ServerListEntry:GetRoot()
   return self.Background
 end
 
-local headerFont = FontTemplate(19)
-headerFont:SetBold()
-headerFont:SetTextAlignment(GUIItem.Align_Center, GUIItem.Align_Center)
-
-local NameOffset = 0
-local GameModeOffset = 0.4
-local MapOffset = 0.15
-local PlayerOffset = 0.2
-local PingOffset = 0.15
-
 function ServerListEntry:SetWidth(width)
   
   local posVec = Vector(18, 0, 0)
@@ -188,13 +222,22 @@ function ServerListEntry:SetData(serverData)
   end
 end
 
-class'ServerBrowserPage'(BaseControl)
+
+class'ServerBrowserPage'(BasePage)
 
 function ServerBrowserPage:__init()
 
-  BaseControl.Initialize(self, 740, 500)
+  BasePage.__init(self, 740, 500, "Server Browser")
 
-  self.RootFrame:SetColor(Color(0.1, 0.1, 0.1,0.3))
+  self.CurrentCount = 0
+  self.Servers = {}
+  self.Filters = {}
+  
+  self.FilteredList = self.Servers 
+
+  self:Hide()
+
+  self.RootFrame:SetColor(PageBgColour)
 
   self.ServerCountDisplay = self:CreateFontString(17, nil, 30, 12)
   
@@ -204,22 +247,17 @@ function ServerBrowserPage:__init()
    self:AddChild(ServerList)
    ServerList:SetPosition(20, 60)
    ServerList.ItemDblClicked = function(data, index) self:Connect(data.Index) end
+   ServerList:SetDataList(self.Servers)
   self.ServerList = ServerList
-    
-  local HeaderLabels = {"Name", "Game", "Map", "Players", "Ping"}
-  local Offsets = {NameOffset, GameModeOffset, MapOffset, PlayerOffset, PingOffset}
-  local FieldNames = {Game = "GameMode", Players = "PlayerCount"}
-  
+
   local x = 18+20 
   local width = ServerList.ItemWidth
   
-  for i,name in ipairs(HeaderLabels) do
-    local FieldName = FieldNames[name] or name
-    
-    local Label = SBListHeader(name, FieldName)
+  for i,headerInfo in ipairs(Headers) do
+    local Label = SBListHeader(headerInfo[3] or headerInfo[1], headerInfo[1], headerInfo[4])
     self:AddChild(Label)
     
-    x = x+(Offsets[i]*width)
+    x = x+(headerInfo[2]*width)
     
     Label:SetPosition(x, 35)
   end
@@ -228,7 +266,7 @@ function ServerBrowserPage:__init()
   local refresh = MainMenuPageButton("Refresh")
     refresh:SetPoint("BottomLeft", 150, -15, "BottomLeft")
     refresh.ClickAction = {self.RefreshList, self}
-  self:AddChild(refresh)  
+  self:AddChild(refresh)
   
   local backButton = MainMenuPageButton("Back to menu")
     backButton:SetPoint("BottomLeft", 20, -15, "BottomLeft")
@@ -252,30 +290,24 @@ function ServerBrowserPage:__init()
         return string.format("< %i", ping)
       end
     end)
+
     pingfilter:SetPoint("BottomLeft", 500, -55, "BottomLeft")
-    pingfilter:SetLabel("Ping")
     pingfilter.ItemPicked = {self.SetPingFilter, self}
+    pingfilter:SetConfigBindingAndTriggerChange("ServerBrowser/Ping", 0, "number")
+    pingfilter:SetLabel("Ping")
   self:AddChild(pingfilter)
 
   local hasPlayers = CheckBox("Has Players", false)
-		hasPlayers:SetPoint("BottomLeft", 580, -55, "BottomLeft")
-		hasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
+    hasPlayers:SetPoint("BottomLeft", 580, -55, "BottomLeft")
+    hasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
+    hasPlayers:SetConfigBindingAndTriggerChange("ServerBrowser/HasPlayers", false)
   self:AddChild(hasPlayers)
   
   local notFull = CheckBox("Not Full", false)
-		notFull:SetPoint("BottomLeft", 580, -20, "BottomLeft")
-		notFull.CheckChanged = {self.SetNotFullFilter, self}
+    notFull:SetPoint("BottomLeft", 580, -20, "BottomLeft")
+    notFull.CheckChanged = {self.SetNotFullFilter, self}
+    notFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)
   self:AddChild(notFull)
-
-  self.CurrentCount = 0
-  self.Servers = {}
-  self.Filters = {}
-  
-  self.FilteredList = self.Servers 
-  
-  ServerList:SetDataList(self.Servers)
-  
-  
 end
 
 function ServerBrowserPage:SetNotFullFilter(filter)
@@ -314,6 +346,11 @@ function ServerBrowserPage:Connect(index)
 end
 
 function ServerBrowserPage:RemoveFilter(filter)
+  
+  if(not filter) then
+    return false
+  end
+  
   local removed = self:ReplaceFilter(filter, nil)
   
   if(removed) then
@@ -346,9 +383,9 @@ function ServerBrowserPage:SetPingFilter(maxping)
     self:RemoveFilter(self.PingFilter)
     self.PingFilter = nil
     self.MaxPing = nil
-  end
-  
-  if(maxping ~= 0) then
+	end
+
+	if(maxping ~= 0) then
     self.MaxPing = maxping
     self.PingFilter = function(server) return server.Ping > maxping end
     self:AddFilter(self.PingFilter)
@@ -559,7 +596,8 @@ function ServerBrowserPage:Update()
     
     for i=self.CurrentCount+1,NewCount do
 		 local server = GetServerRecord(i-1)
-      
+      //ServerList:GetServerRules(i-1, RullCallback)
+      //ServerInfo.QueryGameInfo(server.Address, RullCallback)
 			self.Servers[i] = server
       
 			if(noFilters) then
@@ -579,44 +617,9 @@ function ServerBrowserPage:Update()
   end
 end
 
-class 'ServerListView'(ListView)
 
 
-class'SBListHeader'(BaseControl)
 
-ButtonMixin:Mixin(SBListHeader)
-
-function SBListHeader:__init(label, serverField)
-  
-  local text = headerFont:CreateFontString()
-   text:SetAnchor(GUIItem.Center, GUIItem.Center)
-   text:SetText(label)
-  self.Label = text
-  
-  BaseControl.Initialize(self, text:GetTextWidth(label)+8, text:GetTextHeight(label)+4)
-  ButtonMixin.__init(self)
-  
-  self.RootFrame:SetColor(Color(1,1,1,0.2))
-  self.RootFrame:AddChild(text)
-  
-  self.ServerInfoField = serverField
-  
-  self.Ascending = false
-  
-  self.ClickAction = {self.ButtonClicked, self}
-end
-
-function SBListHeader:ButtonClicked()
-  self.Parent:SetServerSorting(self.ServerInfoField, self.Ascending)
-  self.Ascending = not self.Ascending
-end
-
-function SBListHeader:OnEnter()
-	self.Label:SetColor(Color(0.8666, 0.3843, 0, 1))
-	PlayerUI_PlayButtonEnterSound()
- return self
-end
-
-function SBListHeader:OnLeave()
-	self.Label:SetColor(Color(1, 1, 1, 1))
+if(HotReload) then
+  MainMenuMod:RecreatePage("ServerBrowser")
 end

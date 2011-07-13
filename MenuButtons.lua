@@ -33,13 +33,9 @@ function MainMenuPageButton:Initialize(labelText, width, height)
 	 self.CenterSquare = center
 	self.RootFrame:AddChild(center)
 	
-	local label = self:CreateFontString(FontSize)
-	 label:SetFontIsBold(true)
-	 label:SetAnchor(GUIItem.Center, GUIItem.Middle)
-	 label:SetTextAlignmentX(GUIItem.Align_Center)
-	 label:SetTextAlignmentY(GUIItem.Align_Center)
+	local label = PageButtonFont:CreateFontString()
 	 label:SetText(labelText or "some text")  
-	center:AddChild(self.Label)
+	 center:AddChild(label)
 	self.Label = label
 	
   self:SetSize(width, height)
@@ -56,28 +52,15 @@ function MainMenuPageButton:SetSize(width, height)
   self.CenterSquare:SetPosition(Vector(1-(centerWidth/2), -((centerHeight/2)-1), 0))
 end
 
-/*
-function MainMenuPageButton:OnClick(button, down, x, y)
-	if(down and button == InputKey.MouseButton0) then
-		PlayerUI_PlayButtonClickSound()
-		
-		local ClickAction = self.ClickAction
-		
-		if(ClickAction) then
-			if(type(ClickAction) == "table") then
-			  ClickAction[1](unpack(ClickAction, 2))
-			else
-			  if(type(ClickAction) == "string") then
-				  ClickAction = _G[ClickAction]
-				end
-			  ClickAction()
-			end
-		end
-	end
 
-	return Draggable.OnClick(self, button, down, x, y)
+function MainMenuPageButton:Clicked(down)
+	if(down) then
+    self.Label:SetPosition(Vector(0, 2 ,0))
+  else
+    self.Label:SetPosition(Vector.origin)
+  end
 end
-*/
+
 
 function MainMenuPageButton:SetLabel(label)
   self.Label:SetText(label)

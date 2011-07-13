@@ -1,5 +1,5 @@
 EngineBuild = 173
-ValidVm = "client"
+ValidVM = "client"
 ModTableName = "MainMenuMod"
 
 ScriptList = {
@@ -8,9 +8,11 @@ ScriptList = {
   "MainPage.lua",
   "MenuButtons.lua",
   "ServerBrowserPage.lua",
-  "KeyBindInfo.lua",
-  "InputKeyHelper.lua",
   "KeybindPage.lua",
+  "OptionsPage.lua",
+  "MapList.lua",
+  "CreateServerPage.lua",
+  "OptionsPageSelector.lua",
 }
 
 Dependencys = {

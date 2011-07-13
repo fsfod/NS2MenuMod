@@ -1,18 +1,26 @@
 MainMenuMod = {
-  DisableMenuCinematic = true
+  DisableMenuCinematic = true,
+  PageInfos = {},
+  OptionPageList = {},
+  
+  DefaultPages = {
+    ServerBrowser = "ServerBrowserPage",
+    Main = "MenuMainPage",
+    CreateServer = "CreateServerPage",
+  },
 }
 
 ClassHooker:Mixin("MainMenuMod")
+
 
 function MainMenuMod:OnLoad()
   ClassHooker:SetClassCreatedIn("MenuManager")
   self:SetHooks()
   
-  self.PageCreators = {
-   ServerBrowser = ServerBrowserPage,
-   Main = MenuMainPage,
-   ["KeybindPage"] = KeybindPage
-  }
+  if(not NS2_IO) then
+    Script.Load("lua/KeyBindInfo.lua")
+    Script.Load("lua/InputKeyHelper.lua")
+  end
   
   Event.Hook("Console_flashmenu", function() self:SwitchToFlash() end)
   Event.Hook("Console_newmenu", function() self:DisableFlashMenu() end)
@@ -40,10 +48,48 @@ function MainMenuMod:OnClientLuaFinished()
   //NS2_IO.MountArchiveFile(arch, "exitgame.dds", "ui/exitgame.dds")
   //NS2_IO.MountArchiveFile(arch, "createserver.dds", "ui/createserver.dds")
   
-  self.MainMenu = GetGUIManager():CreateGUIScript("GUIMainMenu")
-  MainMenu_Loaded()
+  self:RegisterDefaultPages()
   
+  self.MainMenu = GetGUIManager():CreateGUIScript("GUIMainMenu")
+  MainMenu_Loaded()  
   //self:SwitchToPage("ServerBrowser")
+end
+
+function MainMenuMod:GetPageInfo(name)
+  return self.PageInfos[name]
+end
+
+function MainMenuMod:RegisterDefaultPages()
+
+  for pageName, className in pairs(self.DefaultPages) do
+    if(not self.PageInfos[pageName]) then
+      self.PageInfos[pageName] = {Name = pageName, ClassName = className, OptionPage = false}
+    end
+  end
+  
+  self:RegisterOptionPage("MainOptions", "Options", "OptionsPage")
+  self:RegisterOptionPage("Keybinds", "Keybinds", "KeybindPage")
+end
+
+function MainMenuMod:RegisterOptionPage(name, label, className)
+
+  if(self.PageInfos[name]) then
+    error("RegisterOptionPage: error a page named "..name.." already exists")
+  end
+
+  if(not className) then
+    className = name
+  end
+
+  if(not label) then
+    label = name
+  end
+
+  local entry = {Name = name, Label = label, ClassName = className, OptionPage = true}
+  
+  self.PageInfos[name] = entry
+  
+  self.OptionPageList[#self.OptionPageList+1] = name
 end
 
 function MainMenuMod:SetMenuCinematic(cinematic)
@@ -129,6 +175,14 @@ function MainMenuMod:Disconnected()
   
 end
 
+function MainMenuMod:ReturnToMainPage()
+  self.MainMenu:ReturnToMainPage()
+end
+
 function MainMenuMod:SwitchToPage(page)
   self.MainMenu:SwitchToPage(page)
+end
+
+function MainMenuMod:RecreatePage(pageName)
+  self.MainMenu:RecreatePage(pageName)
 end

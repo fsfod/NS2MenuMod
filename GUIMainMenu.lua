@@ -18,7 +18,44 @@ function GUIMainMenu:__init()
   
   self.MsgBox:Hide()
   
+  local optionsMenu = OptionsPageSelector()
+    //optionsMenu:Hide()
+    self:AddChild(optionsMenu)
+  self.OptionsMenu = optionsMenu
+  
   self.MainPage:Show()
+end
+
+function GUIMainMenu:RecreatePage(pageName)
+  local page = self.Pages[pageName]
+  
+  if(page) then
+		Print("GUIMainMenu RecreatingPage "..pageName)
+		
+    pcall(function()
+      page:Hide()
+      page:Uninitialize()
+      self:RemoveChild(page)
+    end)
+
+    self.Pages[pageName] = nil
+
+    if(self.CurrentPage == page) then
+      local NewPage = self:GetPage(pageName)
+      
+      //check to make sure we were able to recreate the page if we didn't just go back to the main page
+      if(not NewPage) then
+        self.Pages[pageName] = nil
+        self:ReturnToMainPage()
+      else
+        self.Pages[pageName] = NewPage
+        self.CurrentPage = NewPage
+        NewPage:Show()
+      end
+    end
+	else
+    Print("GUIMainMenu:RecreatePage Could not find a pageinfo for page"..pageName)
+  end
 end
 
 function GUIMainMenu:GetPage(name)
@@ -27,13 +64,26 @@ function GUIMainMenu:GetPage(name)
     return self.Pages[name]
   end
 
-  local creator = MainMenuMod.PageCreators[name]
-
-  if(not creator) then
-    error("GUIMainMenu:CreatePage unknown page " .. (name or "nil"))
+  local info = MainMenuMod:GetPageInfo(name)
+  
+  if(not info) then
+    Print("GUIMainMenu:CreatePage unknown page " .. (name or "nil"))
+   return nil
   end
 
-  local page = creator()
+  local creator = _G[info.ClassName]
+
+  if(not creator) then
+    Print("GUIMainMenu:CreatePage could not get page creator for " .. (name or "nil"))
+   return nil
+  end
+
+  local success,page = pcall(creator)
+
+  if(not success) then
+    self:ShowMessage("Error while creating page %s: %s", name, page)
+   return nil
+  end
 
   page:Hide()
  
@@ -71,6 +121,15 @@ function GUIMainMenu:SwitchToPage(page)
     self.CurrentPage = PageFrame
     
     PageFrame:Show()
+    
+    if(MainMenuMod:GetPageInfo(page).OptionPage) then
+      self.OptionsMenu:Show()
+      self.OptionsMenu:SetPageButtonActive(page)
+      
+      self.OptionsMenu:SetPoint("Left", PageFrame:GetLeft()-2, 0, "Right")
+    else
+      self.OptionsMenu:Hide()
+    end
   end
 end
 
@@ -79,10 +138,15 @@ function GUIMainMenu:LeaveMainPage()
 end
 
 function GUIMainMenu:ReturnToMainPage()
-  self.CurrentPage:Hide()
+
+  if(self.CurrentPage) then
+    self.CurrentPage:Hide()
+  end
+
+  self.OptionsMenu:Hide()
   
   self.MsgBox:Hide()
-  
+
   self.CurrentPage = self.MainPage
   self.MainPage:UpdateButtons()
   self.MainPage:Show()
@@ -110,8 +174,14 @@ function GUIMainMenu:OnScreenSizeChanged(width, height)
   
 end
 
-function GUIMainMenu:ShowMessage(Message)
-  self.MsgBox:SetMsg(Message)
+function GUIMainMenu:ShowMessage(Message, ...)
+  
+  if(select('#', ...) == 0) then
+    self.MsgBox:SetMsg(Message)
+  else
+    self.MsgBox:SetMsg(string.format(Message, ...))
+  end
+  
   self.MsgBox:Show()
 end
 
@@ -125,37 +195,30 @@ end
 
 function GUIMainMenu:OnEnter(x, y)
 	
-	local ActiveFrame = (not self.MsgBox.Hidden and self.MsgBox) or self.CurrentPage
-	local HitRec = ActiveFrame.HitRec
+	local ControlList = {} 
 	
-	if(x > HitRec[1] and y > HitRec[2] and x < HitRec[3] and y < HitRec[4]) then
-	  local frame = ActiveFrame:ContainerOnEnter(x-HitRec[1],y-HitRec[2])
-	
-    if(frame) then
-		  return frame
-	  end
+	if(not self.MsgBox.Hidden) then
+	  ControlList[1] = self.MsgBox
+	else
+	  ControlList[1] = self.OptionsMenu
+	  ControlList[2] = self.CurrentPage
 	end
-	
-	return false
+
+	return self:ContainerOnEnter(x, y, ControlList) or false
 end
 
 function GUIMainMenu:OnClick(button, down, x, y)
 	
-	local ActiveFrame = (not self.MsgBox.Hidden and self.MsgBox) or self.CurrentPage
-	local HitRec = ActiveFrame.HitRec
-		
-	if(down and x > HitRec[1] and y > HitRec[2] and x < HitRec[3] and y < HitRec[4]) then
-	  
-	  local ClickFunc = ActiveFrame.OnClick or BaseControl.ContainerOnClick
-	  
-	  local frame = ClickFunc(ActiveFrame, button, down, x-HitRec[1],y-HitRec[2])
+	local ControlList = {} 
 	
-    if(frame) then
-		  return frame
-	  end
+	if(not self.MsgBox.Hidden) then
+	  ControlList[1] = self.MsgBox
+	else
+	  ControlList[1] = self.OptionsMenu
+	  ControlList[2] = self.CurrentPage
 	end
-
-  return self
+	
+	return self:ContainerOnClick(button, down, x, y, ControlList) or self
 end
 
 class'MenuMessageBox'(BorderedSquare)
