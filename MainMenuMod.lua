@@ -24,7 +24,7 @@ function MainMenuMod:OnLoad()
   ClassHooker:SetClassCreatedIn("MenuManager")
   self:SetHooks()
   
-  if(not NS2_IO) then
+  if(not ModLoader:IsModEnabled("keybinds")) then
     Script.Load("Mods/Keybinds/KeyBindInfo.lua")
     Script.Load("Mods/Keybinds/InputKeyHelper.lua")
   end

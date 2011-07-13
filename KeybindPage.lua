@@ -123,7 +123,7 @@ function KeybindListEntry:OnClick(button, down, x, y)
   if(down and button == InputKey.MouseButton0 and not self.Data.Keybinds) then
     
     if(x < 300) then
-      return
+      return false
     end
     
     if(self.LastClicked and (Client.GetTime()-self.LastClicked) < GUIManager.DblClickSpeed) then
@@ -132,10 +132,14 @@ function KeybindListEntry:OnClick(button, down, x, y)
        self.BindModeOverlay:SetIsVisible(true)
        
        GetGUIManager():SetFocus(self)
+      return true
     end
     
     self.LastClicked = Client.GetTime()
   end
+
+  //return false so the listview will select our entry
+  return false
 end
 
 function KeybindListEntry:ExitBindingMode()
