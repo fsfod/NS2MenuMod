@@ -268,37 +268,6 @@ function GUIMainMenu:GetFrameList()
 	end
 end
 
-/*
-function GUIMainMenu:OnEnter(x, y)
-	
-	local ControlList = {} 
-	
-	if(self.MsgBox and not self.MsgBox.Hidden) then
-	  ControlList[1] = self.MsgBox
-	else
-	  //ControlList[1] = self.OptionsMenu
-	  //ControlList[2] = self.CurrentPage
-	  ControlList = self.ChildControls
-	end
-
-	return self:ContainerOnEnter(x, y, ControlList) or false
-end
-
-function GUIMainMenu:OnClick(button, down, x, y)
-	
-	local ControlList = {} 
-	
-	if(self.MsgBox and not self.MsgBox.Hidden) then
-	  ControlList[1] = self.MsgBox
-	else
-	  //ControlList[1] = self.OptionsMenu
-	  //ControlList[2] = self.CurrentPage
-	  ControlList = self.ChildControls
-	end
-	
-	return self:ContainerOnClick(button, down, x, y, ControlList) or self
-end
-*/
 class'MenuMessageBox'(BorderedSquare)
 
 function MenuMessageBox:__init()
