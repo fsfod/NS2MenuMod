@@ -191,7 +191,7 @@ function MenuMainPage:__init()
   self:UpdateButtons()
 end
 
-function MenuMainPage:OnScreenSizeChanged(width, height)
+function MenuMainPage:OnResolutionChanged(oldX, oldY, width, height)
   
   local buttonHeight = height*0.2
   

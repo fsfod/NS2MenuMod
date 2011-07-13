@@ -217,15 +217,14 @@ function GUIMainMenu:ShowMessage(Message, ...)
   self.MsgBox:Open("SimpleMsg", msgString)
 end
 
-function GUIMainMenu:OnScreenSizeChanged(width, height)
+function GUIMainMenu:OnResolutionChanged(oldX, oldY, width, height)
+  
+
   self:SetSize(width, height)
   
   for k,page in pairs(self.Pages) do
     page:UpdatePosition()
-    
-    if(page.OnScreenSizeChanged) then
-      page:OnScreenSizeChanged(width, height)
-    end
+    page:OnResolutionChanged(oldX, oldY, width, height)
   end
   
   if(not self.OptionsMenu.Hidden) then
@@ -241,8 +240,9 @@ function GUIMainMenu:Update(...)
   end
 end
 
-function GUIMainMenu:SendKeyEvent(key, down)
-  if not self.Hidden and down and key == InputKey.Escape and not GetGUIManager():IsFocusedSet() then
+function GUIMainMenu:SendKeyEvent(key, down, isRepeat)
+
+  if not self.Hidden and down and key == InputKey.Escape and not isRepeat and not GetGUIManager():IsFocusedSet() then
     if(self.CurrentPageName == "Main") then
       if(Client.GetIsConnected()) then
         MainMenuMod:CloseMenu()
@@ -252,6 +252,7 @@ function GUIMainMenu:SendKeyEvent(key, down)
     else
       self:ReturnToMainPage()
     end
+    
    return true
   end
   

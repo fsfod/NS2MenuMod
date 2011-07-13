@@ -25,8 +25,8 @@ function MainMenuMod:OnLoad()
   self:SetHooks()
   
   if(not NS2_IO) then
-    Script.Load("lua/KeyBindInfo.lua")
-    Script.Load("lua/InputKeyHelper.lua")
+    Script.Load("Mods/Keybinds/KeyBindInfo.lua")
+    Script.Load("Mods/Keybinds/InputKeyHelper.lua")
   end
   
   Event.Hook("Console_flashmenu", function() self:SwitchToFlash() end)

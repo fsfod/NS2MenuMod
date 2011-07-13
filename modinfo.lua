@@ -17,6 +17,6 @@ ScriptList = {
   "ModsPage.lua",
 }
 
-Dependencys = {
+Dependencies = {
   "BaseUIControls",
 }
