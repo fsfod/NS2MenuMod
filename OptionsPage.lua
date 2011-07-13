@@ -151,6 +151,6 @@ end
  
 
 if(HotReload) then
-  MainMenuMod:RecreatePage("MainOptions")
+  GUIMenuManager:RecreatePage("MainOptions")
 end
 

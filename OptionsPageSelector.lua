@@ -13,7 +13,7 @@ function OptionsPageSelector:__init()
   self.ButtonWidth = 130
 
   local borderSize = 4
-  local pageList = MainMenuMod.OptionPageList
+  local pageList = GUIMenuManager.OptionPageList
 
   BorderedSquare.__init(self, self.ButtonWidth+borderSize, (self.ButtonHeight*(#pageList+1))+borderSize, borderSize)
   self:Hide()
@@ -59,11 +59,11 @@ end
 function OptionsPageSelector:ButtonClicked(button)
 
   if(button.ReturnButton) then
-    MainMenuMod:ReturnToMainPage()
+    GUIMenuManager:ReturnToMainPage()
    return
   end
 
-  MainMenuMod:SwitchToPage(button.PageName)
+  GUIMenuManager:SwitchToPage(button.PageName)
 end
 
 function OptionsPageButton:Initialize(pageName, width, height)
@@ -98,7 +98,7 @@ function OptionsPageButton:UpdatePage(pageName)
     
     self.RootFrame:SetTexturePixelCoordinates(0, 0, 2, 122)
   else
-    labelText = MainMenuMod:GetPageInfo(pageName).Label
+    labelText = GUIMenuManager:GetPageInfo(pageName).Label
     self.PageName = pageName
   end
 

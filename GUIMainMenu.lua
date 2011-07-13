@@ -7,11 +7,10 @@ function GUIMainMenu:Initialize()
   
 end
 
-function GUIMainMenu:__init()
-  BaseControl.Initialize(self, Client.GetScreenWidth(), Client.GetScreenHeight())
+function GUIMainMenu:__init(height, width)
+  BaseControl.Initialize(self, height, width)
   Draggable.__init(self)
 
-  GetGUIManager():SetMainMenu(self)
 
 	self.Pages = {}
 
@@ -77,7 +76,7 @@ function GUIMainMenu:GetPage(name)
     return self.Pages[name]
   end
 
-  local info = MainMenuMod:GetPageInfo(name)
+  local info = GUIMenuManager:GetPageInfo(name)
   
   if(not info) then
     RawPrint("GUIMainMenu:CreatePage unknown page " .. (name or "nil"))
@@ -159,7 +158,7 @@ function GUIMainMenu:SwitchToPage(page)
   
   PageFrame:Show()
 
-  if(MainMenuMod:GetPageInfo(page).OptionPage) then
+  if(GUIMenuManager:GetPageInfo(page).OptionPage) then
     self.OptionsMenu:Show()
     self.OptionsMenu:SetPageButtonActive(page)
     
@@ -192,7 +191,7 @@ end
 
 function GUIMainMenu:Show(Message)
   --clear focus incase a frame like chat has focus
-  GetGUIManager():ClearFocus()
+  GUIMenuManager:ClearFocus()
 
   local hidden = self.Hidden
   
@@ -218,7 +217,6 @@ function GUIMainMenu:ShowMessage(Message, ...)
 end
 
 function GUIMainMenu:OnResolutionChanged(oldX, oldY, width, height)
-  
 
   self:SetSize(width, height)
   
@@ -242,10 +240,10 @@ end
 
 function GUIMainMenu:SendKeyEvent(key, down, isRepeat)
 
-  if not self.Hidden and down and key == InputKey.Escape and not isRepeat and not GetGUIManager():IsFocusedSet() then
+  if not self.Hidden and down and key == InputKey.Escape and not isRepeat and not GUIMenuManager:IsFocusedSet() then
     if(self.CurrentPageName == "Main") then
       if(Client.GetIsConnected()) then
-        MainMenuMod:CloseMenu()
+        GUIMenuManager:CloseMenu()
       else
         return false
       end

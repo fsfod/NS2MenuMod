@@ -101,5 +101,5 @@ function CreateServerPage.MapValueConverter(entry, index)
 end
 
 if(HotReload) then
-  MainMenuMod:RecreatePage("CreateServer")
+  GUIMenuManager:RecreatePage("CreateServer")
 end

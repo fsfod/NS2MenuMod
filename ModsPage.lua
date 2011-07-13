@@ -116,5 +116,5 @@ function ModsPage:__init()
 end
 
 if(HotReload) then
-  MainMenuMod:RecreatePage("Mods")
+  GUIMenuManager:RecreatePage("Mods")
 end

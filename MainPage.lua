@@ -109,17 +109,17 @@ MenuMainPage.ButtonSpacing = 15
 
 local ButtonList ={
   ServerBrowser = {
-    function() MainMenuMod:SwitchToPage("ServerBrowser") end,
+    function() GUIMenuManager:SwitchToPage("ServerBrowser") end,
 	  "Join",
 	  "ui/join.dds",
 	},
 	CreateServer = {
-		function() MainMenuMod:SwitchToPage("CreateServer") end,
+		function() GUIMenuManager:SwitchToPage("CreateServer") end,
 		"Create",
 		"ui/createserver.dds",
 	},
 	Options = {
-		function() MainMenuMod:SwitchToPage("MainOptions") end,
+		function() GUIMenuManager:SwitchToPage("MainOptions") end,
 		"Options",
 		"ui/options.dds",
 	},

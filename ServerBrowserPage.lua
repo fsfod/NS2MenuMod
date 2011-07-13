@@ -359,7 +359,7 @@ function ServerBrowserPage:Connect(server, password)
 	  self.PasswordPrompt = self.PasswordPrompt or ServerPasswordPrompt(self)
   
     self.PasswordPrompt.Server = server
-    MainMenuMod:ShowMessageBox(self.PasswordPrompt)
+    GUIMenuManager:ShowMessageBox(self.PasswordPrompt)
    return
 	end
 	
@@ -686,5 +686,5 @@ end
 
 
 if(HotReload) then
-  MainMenuMod:RecreatePage("ServerBrowser")
+  GUIMenuManager:RecreatePage("ServerBrowser")
 end

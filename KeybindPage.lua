@@ -308,5 +308,5 @@ function KeybindPage:Hide()
 end
 
 if(HotReload) then
-  MainMenuMod:RecreatePage("Keybinds")
+  GUIMenuManager:RecreatePage("Keybinds")
 end
