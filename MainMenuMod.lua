@@ -5,8 +5,6 @@ if(not MainMenuMod) then
   
 MainMenuMod = {
   DisableMenuCinematic = true,
-  PageInfos = {},
-  OptionPageList = {},
   
   DefaultPages = {
     ServerBrowser = "ServerBrowserPage",
@@ -46,7 +44,7 @@ function MainMenuMod:SetHooks()
   self:ReplaceFunction("ShowInGameMenu")
   self:ReplaceFunction("MainMenu_SetAlertMessage")
   
-  self:HookLibraryFunction(HookType.Replace, "MenuManager", "GetMenu", function() return (self:IsMenuOpen() and "") or nil end)
+  self:HookLibraryFunction(HookType.Replace, "MenuManager", "GetMenu", function() return (GUIMenuManager:IsMenuOpen() and "") or nil end)
   
   //self:HookLibraryFunction(HookType.Replace, "MenuManager", "PlayMusic", function() end)
 end
@@ -54,48 +52,22 @@ end
 function MainMenuMod:OnClientLuaFinished()
   self:RegisterDefaultPages()
   
-  self.MainMenu = GetGUIManager():CreateGUIScript("GUIMainMenu")
+  GUIMenuManager:ShowMenu()
   MainMenu_Loaded() 
   //self:SwitchToPage("ServerBrowser")
-end
-
-function MainMenuMod:GetPageInfo(name)
-  return self.PageInfos[name]
 end
 
 function MainMenuMod:RegisterDefaultPages()
 
   for pageName, className in pairs(self.DefaultPages) do
-    if(not self.PageInfos[pageName]) then
-      self.PageInfos[pageName] = {Name = pageName, ClassName = className, OptionPage = false}
-    end
+    GUIMenuManager:RegisterPage(pageName, nil, className)
   end
   
-  self:RegisterOptionPage("MainOptions", "Options", "OptionsPage")
-  self:RegisterOptionPage("Keybinds", "Keybinds", "KeybindPage")
-  self:RegisterOptionPage("Mods", "Mods", "ModsPage")
+  GUIMenuManager:RegisterOptionPage("MainOptions", "Options", "OptionsPage")
+  GUIMenuManager:RegisterOptionPage("Keybinds", "Keybinds", "KeybindPage")
+  GUIMenuManager:RegisterOptionPage("Mods", "Mods", "ModsPage")
 end
 
-function MainMenuMod:RegisterOptionPage(name, label, className)
-
-  if(self.PageInfos[name]) then
-    error("RegisterOptionPage: error a page named "..name.." already exists")
-  end
-
-  if(not className) then
-    className = name
-  end
-
-  if(not label) then
-    label = name
-  end
-
-  local entry = {Name = name, Label = label, ClassName = className, OptionPage = true}
-  
-  self.PageInfos[name] = entry
-  
-  self.OptionPageList[#self.OptionPageList+1] = name
-end
 
 function MainMenuMod:SetMenuCinematic(cinematic)
   
@@ -107,18 +79,18 @@ function MainMenuMod:SetMenuCinematic(cinematic)
 end
 
 function MainMenuMod:MainMenu_SetAlertMessage(msg)
-  self:ShowMenu() 
+  GUIMenuManager:ShowMenu(msg)
   MouseStateTracker:ClearStack()
-  
-  self.MainMenu.MainPage:UpdateButtons()
-  self.MainMenu:ShowMessage(msg)
-  
+
+  //self.MainMenu.MainPage:UpdateButtons()
+  //self.MainMenu:ShowMessage(msg)
+
   MainMenu_Loaded()
 end
 
 function MainMenuMod:ShowInGameMenu()
   if not Shared.GetIsRunningPrediction() then
-    self:ShowMenu()
+    GUIMenuManager:ShowMenu()
   end
 end
 
@@ -131,8 +103,7 @@ function MainMenuMod:CloseMenu()
 end
 
 function MainMenuMod:LeaveMenu() 
-  self.MainMenu:Hide()
-  MouseStateTracker:ClearMainMenuState()
+  GUIMenuManager:CloseMenu()
 end
 
 function MainMenuMod:SetMenu(filename)
@@ -141,20 +112,8 @@ function MainMenuMod:SetMenu(filename)
   end
 end
 
-function MainMenuMod:IsMenuOpen()
-  return not self.MainMenu.Hidden
-end
-
-function MainMenuMod:ShowMessageBox(msgBox)
-  self.MainMenu:ShowMessageBox(msgBox)
-end
-
 function MainMenuMod:ShowMenu()
-  if(not self:IsMenuOpen()) then
-    self.MainMenu:Show()
-    
-    MouseStateTracker:SetMainMenuState()
-  end
+  GUIMenuManager:ShowMenu()
 end
 
 function MainMenuMod:DisableFlashMenu()
@@ -164,13 +123,13 @@ function MainMenuMod:DisableFlashMenu()
   self:SetHooks()
   self:ShowMenu()
   
-  self.MainMenu:ReturnToMainPage()
+  //GUIMenuManager:ReturnToMainPage()
   
   self.Flashmenu = false
 end
 
 function MainMenuMod:SwitchToFlash()
-  self.MainMenu:Hide()
+  GUIMenuManager:CloseMenu()
   self:RemoveAllHooks()
   
   self:HookLibraryFunction(HookType.Replace, "MenuManager", "PlayMusic", function() end)
@@ -179,26 +138,7 @@ function MainMenuMod:SwitchToFlash()
   self.Flashmenu = true
 end
 
-function MainMenuMod:Disconnected()
-  
-end
-
-function MainMenuMod:ReturnToMainPage()
-  self.MainMenu:ReturnToMainPage()
-end
-
-function MainMenuMod:SwitchToPage(page)
-  self.MainMenu:SwitchToPage(page)
-end
-
-function MainMenuMod:RecreatePage(pageName)
-  self.MainMenu:RecreatePage(pageName)
-end
 
 if(HotReload) then
   MainMenuMod:SetHooks()
-else
-  Event.Hook("Console_menulayer", function()
-    MainMenuMod.MainMenu.RootFrame:SetLayer(GUIMainMenu.MenuLayer)
-  end)
 end

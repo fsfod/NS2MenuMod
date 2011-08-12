@@ -7,7 +7,6 @@ ScriptList = {
   "MainMenuMod.lua",
   "GUIMainMenu.lua",
   "MainPage.lua",
-  "MenuButtons.lua",
   "ServerBrowserPage.lua",
   "KeybindPage.lua",
   "OptionsPage.lua",

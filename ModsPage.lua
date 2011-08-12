@@ -92,13 +92,13 @@ function ModsPage:__init()
   modList:SetDataList(list)
   
   if(NS2_IO) then
-    local openModsFolder = MainMenuPageButton("Open Mods Folder", 150)
+    local openModsFolder = UIButton("Open Mods Folder", 150)
       openModsFolder:SetPoint("BottomLeft", 400, -20, "BottomLeft")
       openModsFolder.ClickAction = NS2_IO.OpenModsFolder
     self:AddChild(openModsFolder)
   end
   
-  local enableAll = MainMenuPageButton("Enable All", 130)
+  local enableAll = UIButton("Enable All", 130)
     enableAll:SetPoint("BottomLeft", 30, -20, "BottomLeft")
     enableAll.ClickAction = function()
       ModLoader:EnableAllMods()
@@ -106,7 +106,7 @@ function ModsPage:__init()
     end
   self:AddChild(enableAll)
   
-  local disableAll = MainMenuPageButton("Disable All", 130)
+  local disableAll = UIButton("Disable All", 130)
     disableAll:SetPoint("BottomLeft", 180, -20, "BottomLeft")
     disableAll.ClickAction = function()
       ModLoader:DisableAllMods() 

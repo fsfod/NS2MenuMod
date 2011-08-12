@@ -63,7 +63,7 @@ function OptionsPageSelector:ButtonClicked(button)
    return
   end
 
-  GUIMenuManager:SwitchToPage(button.PageName)
+  GUIMenuManager:ShowPage(button.PageName)
 end
 
 function OptionsPageButton:Initialize(pageName, width, height)

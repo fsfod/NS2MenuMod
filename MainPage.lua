@@ -90,7 +90,7 @@ end
 function MainMenuButton:OnEnter()
   self.InnerSquare:SetBorderColour(ControlHighlightColor)
   
-  self.LabelBG:SetTexture("ui/MainMenuButtonBg.dds")
+  self.LabelBG:SetTexture("ui/ButtonBg.dds")
   self.LabelBG.RootFrame:SetColor(Color(1, 1, 1, 1))
   PlayerUI_PlayButtonEnterSound()
 end
@@ -109,17 +109,17 @@ MenuMainPage.ButtonSpacing = 15
 
 local ButtonList ={
   ServerBrowser = {
-    function() GUIMenuManager:SwitchToPage("ServerBrowser") end,
+    function() GUIMenuManager:ShowPage("ServerBrowser") end,
 	  "Join",
 	  "ui/join.dds",
 	},
 	CreateServer = {
-		function() GUIMenuManager:SwitchToPage("CreateServer") end,
+		function() GUIMenuManager:ShowPage("CreateServer") end,
 		"Create",
 		"ui/createserver.dds",
 	},
 	Options = {
-		function() GUIMenuManager:SwitchToPage("MainOptions") end,
+		function() GUIMenuManager:ShowPage("MainOptions") end,
 		"Options",
 		"ui/options.dds",
 	},
@@ -191,12 +191,15 @@ function MenuMainPage:__init()
   self:UpdateButtons()
 end
 
+function MenuMainPage:Show()
+  BaseControl.Show(self)
+  
+  self:UpdateButtons()
+end
+
 function MenuMainPage:OnResolutionChanged(oldX, oldY, width, height)
   
   local buttonHeight = height*0.2
-  
-  
-  
 end
 
 function MenuMainPage:UpdateButtons()

@@ -109,29 +109,40 @@ end
 function KeybindListEntry:SendKeyEvent(key, down)
 
   if(self.InBindMode and down and key ~= InputKey.MouseX and key ~= InputKey.MouseY) then
-    self.Parent.Parent:SetKeybind(self.Data[1], key)
-    self:ExitBindingMode()
+    self:SetBind(key)
 
-    GetGUIManager():ClearFocus()
-    
     return true
   end
 end
 
-function KeybindListEntry:OnClick(button, down, x, y)
+function KeybindListEntry:SetBind(newKey)
+  self.Parent.Parent:SetKeybind(self.Data[1], newKey)
+  self:ExitBindingMode()
+
+  self.Parent:GetGUIManager():ClearFocus()
+end
   
+
+function KeybindListEntry:OnClick(button, down, x, y)
+
+  if(self.InBindMode and down) then
+    self:SetBind(button)
+    
+    return true
+  end
+
   if(down and button == InputKey.MouseButton0 and not self.Data.Keybinds) then
     
     if(x < 300) then
       return false
     end
     
-    if(self.LastClicked and (Client.GetTime()-self.LastClicked) < GUIManager.DblClickSpeed) then
+    if(self.LastClicked and (Client.GetTime()-self.LastClicked) < GUIMenuManager.DblClickSpeed) then
        self.InBindMode = true
        self.BindModeOverlay:SetColor(Color(0.8666, 0.3843, 0, 1))
        self.BindModeOverlay:SetIsVisible(true)
        
-       GetGUIManager():SetFocus(self)
+       GUIMenuManager:SetFocus(self)
       return true
     end
     
@@ -202,18 +213,18 @@ function KeybindPage:__init()
   self.KeybindList = keybindList
 
 
-  local clearButton = MainMenuPageButton("Clear Key")
+  local clearButton = UIButton("Clear Key")
     clearButton:SetPoint("BottomLeft", 120, -15, "BottomLeft")
     clearButton.ClickAction = {self.ClearBind, self}
   self:AddChild(clearButton)
 
 /*
-  local resetGroupButton = MainMenuPageButton("Reset Group")
+  local resetGroupButton = UIButton("Reset Group")
     resetGroupButton:SetPoint("BottomLeft", 230, -15, "BottomLeft")
     resetGroupButton.ClickAction = {self.ResetSelectedGroup, self}
   self:AddChild(resetGroupButton)
 */  
-  local resetButton = MainMenuPageButton("Reset Keybinds")
+  local resetButton = UIButton("Reset Keybinds")
     resetButton:SetPoint("BottomLeft", 450, -15, "BottomLeft")
     resetButton.ClickAction = {self.ResetKeybinds, self}
   self:AddChild(resetButton)
@@ -226,11 +237,6 @@ function KeybindPage:__init()
    warningString:SetAnchor(GUIItem.Middle, GUIItem.Bottom)
    self:AddGUIItemChild(warningString)
   self.WarningString = warningString
-end
-
-function KeybindPage:EnterBindMode(item, bindname)
-  self.ItemBinding = item
-  GetGUIManager():SettingKeybindHook(self.SetKeybind, self)
 end
 
 function KeybindPage:SetKeybind(BindName, key)

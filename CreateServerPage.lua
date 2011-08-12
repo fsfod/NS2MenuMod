@@ -55,12 +55,12 @@ function CreateServerPage:__init()
     lanGame:SetConfigBinding("lanGame", true)
   self:AddChild(lanGame)
   
-  local create = MainMenuPageButton("Create", 200, 40)
+  local create = UIButton("Create", 200, 40)
     create:SetPoint("Bottom", 0, -70, "Bottom")
     create.ClickAction = {self.CreateServer, self}
   self:AddChild(create)
   
-  local backButton = MainMenuPageButton("Back to menu")
+  local backButton = UIButton("Back to menu")
     backButton:SetPoint("BottomLeft", 20, -15, "BottomLeft")
     backButton.ClickAction = function() self.Parent:ReturnToMainPage() end
   self:AddChild(backButton)

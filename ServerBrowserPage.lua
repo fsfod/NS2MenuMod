@@ -264,17 +264,17 @@ function ServerBrowserPage:__init()
   end
   
   
-  local refresh = MainMenuPageButton("Refresh")
+  local refresh = UIButton("Refresh")
     refresh:SetPoint("BottomLeft", 150, -15, "BottomLeft")
     refresh.ClickAction = {self.RefreshList, self}
   self:AddChild(refresh)
   
-  local backButton = MainMenuPageButton("Back to menu")
+  local backButton = UIButton("Back to menu")
     backButton:SetPoint("BottomLeft", 20, -15, "BottomLeft")
     backButton.ClickAction = function() self.Parent:ReturnToMainPage() end
   self:AddChild(backButton)
   
-  local connectButton = MainMenuPageButton("Connect")
+  local connectButton = UIButton("Connect")
     connectButton:SetPoint("BottomLeft", 300, -15, "BottomLeft")
     connectButton.ClickAction = function()
       local index = ServerList:GetSelectedIndex()
@@ -646,18 +646,20 @@ function ServerPasswordPrompt:__init(owner)
   BorderedSquare.__init(self, 400, 100, 4)
   self:Hide()
 
-  self:SetLayer(GUIMainMenu.MenuLayer+1)
-
-  local connectButton = MainMenuPageButton("Connect")
-   connectButton:SetPoint("Bottom", 100, -10, "Bottom")
-   connectButton.ClickAction = function()
-     owner:Connect(self.Server, self.PasswordBox:GetText())
-     self.Server = nil
-   end
+  local connectButton = UIButton("Connect")
+    connectButton:SetPoint("Bottom", 100, -10, "Bottom")
+    connectButton.ClickAction = function()
+      local password = self.PasswordBox:GetText()
+      
+      self:Close()
+    
+      owner:Connect(self.Server, password)
+      self.Server = nil
+    end
   self:AddChild(connectButton)
   self.Connect = connectButton
  
-  local cancelButton = MainMenuPageButton("Cancel")
+  local cancelButton = UIButton("Cancel")
    cancelButton:SetPoint("Bottom", -100, -10, "Bottom")
    cancelButton.ClickAction = {self.Close, self}
   self:AddChild(cancelButton)
@@ -679,8 +681,9 @@ end
 
 function ServerPasswordPrompt:Close()
   if(not self.Hidden) then
-   self:Hide(self) 
-   self.Parent:MsgBoxClosed()
+   self:Hide(self)
+   
+   GUIMenuManager:MesssageBoxClosed(self)
   end
 end
 

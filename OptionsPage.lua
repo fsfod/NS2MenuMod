@@ -119,7 +119,7 @@ function OptionsPage:__init()
     //visualDetail.ItemPicked = function() Client.ReloadGraphicsOptions() end
   self:AddChild(visualDetail)
 
-   local applyGFXsButton = MainMenuPageButton("Apply Gfx Changes", 150)
+   local applyGFXsButton = UIButton("Apply Gfx Changes", 150)
     applyGFXsButton:SetPoint("Top", -10, 395, "Top")
     applyGFXsButton.ClickAction = function() 
       //visualDetail
