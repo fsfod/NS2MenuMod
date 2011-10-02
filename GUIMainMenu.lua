@@ -1,118 +1,62 @@
-class'GUIMainMenu'(BaseControl)
+class'PagedMainMenu'(BaseControl)
 
+PageFactory:Mixin(PagedMainMenu)
 
-function GUIMainMenu:__init(height, width)
+function PagedMainMenu:__init(height, width)
   BaseControl.Initialize(self, height, width)
-  Draggable.__init(self)
-
-
-	self.Pages = {}
+  PageFactory.__init(self)
 
   self:SetColor(Color(0,0,0, 0))
  
-  self.MainPage = self:GetPage("Main")
+  self.MainPage = self:GetOrCreatePage("Main")
   self.CurrentPageName = "Main"
   self.CurrentPage = self.MainPage
-  /*
-  msgBox = MenuMessageBox()
-    msgBox:SetPoint("Center", 0, 0, "Center")
-    msgBox:Hide()
-  self:AddChild(msgBox)
-  self.MsgBox = msgBox
-  
-  self.DefaultMsgBox = msgBox
-  */
+
   local optionsMenu = OptionsPageSelector()
     //optionsMenu:Hide()
     self:AddChild(optionsMenu)
   self.OptionsMenu = optionsMenu
   
   self.MainPage:Show()
-  
-  Event.Hook("ClientDisconnected", function() self:OnClientDisconnected() end)
+
+  local switchButton = MenuButton(15, "Switch to classic menu", function() GUIMenuManager:SwitchMainMenu("ClassicMenu") end, 14)                                               
+   switchButton:SetPoint("BottomLeft", 20, -20)
+   self:AddChild(switchButton)
 end
 
-function GUIMainMenu:OnClientDisconnected()
+function PagedMainMenu:OnClientConnected()
   self.MainPage:UpdateButtons()
 end
 
-function GUIMainMenu:RecreatePage(pageName)
-  local page = self.Pages[pageName]
-  
-  if(page) then
-		RawPrint("GUIMainMenu RecreatingPage "..pageName)
-		
-    pcall(function()
-      page:Hide()
-      page:Uninitialize()
-      self:RemoveChild(page)
-    end)
-
-    self.Pages[pageName] = nil
-
-    if(self.CurrentPage == page) then
-      local NewPage = self:GetPage(pageName)
-      
-      //check to make sure we were able to recreate the page if we didn't just go back to the main page
-      if(not NewPage) then
-        self.Pages[pageName] = nil
-        self:ReturnToMainPage()
-      else
-        self.Pages[pageName] = NewPage
-        self.CurrentPage = NewPage
-        NewPage:Show()
-      end
-    end
-	else
-    RawPrint("GUIMainMenu:RecreatePage Could not find a pageinfo for page"..pageName)
-  end
+function PagedMainMenu:OnClientDisconnected()
+  self.MainPage:UpdateButtons()
 end
 
-function GUIMainMenu:GetPage(name)
-  
-  if(self.Pages[name]) then
-    return self.Pages[name]
+function PagedMainMenu:OnPageCreated(name, page)
+
+  if(not page) then
+    self:ReturnToMainPage()
+   return
   end
 
-  local info = GUIMenuManager:GetPageInfo(name)
-  
-  if(not info) then
-    RawPrint("GUIMainMenu:CreatePage unknown page " .. (name or "nil"))
-   return nil
-  end
-
-  local creator = _G[info.ClassName]
-
-  if(not creator) then
-    RawPrint("GUIMainMenu:CreatePage could not get page creator for " .. (name or "nil"))
-   return nil
-  end
-
-  local success,page = pcall(creator)
-
-  if(not success) then
-    self:ShowMessage("Error while creating page %s: %s", name, page)
-   return nil
-  end
-
-  page:Hide()
- 
   self:AddChild(page)
+  
+  page:Show()
   page:SetPoint("Center", 0, 0, "Center")
-  
-  self.Pages[name] = page
-  
-  return page
 end
 
-function GUIMainMenu:ShowPage(page)
+function PagedMainMenu:OnPageDestroy(name, page)
+  self:RemoveChild(page)
+end
+
+function PagedMainMenu:ShowPage(page)
 
   if(not page or page == "Main" or page == "") then
     self:ReturnToMainPage()
    return
   end
-  
-  local PageFrame = self:GetPage(page)
+
+  local PageFrame = self:GetOrCreatePage(page)
 
   if(not PageFrame) then
    --GetPage will have placed error in the console so we have nothing todo
@@ -140,11 +84,11 @@ function GUIMainMenu:ShowPage(page)
   end
 end
 
-function GUIMainMenu:LeaveMainPage()
+function PagedMainMenu:LeaveMainPage()
   self.MainPage:Hide()
 end
 
-function GUIMainMenu:ReturnToMainPage()
+function PagedMainMenu:ReturnToMainPage()
 
   if(self.CurrentPage) then
     self.CurrentPage:Hide()
@@ -160,8 +104,7 @@ function GUIMainMenu:ReturnToMainPage()
   self.MainPage:Show()
 end
 
-
-function GUIMainMenu:Show(Message)
+function PagedMainMenu:Show()
   --clear focus incase a frame like chat has focus
   GUIMenuManager:ClearFocus()
 
@@ -170,28 +113,12 @@ function GUIMainMenu:Show(Message)
   BaseControl.Show(self)
   
   self:ReturnToMainPage()
-  
-  if(Message) then
-    self:ShowMessage(Message)
-  end
 end
 
-
-function GUIMainMenu:ShowMessage(Message, ...)  
-  local msgString = Message
-  
-  if(select('#', ...) ~= 0) then
-    msgString = string.format(Message, ...)
-  end
-
-  self.MsgBox = self.DefaultMsgBox
-  self.MsgBox:Open("SimpleMsg", msgString)
-end
-
-function GUIMainMenu:OnResolutionChanged(oldX, oldY, width, height)
+function PagedMainMenu:OnResolutionChanged(oldX, oldY, width, height)
 
   self:SetSize(width, height)
-  
+ 
   for k,page in pairs(self.Pages) do
     page:UpdatePosition()
     page:OnResolutionChanged(oldX, oldY, width, height)
@@ -202,7 +129,7 @@ function GUIMainMenu:OnResolutionChanged(oldX, oldY, width, height)
   end
 end
 
-function GUIMainMenu:Update(...)  
+function PagedMainMenu:Update(...)  
   local page = self.CurrentPage
   
   if(page and page.Update) then
@@ -210,10 +137,12 @@ function GUIMainMenu:Update(...)
   end
 end
 
-function GUIMainMenu:SendKeyEvent(key, down, isRepeat)
+function PagedMainMenu:SendKeyEvent(key, down, isRepeat)
 
   if not self.Hidden and down and key == InputKey.Escape and not isRepeat and not GUIMenuManager:IsFocusedSet() then
-    if(self.CurrentPageName == "Main") then
+    
+    if(GUIMenuManager:TryCloseTopMostWindow()) then
+    elseif(self.CurrentPageName == "Main") then
       if(Client.GetIsConnected()) then
         MainMenu_ReturnToGame()
       else

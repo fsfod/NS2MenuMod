@@ -1,4 +1,4 @@
-EngineBuild = 173
+EngineBuild = 185
 ValidVM = "client"
 ModTableName = "MainMenuMod"
 MountSource = true
@@ -8,12 +8,14 @@ ScriptList = {
   "GUIMainMenu.lua",
   "MainPage.lua",
   "ServerBrowserPage.lua",
+  "ServerInfoWindow.lua",
   "KeybindPage.lua",
   "OptionsPage.lua",
   "MapList.lua",
   "CreateServerPage.lua",
   "OptionsPageSelector.lua",
   "ModsPage.lua",
+  "ClassicMenu.lua"
 }
 
 Dependencies = {

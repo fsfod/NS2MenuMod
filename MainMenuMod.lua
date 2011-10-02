@@ -36,11 +36,11 @@ end
 
 function MainMenuMod:SetHooks()
   self:RemoveAllHooks()
-  
+
   self:HookLibraryFunction(HookType.Replace, "MenuManager", "SetMenu")
   //uncomment to disable menu cinematic
   //self:HookLibraryFunction(HookType.Raw, "MenuManager", "SetMenuCinematic")
-  self:HookFunction("LeaveMenu")
+  
   self:ReplaceFunction("ShowInGameMenu")
   self:ReplaceFunction("MainMenu_SetAlertMessage")
   
@@ -49,8 +49,9 @@ function MainMenuMod:SetHooks()
   //self:HookLibraryFunction(HookType.Replace, "MenuManager", "PlayMusic", function() end)
 end
 
-function MainMenuMod:OnClientLuaFinished()
+function MainMenuMod:OnUILoading()
   self:RegisterDefaultPages()
+  self:HookFunction("LeaveMenu", false, InstantHookFlag)
   
   GUIMenuManager:ShowMenu()
   MainMenu_Loaded() 
@@ -79,7 +80,10 @@ function MainMenuMod:SetMenuCinematic(cinematic)
 end
 
 function MainMenuMod:MainMenu_SetAlertMessage(msg)
-  GUIMenuManager:ShowMenu(msg)
+  GUIMenuManager:ShowMenu()
+  
+  GUIMenuManager:ShowMessage("Disconnected from server", msg)
+  
   MouseStateTracker:ClearStack()
 
   //self.MainMenu.MainPage:UpdateButtons()
@@ -132,7 +136,7 @@ function MainMenuMod:SwitchToFlash()
   GUIMenuManager:CloseMenu()
   self:RemoveAllHooks()
   
-  self:HookLibraryFunction(HookType.Replace, "MenuManager", "PlayMusic", function() end)
+  //self:HookLibraryFunction(HookType.Replace, "MenuManager", "PlayMusic", function() end)
   
   MenuManager.SetMenu(kMainMenuFlash)
   self.Flashmenu = true

@@ -59,11 +59,8 @@ function CreateServerPage:__init()
     create:SetPoint("Bottom", 0, -70, "Bottom")
     create.ClickAction = {self.CreateServer, self}
   self:AddChild(create)
-  
-  local backButton = UIButton("Back to menu")
-    backButton:SetPoint("BottomLeft", 20, -15, "BottomLeft")
-    backButton.ClickAction = function() self.Parent:ReturnToMainPage() end
-  self:AddChild(backButton)
+
+  self:AddBackButton("BottomLeft", 20, -15, "BottomLeft")
 end
 
 function CreateServerPage:CreateServer()

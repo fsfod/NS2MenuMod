@@ -6,11 +6,12 @@ local PingLimits = {
   250,
 }
 
+local PasswordedWidth = 18
 local NameOffset = 0
 local GameModeOffset = 0.4
-local MapOffset = 0.15
-local PlayerOffset = 0.2
-local PingOffset = 0.15
+local MapOffset = GameModeOffset+0.15
+local PlayerOffset = MapOffset+0.2
+local PingOffset = PlayerOffset+0.15
 
 local Headers = {
   {"Name",    NameOffset},
@@ -77,13 +78,15 @@ local function GetServerRecord(serverIndex)
             Passworded = Client.GetServerRequiresPassword(serverIndex),
             Address = Client.GetServerAddress(serverIndex),
             Index = serverIndex,
+            QueryPort = ServerList and ServerList:GetServerQueryPort(serverIndex),
             playerCount.." / "..maxPlayers,
         }
 end
 
+
 local HotReload = ServerListEntry
 
-class'ServerListEntry'
+class'ServerListEntry'(BaseControl)
 
 ServerListEntry.FontSize = 14
 ServerListEntry.PingColour100 = Color(0, 1, 0, 1)
@@ -93,6 +96,10 @@ ServerListEntry.PingColourWorst = Color(1, 0, 0, 1)
 
 function ServerListEntry:__init(owner, width, height)
   
+  BaseControl.__init(self, width, height)
+  
+  self.Owner = owner
+  
   local passwordIcon = GUIManager:CreateGraphicItem()
     passwordIcon:SetSize(Vector(10,12, 0))
     passwordIcon:SetTexture("ui/passworded.dds")
@@ -101,7 +108,7 @@ function ServerListEntry:__init(owner, width, height)
   local serverName = GUIManager:CreateTextItem()
    serverName:SetFontSize(self.FontSize)
    serverName:SetPosition(Vector(18, 0, 0))
-   serverName:SetAnchor(GUIItem.Left, GUIItem.Center)
+ //  serverName:SetAnchor(GUIItem.Left, GUIItem.Top)
    serverName:SetTextAlignmentX(GUIItem.Align_Min)
    serverName:SetTextAlignmentY(GUIItem.Align_Min)
   self.ServerName = serverName
@@ -109,93 +116,110 @@ function ServerListEntry:__init(owner, width, height)
   
   local gameMode = GUIManager:CreateTextItem()
    gameMode:SetFontSize(self.FontSize)
-   gameMode:SetAnchor(GUIItem.Left, GUIItem.Center)
+  // gameMode:SetAnchor(GUIItem.Left, GUIItem.Top)
    gameMode:SetTextAlignmentX(GUIItem.Align_Min)
    gameMode:SetTextAlignmentY(GUIItem.Align_Min)
   self.GameMode = gameMode
   
   local map = GUIManager:CreateTextItem()
    map:SetFontSize(self.FontSize)
-   map:SetAnchor(GUIItem.Left, GUIItem.Center)
+ //  map:SetAnchor(GUIItem.Left, GUIItem.Top)
    map:SetTextAlignmentX(GUIItem.Align_Min)
    map:SetTextAlignmentY(GUIItem.Align_Min)
   self.MapName = map
   
   local playerCount = GUIManager:CreateTextItem()
    playerCount:SetFontSize(self.FontSize)
-   playerCount:SetAnchor(GUIItem.Left, GUIItem.Center)
+  // playerCount:SetAnchor(GUIItem.Left, GUIItem.Top)
    playerCount:SetTextAlignmentX(GUIItem.Align_Min)
    playerCount:SetTextAlignmentY(GUIItem.Align_Min)
   self.PlayerCount = playerCount
   
   local ping = GUIManager:CreateTextItem()
    ping:SetFontSize(self.FontSize)
-   ping:SetAnchor(GUIItem.Left, GUIItem.Center)
+   //ping:SetAnchor(GUIItem.Left, GUIItem.Top)
    ping:SetTextAlignmentX(GUIItem.Align_Min)
    ping:SetTextAlignmentY(GUIItem.Align_Min)
   self.Ping = ping
-  
-  local Background = GUIManager:CreateGraphicItem()
-    Background:SetColor(Color(0,0,0,0))
-    Background:AddChild(passwordIcon)
-    Background:AddChild(serverName)
-    Background:AddChild(gameMode)
-    Background:AddChild(map)
-    Background:AddChild(playerCount)
-    Background:AddChild(ping)
-  self.Background = Background
-  
-  self.PositionVector = Vector(0,0,0)
-  
+
+  self:SetColor(Color(0,0,0,0))
+  self:AddGUIItemChild(passwordIcon)
+  self:AddGUIItemChild(serverName)
+  self:AddGUIItemChild(gameMode)
+  self:AddGUIItemChild(map)
+  self:AddGUIItemChild(playerCount)
+  self:AddGUIItemChild(ping)
+
   self:SetWidth(width)
 end
 
 function ServerListEntry:OnHide()
-  if(not self.Hidden) then
-   self.Background:SetIsVisible(false)
+  self:Hide()
+end
+
+function ServerListEntry:OnClick(button, down)
+
+  if(not down) then
+    return
+  end
+
+  if(button == InputKey.MouseButton1 and ServerInfo) then 
+    self.Owner:SetSelectedItem(self)
+    
+    //we were rightclicked so show a server info window for this entry
+    GUIMenuManager:CreateWindow("ServerInfoWindow", self.Data.Address, self.Data.QueryPort)
+  elseif(button == InputKey.MouseButton0) then
+    
+    if(self.LastClicked and (Client.GetTime()-self.LastClicked) < GUIMenuManager.DblClickSpeed) then
+      self.Owner.Parent:Connect(self.Data.Index)
+     return
+    end
+
+    self.LastClicked = Client.GetTime()
+    
+    return false
   end
 end
 
 function ServerListEntry:OnShow()
-  if(not self.Hidden) then
-    self.Background:SetIsVisible(true)
-  end
-end
-
-function ServerListEntry:SetPosition(x,y)
-  local vec = self.PositionVector
-   vec.x = x
-   vec.y = y
-  
-  self.Background:SetPosition(vec)
+  self:Show()
 end
 
 function ServerListEntry:GetRoot()
-  return self.Background
+  return self.RootFrame
 end
 
-function ServerListEntry:SetWidth(width)
+function ServerListEntry:SetWidth(width) 
   
-  local posVec = Vector(18, 0, 0)
-  
-  
-  posVec.x = posVec.x+(width*GameModeOffset)
+  width = width-PasswordedWidth
+
+  local nameX = PasswordedWidth
+  local playerX = nameX+(width*PlayerOffset)
+  local modeX = nameX+(width*GameModeOffset)
+  local mapX = nameX+(width*MapOffset)
+
+  local posVec = Vector()
+ 
+  self.ServerName:SetTextClipped(true, modeX-nameX, self.FontSize)
+
+  posVec.x = modeX
   self.GameMode:SetPosition(posVec)
-  
-  posVec.x = posVec.x+(width*MapOffset)
+  self.GameMode:SetTextClipped(true, mapX-modeX, self.FontSize)
+
+  posVec.x = mapX
   self.MapName:SetPosition(posVec)
+  self.MapName:SetTextClipped(true, playerX-mapX, self.FontSize)
   
-  posVec.x = posVec.x+(width*PlayerOffset)
+  posVec.x = playerX
   self.PlayerCount:SetPosition(posVec)
-  
-  posVec.x = posVec.x+(width*PingOffset)
+
+  posVec.x = nameX+(width*PingOffset)
   self.Ping:SetPosition(posVec)
 end
 
 function ServerListEntry:SetData(serverData)
   if(self.Hidden) then
-    self.Background:SetIsVisible(true)
-    self.Hidden = nil
+    self:Show()
   end
 
   self.Data = serverData
@@ -247,32 +271,25 @@ function ServerBrowserPage:__init()
    ServerList.RootFrame:SetColor(Color(0, 0, 0, 1))
    self:AddChild(ServerList)
    ServerList:SetPosition(20, 60)
-   ServerList.ItemDblClicked = function(data, index) self:Connect(data.Index) end
    ServerList:SetDataList(self.Servers)
   self.ServerList = ServerList
 
-  local x = 18+20 
-  local width = ServerList.ItemWidth
+  local x = PasswordedWidth+20
+  local width = ServerList.ItemWidth-PasswordedWidth
   
   for i,headerInfo in ipairs(Headers) do
     local Label = SBListHeader(headerInfo[3] or headerInfo[1], headerInfo[1], headerInfo[4])
     self:AddChild(Label)
-    
-    x = x+(headerInfo[2]*width)
-    
-    Label:SetPosition(x, 35)
-  end
-  
+
+    Label:SetPosition(x+(headerInfo[2]*width), 35)
+  end  
   
   local refresh = UIButton("Refresh")
     refresh:SetPoint("BottomLeft", 150, -15, "BottomLeft")
     refresh.ClickAction = {self.RefreshList, self}
   self:AddChild(refresh)
   
-  local backButton = UIButton("Back to menu")
-    backButton:SetPoint("BottomLeft", 20, -15, "BottomLeft")
-    backButton.ClickAction = function() self.Parent:ReturnToMainPage() end
-  self:AddChild(backButton)
+  self:AddBackButton("BottomLeft", 20, -15, "BottomLeft")
   
   local connectButton = UIButton("Connect")
     connectButton:SetPoint("BottomLeft", 300, -15, "BottomLeft")
@@ -309,14 +326,32 @@ function ServerBrowserPage:__init()
     notFull.CheckChanged = {self.SetNotFullFilter, self}
     notFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)
   self:AddChild(notFull)
+  
+  local mapFilter = TextBox(80, 20)
+    mapFilter:SetLabel("Map")
+    mapFilter:SetPoint("BottomLeft", 490, -22, "BottomLeft")
+    mapFilter.TextChanged = {self.SetMapFilter, self}
+    mapFilter:SetConfigBindingAndTriggerChange("ServerBrowser/Map", "")
+    //mapFilter:SetColor(0, 0, 0, 1)
+  self.MapTextBox = mapFilter 
+  self:AddChild(mapFilter)
+  
 end
 
-function ListView:Uninitialize()
+function ServerBrowserPage:Uninitialize()
   BaseControl.Uninitialize(self)
   
   if(self.PasswordPrompt) then
     self.PasswordPrompt:Close()
     self.PasswordPrompt:Uninitialize()
+  end
+end
+
+function ServerBrowserPage:Hide()
+  BaseControl.Hide(self)
+  
+  if(self.PasswordPrompt) then
+    self.PasswordPrompt:Close()
   end
 end
 
@@ -356,10 +391,16 @@ function ServerBrowserPage:Connect(server, password)
   end
 	
 	if(server.Passworded and not password) then
-	  self.PasswordPrompt = self.PasswordPrompt or ServerPasswordPrompt(self)
+	  self.PasswordPrompt = self.PasswordPrompt or GUIMenuManager:CreateWindow("ServerPasswordPrompt", self)
+  
+    if(self.PasswordPrompt) then
+      GUIMenuManager:BringWindowToFront(self.PasswordPrompt)
+    else
+      self.PasswordPrompt = GUIMenuManager:CreateWindow("ServerPasswordPrompt", self)
+    end
   
     self.PasswordPrompt.Server = server
-    GUIMenuManager:ShowMessageBox(self.PasswordPrompt)
+    self.PasswordPrompt:Show()
    return
 	end
 	
@@ -399,9 +440,7 @@ function ServerBrowserPage:ReplaceFilter(old, new)
 end
 
 function ServerBrowserPage:SetPingFilter(maxping)  
-  
-  local filterChanged = false
-  
+
   if(self.PingFilter) then
     self:RemoveFilter(self.PingFilter)
     self.PingFilter = nil
@@ -412,6 +451,23 @@ function ServerBrowserPage:SetPingFilter(maxping)
     self.MaxPing = maxping
     self.PingFilter = function(server) return server.Ping > maxping end
     self:AddFilter(self.PingFilter)
+  end
+  
+  self:FiltersChanged()
+end
+
+function ServerBrowserPage:SetMapFilter(map)  
+
+  if(self.MapFilter) then
+    self:RemoveFilter(self.MapFilter)
+    self.MapFilter = nil
+	end
+
+	if(map ~= nil or map == "") then
+	  map = map:lower()
+
+    self.MapFilter = function(server) return string.find(server.Map:lower(), map) == nil end
+    self:AddFilter(self.MapFilter)
   end
   
   self:FiltersChanged()
@@ -623,6 +679,8 @@ function ServerBrowserPage:Update()
       //ServerInfo.QueryGameInfo(server.Address, RullCallback)
 			self.Servers[i] = server
       
+      //GUIMenuManager:CreateWindow("ServerInfoWindow", server.Address, server.QueryPort)
+      
 			if(noFilters) then
 				filteredList[#filteredList+1] = server
       end
@@ -640,10 +698,10 @@ function ServerBrowserPage:Update()
   end
 end
 
-class'ServerPasswordPrompt'(BorderedSquare)
+class'ServerPasswordPrompt'(BaseWindow)
 
 function ServerPasswordPrompt:__init(owner)
-  BorderedSquare.__init(self, 400, 100, 4)
+  BaseWindow.__init(self, 400, 100, "Enter Server Password", true)
   self:Hide()
 
   local connectButton = UIButton("Connect")
@@ -668,6 +726,13 @@ function ServerPasswordPrompt:__init(owner)
   local passwordBox = TextBox(150, 20, 19)
     passwordBox:SetPoint("Top", 20, 20, "Top")
     passwordBox:SetLabel("Enter Password")
+    passwordBox.SendKeyEvent = function(tbSelf, key, down)
+      if key == InputKey.Escape then
+        self:Close()
+      else
+        return TextBox.SendKeyEvent(tbSelf, key, down)
+      end
+    end
   self:AddChild(passwordBox)
   self.PasswordBox = passwordBox
 end
@@ -680,10 +745,12 @@ function ServerPasswordPrompt:Show()
 end
 
 function ServerPasswordPrompt:Close()
+  self.PasswordBox:ClearText()
+  
   if(not self.Hidden) then
    self:Hide(self)
    
-   GUIMenuManager:MesssageBoxClosed(self)
+   //GUIMenuManager:MesssageBoxClosed(self)
   end
 end
 

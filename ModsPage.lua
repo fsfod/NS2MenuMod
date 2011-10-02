@@ -72,16 +72,16 @@ end
 
 class'ModsPage'(BasePage)
 
-local Mods = {"Scrollable Chat", "Keybind System"}
+ModsPage.PageName = "Mods"
 
 function ModsPage:__init()
-  BasePage.__init(self, 600, 500, "Mods")
+  BasePage.__init(self, 600, 500, self.PageName, "Mods")
 
   self:Hide()
 
   local modList = ListView(560, 350, ModListEntry, 26, 8)
    modList.RootFrame:SetColor(Color(0, 0, 0, 1))
-   modList.ItemsSelectble = false
+   modList.ItemsSelectable = false
    modList:SetPosition(20, 60)
    modList.ScrollBar:SetWidth(25)
    self:AddChild(modList)
@@ -116,5 +116,5 @@ function ModsPage:__init()
 end
 
 if(HotReload) then
-  GUIMenuManager:RecreatePage("Mods")
+  GUIMenuManager:RecreatePage(ModsPage.PageName)
 end

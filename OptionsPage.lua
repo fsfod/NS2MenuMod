@@ -35,8 +35,10 @@ end
 
 class'OptionsPage'(BasePage)
 
+OptionsPage.PageName = "MainOptions"
+
 function OptionsPage:__init()
-  BasePage.__init(self, 600, 500, "Options")
+  BasePage.__init(self, 600, 500, self.PageName, "Options")
   BaseControl.Hide(self)
  
   ResHelper:Init()
@@ -49,15 +51,8 @@ function OptionsPage:__init()
     nickName:SetConfigBinding(kNicknameOptionsKey, "NsPlayer")
   self:AddChild(nickName)
   
-  local musicVolume = Slider(250, 20, 0, 100)
-    musicVolume:SetLabel("Music Volume")
-    musicVolume:SetPoint("Top", 0, 80, "Top")
-    musicVolume:SetConfigBinding(kMusicVolumeOptionsKey, 90)
-    musicVolume.ValueChanged = function(value) Client.SetMusicVolume(value/100) end
-  self:AddChild(musicVolume)
-
   local soundVolume = Slider(250, 20, 0, 100)
-    soundVolume:SetPoint("Top", 0, 120, "Top")
+    soundVolume:SetPoint("Top", 0, 80, "Top")
     soundVolume:SetLabel("Sound Volume")
     soundVolume.NoValueChangedWhileDraging = true
     soundVolume:SetConfigBinding(kSoundVolumeOptionsKey, 90)
@@ -66,9 +61,28 @@ function OptionsPage:__init()
       PlayerUI_PlayButtonClickSound()
     end
   self:AddChild(soundVolume)
+  
+  local musicVolume = Slider(250, 20, 0, 100)
+    musicVolume:SetLabel("Music Volume")
+    musicVolume:SetPoint("Top", 0, 120, "Top")
+    musicVolume:SetConfigBinding(kMusicVolumeOptionsKey, 90)
+    musicVolume.ValueChanged = function(value) Client.SetMusicVolume(value/100) end
+  self:AddChild(musicVolume)
+
+  local voiceVolume = Slider(250, 20, 0, 100)
+    voiceVolume:SetPoint("Top", 0, 155, "Top")
+    voiceVolume:SetLabel("Voice Volume")
+    voiceVolume.NoValueChangedWhileDraging = true
+    voiceVolume:SetConfigBinding(kVoiceVolumeOptionsKey or "voiceVolume", 90)
+    voiceVolume.ValueChanged = function(value, stillDragging) 
+      if(Client.SetVoiceVolume) then
+        Client.SetVoiceVolume(value/100)
+      end
+    end
+  self:AddChild(voiceVolume)
  
   local mouseSensitivity = Slider(250, 20, 0.01, 2)
-    mouseSensitivity:SetPoint("Top", 0, 160, "Top")
+    mouseSensitivity:SetPoint("Top", 0, 190, "Top")
     mouseSensitivity:SetConfigBinding(Client.GetMouseSensitivity, Client.SetMouseSensitivity)
     mouseSensitivity:SetStepSize(0.05)
     mouseSensitivity.NoValueChangedWhileDraging = true
@@ -76,12 +90,12 @@ function OptionsPage:__init()
   self:AddChild(mouseSensitivity)
 
   local invertMouse = CheckBox("Invert Mouse", false, true)
-    invertMouse:SetPoint("Top", -85, 195, "Top")
+    invertMouse:SetPoint("Top", -85, 225, "Top")
     invertMouse:SetConfigBinding(kInvertedMouseOptionsKey, false)
   self:AddChild(invertMouse)
 
   local skulkViewTilt = CheckBox("Disable Skulk View Tilt", false, true)
-    skulkViewTilt:SetPoint("Top", -53, 225, "Top")
+    skulkViewTilt:SetPoint("Top", -53, 260, "Top")
     skulkViewTilt:SetConfigBinding("DisableSkulkViewTilt", false)
     skulkViewTilt.CheckChanged = function(checked)
       if(OnCommandSkulkViewTilt) then
@@ -151,6 +165,6 @@ end
  
 
 if(HotReload) then
-  GUIMenuManager:RecreatePage("MainOptions")
+  GUIMenuManager:RecreatePage(OptionsPage.PageName)
 end
 

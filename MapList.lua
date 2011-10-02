@@ -78,6 +78,8 @@ end
 
 function MapList:CheckMountMap(name)
   
+  self:RefreshMapList()
+  
   local entry = self:GetEntry(name)
   
   if(not entry) then
