@@ -71,8 +71,8 @@ function ServerInfoWindow:__init(serverAddress, queryPort)
 
   self.PlayerCount = self:AddGUIItemChild(GUIManager:CreateTextItem())
   
-  local refreshButton = UIButton("Refresh", 80, 24)
-    refreshButton:SetPosition(15, 160)
+  local refreshButton = UIButton("Refresh", 75, 24)
+    refreshButton:SetPosition(8, 160)
     refreshButton.ClickAction = function() 
       if(not self.RefreshActive) then
         self:Refresh() 
@@ -80,12 +80,23 @@ function ServerInfoWindow:__init(serverAddress, queryPort)
     end
   self:AddChild(refreshButton)
   
-   local connectButton = UIButton("Connect", 80, 24)
-    connectButton:SetPosition(160, 160)
-    connectButton.ClickAction = function() 
-      MainMenu_SBJoinServer(self.ServerAddress)
+  local connectButton = UIButton("Connect", 80, 24)
+    connectButton:SetPosition(100, 160)
+    connectButton.ClickAction = function()
+       MainMenu_SBJoinServer(self.ServerAddress)
     end
   self:AddChild(connectButton)
+
+  local retryButton = UIButton("Auto retry", 80, 24)
+    retryButton:SetPosition(195, 160)
+    retryButton.ClickAction = function()
+      
+      self.AutoRetryConnect = not self.AutoRetryConnect
+      retryButton:SetHighlightLock(self.AutoRetryConnect)
+    end
+    retryButton:Hide()
+  self:AddChild(retryButton)
+  self.RetryButton = retryButton
 
   self.PlayerCallbackFunc = function(playerList)
     self:PlayerCallback(playerList)
@@ -111,6 +122,23 @@ function ServerInfoWindow:ServerCallback(serverInfo)
     self:SetBlank()
    return
   end
+  
+  self.ServerFull = serverInfo.PlayerCount >= serverInfo.MaxPlayers
+  
+  if(self.ServerFull) then
+    self.RetryButton:Show()
+  else
+    if(not self.AutoRetryConnect) then
+      self.RetryButton:Hide()
+    end
+  end
+  
+  if(self.AutoRetryConnect and not self.ServerFull) then
+    self.AutoRetryConnect = false
+    MainMenu_SBJoinServer(self.ServerAddress)
+  end
+  
+  self.ServerInfo = serverInfo
   
   self.ServerQueryActive = false    
   
