@@ -24,7 +24,7 @@
     def("CancelActiveQuerys", &SingleQueryManager::CancelActiveQuerys)
 */
 
-class 'ServerInfoWindow'(BaseWindow)
+ControlClass('ServerInfoWindow', BaseWindow)
 
 ServerInfoWindow.InfoSpacing = 22
 
@@ -39,8 +39,8 @@ local InfoList = {
   "Players",
 }
 
-function ServerInfoWindow:__init(serverAddress, queryPort)
-  BaseWindow.__init(self, 280, 410, "Server Info")
+function ServerInfoWindow:Initialize(serverAddress, queryPort)
+  BaseWindow.Initialize(self, 280, 410, "Server Info")
 
   self.DestroyOnClose = true
 
@@ -61,8 +61,8 @@ function ServerInfoWindow:__init(serverAddress, queryPort)
  
   self.ServerAddress = serverAddress
   self.QueryPort = queryPort
- 
-  local playerList = ListView(240, 200, PlayerListEntry, PlayerListEntry.FontSize)
+
+  local playerList = self:CreateControl("ListView", 240, 200, "PlayerListEntry", PlayerListEntry.FontSize)
     playerList:SetPoint("Bottom", 0, -15, "Bottom")
     playerList:SetColor(Color(0,0,0,1))
     
@@ -71,7 +71,7 @@ function ServerInfoWindow:__init(serverAddress, queryPort)
 
   self.PlayerCount = self:AddGUIItemChild(GUIManager:CreateTextItem())
   
-  local refreshButton = UIButton("Refresh", 75, 24)
+  local refreshButton = self:CreateControl("UIButton", "Refresh", 75, 24)
     refreshButton:SetPosition(8, 160)
     refreshButton.ClickAction = function() 
       if(not self.RefreshActive) then
@@ -80,14 +80,14 @@ function ServerInfoWindow:__init(serverAddress, queryPort)
     end
   self:AddChild(refreshButton)
   
-  local connectButton = UIButton("Connect", 80, 24)
+  local connectButton = self:CreateControl("UIButton", "Connect", 80, 24)
     connectButton:SetPosition(100, 160)
     connectButton.ClickAction = function()
        MainMenu_SBJoinServer(self.ServerAddress)
     end
   self:AddChild(connectButton)
 
-  local retryButton = UIButton("Auto retry", 80, 24)
+  local retryButton = self:CreateControl("UIButton", "Auto retry", 80, 24)
     retryButton:SetPosition(195, 160)
     retryButton.ClickAction = function()
       
@@ -188,7 +188,7 @@ function ServerInfoWindow:Refresh()
   self.RefreshActive = true
 end
 
-class'PlayerListEntry'
+ControlClass('PlayerListEntry', BaseControl)
 
 PlayerListEntry.FontSize = 14
 PlayerListEntry.DefaultWidth = 300
@@ -196,34 +196,24 @@ PlayerListEntry.PlayerNameOffset = Vector(5, 0, 0)
 PlayerListEntry.TimePlayedOffset = Vector(120, 0, 0)
 PlayerListEntry.ScoreOffset = Vector(190, 0, 0)
 
+function PlayerListEntry:Initialize(owner, width, height)
 
-
-function PlayerListEntry:__init(owner, width, height)
-    
-  local playerName = GUIManager:CreateTextItem()
+  BaseControl.Initialize(self, width, height)
+  
+  self:SetColor(0,0,0,0)
+  
+  local playerName = self:CreateFontString(self.FontSize)
    playerName:SetFontSize(self.FontSize)
    playerName:SetPosition(self.PlayerNameOffset)
   self.PlayerName = playerName
 
-  local timePlayed = GUIManager:CreateTextItem()
+  local timePlayed = self:CreateFontString(self.FontSize)
    timePlayed:SetPosition(self.TimePlayedOffset)
-   timePlayed:SetFontSize(self.FontSize)
   self.TimePlayed = timePlayed
   
-  local score = GUIManager:CreateTextItem()
-   score:SetFontSize(self.FontSize)
+  local score = self:CreateFontString(self.FontSize)
    score:SetPosition(self.ScoreOffset)
   self.Score = score  
-  
-  local Background = GUIManager:CreateGraphicItem()
-    Background:SetSize(Vector(width, self.FontSize, 0))
-    Background:SetColor(Color(0,0,0,0))
-    Background:AddChild(playerName)
-    Background:AddChild(timePlayed)
-    Background:AddChild(score)
-  self.Background = Background
-  
-  self.PositionVector = Vector(0,0,0)
   
   //self:SetWidth(width)
 end
@@ -237,34 +227,13 @@ function PlayerListEntry.UpdateWidths(width, entrys)
   end
 end
 
-function PlayerListEntry:OnHide()
-  if(not self.Hidden) then
-   self.Background:SetIsVisible(false)
-  end
-end
-
-function PlayerListEntry:OnShow()
-  if(not self.Hidden) then
-    self.Background:SetIsVisible(true)
-  end
-end
-
-function PlayerListEntry:SetPosition(x,y)
-  local vec = self.PositionVector
-   vec.x = x
-   vec.y = y
-  
-  self.Background:SetPosition(vec)
-end
-
 function PlayerListEntry:GetRoot()
-  return self.Background
+  return self.RootFrame
 end
 
 function PlayerListEntry:SetData(playerData)
   if(self.Hidden) then
-    self.Background:SetIsVisible(true)
-    self.Hidden = nil
+    self:Show()
   end
 
   self.PlayerName:SetText(playerData[1])

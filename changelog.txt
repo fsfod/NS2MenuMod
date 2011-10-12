@@ -1,0 +1,68 @@
+
+4/10
+    Added auto retry connect to the ServerInfo window when the server is full
+    Fixed losing the cursor in the buymenu when another player closed there armory menu
+    Fixed loading lua dll modules when the mod is installed using the second installation method
+  
+0.09
+
+    Added support for window frames in the GUI system
+    Added a brand new windowed style main menu The old paged main menu can still be switched to by clicking on "switch to paged menu" text 
+    Added the ability to filter servers in the Server Browser by map name
+    Added a ServerInfo popup window similar to steams when you right click on a server in the server browser that shows connected players and server info. 
+     ServerQueryHelper mod/lua dll module that I made to provide the missing server query api is needed for the ServerInfo window to work
+    Added a voice volume slider to the options page
+    Made the chat frame separately save the position its moved to when commanding 
+    Made lua code loading a 2 stage process this might slightly reduce startup time but was added for other purposes
+    Changed the Server Browser text to be clipped
+    Redesigned the internal logic for dragging frames
+
+0.08 6/8 Update
+
+    Fixed the windowed mode check box not correctly saving its value
+
+0.07 29/7 Update
+
+    Refactored the ui backend and made it less fragile to errors
+    Added support for setting NextWeapon and PrevWeapon in the keybinds page
+    The CheckBox now play the games built in sounds for checking and unchecking
+    Esc will now close an open combobox
+    Fixed keybinds still being activated while typing chat
+    Fixed arrow keys not adjusting the carret correctly in textboxs
+    Fixed a rare stack overflow when pressing escape while chat box is open
+
+
+0.06 11/7 Update
+
+    Fixed Escape closing the keybind page when canceling a keybind edit
+    Fixed the 64 bit registry path in the launching bat
+    Made keybind entrys on the keybind page selectable again
+    
+10/7 Update
+
+    Updated for build 180
+    Greatly improved the escape key behavior for the keybind system mod
+    Readded the mic active icon
+    improved the launcher bat should work on 64 bit windows as well now
+    Added support for sub mods to run in the listen server vm
+
+
+28/6 Update
+
+    Added a new awesome configurable ChatFrame
+    Added my replacement keybind system mod, its disabled by default it can be enabled in the mods option page. the game will be need to restarted after it been enabled
+    Added a password prompt when connecting to a passworded server in the server browser
+    Esc now returns you to the main menu page if pressed while in a sub page and it will also close the menu if at the main page while ingame
+
+
+18/5 Update
+
+    Added Options and Create Server pages
+    The Server Browser now remembers what filters you set before
+    Keybind changes now take effect without having to restart the game
+
+
+29/4 Update
+
+    Added keybind page currently the options button takes you to it
+    Added the ability to filter empty and full servers in the server browser

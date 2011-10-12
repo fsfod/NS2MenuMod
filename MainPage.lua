@@ -1,5 +1,5 @@
 
-class 'MainMenuButton'(BorderedSquare)
+ControlClass('MainMenuButton', BorderedSquare)
 
 Draggable:Mixin(MainMenuButton)
 ButtonMixin:Mixin(MainMenuButton)
@@ -11,29 +11,24 @@ MainMenuButton.InnerSquareRatio = 100/132
 MainMenuButton.InnerOffset = 5/132
 MainMenuButton.LabelSquareRatio = 0.8
 
-function MainMenuButton:__init(mode)
-  if(mode) then
-    self:Initialize(mode)
-  end
-end
 
 function MainMenuButton:Initialize(mode)
-  Draggable.__init(self)
-  ButtonMixin.__init(self)
+  Draggable.Initialize(self)
+  ButtonMixin.Initialize(self)
   
   local width = MainMenuButton.DefaultHeight*self.WidthRatio
-  BorderedSquare.__init(self, width, MainMenuButton.DefaultHeight, 2)
+  BorderedSquare.Initialize(self, width, MainMenuButton.DefaultHeight, 2)
   
   self:SetBackgroundColor(Color(0.06,0.06,0.06, 0.8))
   local innerSize = self.InnerSquareRatio*width
   
-  local innerSquare = BorderedSquare(innerSize, innerSize, 1)
+  local innerSquare = self:CreateControl("BorderedSquare", innerSize, innerSize, 1)
    self:AddChild(innerSquare)
    innerSquare:SetPoint("Top", 1, 5, "Top")
    innerSquare:SetBackgroundColor(Color(1,1,1,1))
   self.InnerSquare = innerSquare
 
-	local labelBG = BaseControl(innerSize, 20)
+	local labelBG = self:CreateControl("BaseControl", innerSize, 20)
     labelBG:SetPoint("Bottom", 0, -4, "Bottom")
     labelBG.RootFrame:SetColor(Color(0, 0, 0, 0))
     self:AddChild(labelBG)
@@ -101,7 +96,7 @@ function MainMenuButton:OnLeave()
 	self.LabelBG.RootFrame:SetColor(Color(0.8666, 0.3843, 0, 0))
 end
 
-class'MenuMainPage'(BaseControl)
+ControlClass('MenuMainPage', BaseControl)
 
 Draggable:Mixin(MenuMainPage)
 
@@ -147,7 +142,7 @@ local ButtonList ={
 	},
 }
 
-function MenuMainPage:__init()
+function MenuMainPage:Initialize()
   
   local buttonHeight = MainMenuButton.DefaultHeight
   local buttonOffset = 108+self.ButtonSpacing
@@ -155,7 +150,7 @@ function MenuMainPage:__init()
   self.DragButton = InputKey.MouseButton1
  
   BaseControl.Initialize(self, buttonOffset*4, (buttonHeight*2)+20)
-  Draggable.__init(self)
+  Draggable.Initialize(self)
  
   self.TraverseChildFirst = true
  
@@ -163,26 +158,26 @@ function MenuMainPage:__init()
   
   self.Buttons = {}
   
-  local logo = BaseControl(717, 158)
+  local logo = self:CreateControl("BaseControl", 717, 158)
     logo:SetTexture("ui/logo.dds")
     logo:SetPoint("Top", 0, -30, "Bottom")
   self:AddChild(logo)
   
   for i, name in ipairs({"ServerBrowser", "CreateServer", "Options", "ExitGame"}) do
-   local button = MainMenuButton(ButtonList[name])
+   local button = self:CreateControl("MainMenuButton", ButtonList[name])
     self:AddChild(button)
     button:SetPosition((i-1)*buttonOffset, 0)
     
     self.Buttons[name] = button
   end
   
-  local returnToGame = MainMenuButton(ButtonList.ReturnToGame)
+  local returnToGame =self:CreateControl("MainMenuButton", ButtonList.ReturnToGame)
     self:AddChild(returnToGame)
     returnToGame:SetPoint("Bottom", 30, -15, "BottomLeft")
   self.ReturnToGame = returnToGame
   self.Buttons.ReturnToGame = returnToGame
 
-  local disconnect = MainMenuButton(ButtonList.Disconnect)
+  local disconnect = self:CreateControl("MainMenuButton", ButtonList.Disconnect)
     self:AddChild(disconnect)
     disconnect:SetPoint("Bottom", -30, -15, "BottomRight")
   self.Disconnect = disconnect

@@ -1,21 +1,21 @@
 
-class 'OptionsPageButton'(BaseControl)
+ControlClass('OptionsPageButton', BaseControl)
 ButtonMixin:Mixin(OptionsPageButton)
 
 OptionsPageButton.FontSize = 16
 OptionsPageButton.StartingColor = Color(0.15, 0.15, 0.15, 1)
 
 
-class 'OptionsPageSelector'(BorderedSquare)
+ControlClass('OptionsPageSelector', BorderedSquare)
 
-function OptionsPageSelector:__init()
+function OptionsPageSelector:Initialize()
   self.ButtonHeight = 40
   self.ButtonWidth = 130
 
   local borderSize = 4
   local pageList = GUIMenuManager.OptionPageList
 
-  BorderedSquare.__init(self, self.ButtonWidth+borderSize, (self.ButtonHeight*(#pageList+1))+borderSize, borderSize)
+  BorderedSquare.Initialize(self, self.ButtonWidth+borderSize, (self.ButtonHeight*(#pageList+1))+borderSize, borderSize)
   self:Hide()
   self:SetupHitRec()
 
@@ -25,14 +25,14 @@ function OptionsPageSelector:__init()
   self.NameToButton = {}
 
   for i,name in ipairs(pageList) do
-    local button = OptionsPageButton(name, self.ButtonWidth, self.ButtonHeight)
+    local button =  self:CreateControl("OptionsPageButton", name, self.ButtonWidth, self.ButtonHeight)
       button:SetPosition(borderSize, ((i-1)*self.ButtonHeight)+borderSize)
       self:AddChild(button)
       
     self.Buttons[#self.Buttons+1] = button
   end
 
-  local returnButton = OptionsPageButton("return", self.ButtonWidth, self.ButtonHeight)
+  local returnButton =  self:CreateControl("OptionsPageButton", "return", self.ButtonWidth, self.ButtonHeight)
     returnButton:SetPoint("BottomLeft", borderSize, 0, "BottomLeft")
   self:AddChild(returnButton)
 
@@ -71,7 +71,7 @@ function OptionsPageButton:Initialize(pageName, width, height)
   height = height or 64
 
   BaseControl.Initialize(self, width, height)
-  ButtonMixin.__init(self)
+  ButtonMixin.Initialize(self)
 
   self:SetTexture("ui/CurvedGradient.dds")
   self:SetColor(self.StartingColor)

@@ -3,7 +3,7 @@ local HotReload = MenuButton
 
 
 
-class'MenuButton'(BaseControl)
+ControlClass('MenuButton', BaseControl)
 ButtonMixin:Mixin(MenuButton)
 
 MenuButton.PaddingX = 13
@@ -16,9 +16,9 @@ local MenuEntryFont = FontTemplate(MenuButton.FontSize)
 //MenuEntryFont:SetCenterAlignAndAnchor()
 //MenuEntryFont:SetColour(0, 1, 1, 1)
 
-function MenuButton:__init(height, label, action, fontSize)
+function MenuButton:Initialize(height, label, action, fontSize)
   
-  BaseControl.__init(self, 80, height-1)
+  BaseControl.Initialize(self, 80, height-1)
   
   self:SetColor(Color(0,1, 0, 0))
   
@@ -57,17 +57,17 @@ function MenuButton:OnLeave()
 	self.Label:SetColor(Color(1, 1, 1, 1))
 end
 
-class'MenuEntry'(BaseControl)
+ControlClass('MenuEntry', BaseControl)
 
 MenuEntry.EntryHeight = MenuButton.FontSize+(2*MenuButton.PaddingY)
 
 MenuEntry.EntrySpacing = 6
 
-function MenuEntry:__init(owner, width, height)
-  BaseControl.__init(self, width, height)
+function MenuEntry:Initialize(owner, width, height)
+  BaseControl.Initialize(self, width, height)
   self:SetColor(Color(0, 0, 0, 0))
 
-  local button = MenuButton(height)
+  local button = self:CreateControl("MenuButton", height)
     button:SetPoint("Left", 10, 0, "Left")
   self:AddChild(button)
   
@@ -81,49 +81,6 @@ function MenuEntry:SetData(data)
   end
   
   self.Button:SetData(data)
-end
-
-function MenuEntry:OnHide()
-  self:Hide()
-end
-
-function MenuEntry:OnShow()
-  self:Show()
-end
-
-class'MenuLinkList'(BaseControl)
-
-MenuLinkList.ItemHeight = MenuButton.FontSize+(MenuButton.PaddingY*2)
-MenuLinkList.ItemSpacing = 8
-
-function MenuLinkList:__init(menuEntrys)
- 
-  local itemSpacing = self.ItemSpacing+self.ItemHeight
-
-  BaseControl.Initialize(self, 300, #menuEntrys*itemSpacing)
-  
-  self.Buttons = {}
-  self.NameToButton = {}
-
-  self:SetColor(1, 0, 0, 0)
-
-  local newWidth = 0
-
-  for i,entry in ipairs(menuEntrys) do
-    local button = MenuEntry(entry)
-      button:SetPosition(0, (i-1)*itemSpacing)      
-     self:AddChild(button)
-
-    local width = button:GetWidth()
-
-    if(width > newWidth) then
-      newWidth = width
-    end
-      
-    self.Buttons[#self.Buttons+1] = button
-  end
-
-  self:SetWidth(newWidth)
 end
 
 MainMenuConnectedLinks = {
@@ -159,11 +116,11 @@ MainMenuLinks = {
   {"Exit", function() Client.Exit() end},
 }
 
-class'ClassicMenu'(BaseControl)
+ControlClass('ClassicMenu', BaseControl)
 
 PageFactory:Mixin(ClassicMenu)
 
-function ClassicMenu:__init(height, width)
+function ClassicMenu:Initialize(height, width)
   BaseControl.Initialize(self, height, width)
   PageFactory.__init(self)
 
@@ -171,23 +128,16 @@ function ClassicMenu:__init(height, width)
 
   self:SetColor(0,0,0,0)
 
-  local logo = BaseControl(717, 158)
+  local logo = self:CreateControl("BaseControl", 717, 158)
     logo:SetTexture("ui/logo.dds")
     logo:SetPoint("Top", 0, 80, "Top")
   self:AddChild(logo)
 
   self.Logo = logo
 
-  local optionsMenu = OptionsPageSelector()
-    //optionsMenu:Hide()
-    self:AddChild(optionsMenu)
-  self.OptionsMenu = optionsMenu
-
   local list = MainMenuLinks
-  
-  local entryClass = MenuEntry
 
-  local menuEntrys = ListView(300, #list*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), MenuEntry, MenuEntry.EntryHeight, MenuEntry.EntrySpacing)//MenuLinkList(list)
+  local menuEntrys = self:CreateControl("ListView", 300, #list*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), "MenuEntry", MenuEntry.EntryHeight, MenuEntry.EntrySpacing)//MenuLinkList(list)
    menuEntrys:SetPoint("BottomLeft", 0, -60, "BottomLeft")
    menuEntrys:SetDataList(list)
    menuEntrys:SetColor(Color(0,0,0,0))
@@ -195,7 +145,7 @@ function ClassicMenu:__init(height, width)
    self:AddChild(menuEntrys)
   self.MenuEntrys = menuEntrys
 
-  local connectedMenu = ListView(300, #MainMenuConnectedLinks*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), MenuEntry, MenuEntry.EntryHeight, MenuEntry.EntrySpacing)
+  local connectedMenu = self:CreateControl("ListView", 300, #MainMenuConnectedLinks*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), "MenuEntry", MenuEntry.EntryHeight, MenuEntry.EntrySpacing)
     connectedMenu:SetDataList(MainMenuConnectedLinks)
     connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-50, "BottomLeft")
     connectedMenu:SetColor(Color(0,0,0,0))
@@ -205,8 +155,8 @@ function ClassicMenu:__init(height, width)
     end
   self:AddChild(connectedMenu)
   self.ConnectedMenu = connectedMenu
-  
-  local switchButton = MenuButton(15, "Switch To Paged Menu", 
+
+  local switchButton = self:CreateControl("MenuButton", 15, "Switch To Paged Menu", 
     function()
       GUIMenuManager:SwitchMainMenu("PagedMainMenu")
       GUIMenuManager.WindowedModeActive = false
@@ -256,25 +206,6 @@ function ClassicMenu:SendKeyEvent(key, down, isRepeat)
     if(not GUIMenuManager:TryCloseTopMostWindow() and Client.GetIsConnected()) then
       MainMenu_ReturnToGame()
     end
-   return true
-  end
-  
-  return false
-end
-
-function ClassicMenu:CloseTopPage()
-  
-  local highest, windowZ = nil, 0
-  
-  for k, page in pairs(self.Pages) do   
-    if(not page.Hidden and page.WindowZ > windowZ) then
-      highest = page
-      windowZ = page.WindowZ
-    end
-  end
-
-  if(highest) then
-    SafeCall(highest.Close, highest)
    return true
   end
   

@@ -1,16 +1,16 @@
 
 local HotReload = ModListEntry
 
-class'ModListEntry'(BaseControl)
+ControlClass('ModListEntry', BaseControl)
 
-function ModListEntry:__init(listview, width, height)
+function ModListEntry:Initialize(listview, width, height)
 
-  BaseControl.__init(self, width, height)
+  BaseControl.Initialize(self, width, height)
   self.Parent = listview
 
   self:SetColor(Color(0,0,0,0))
 
-  local button = CheckButton(height, false)
+  local button =  self:CreateControl("CheckButton", height, false)
     button:SetPosition(22, 0)
     self:AddChild(button)
   self.Button = button
@@ -70,16 +70,16 @@ function ModListEntry:OnCheckedToggled()
   return self.Checked
 end
 
-class'ModsPage'(BasePage)
+ControlClass('ModsPage', BasePage)
 
 ModsPage.PageName = "Mods"
 
-function ModsPage:__init()
-  BasePage.__init(self, 600, 500, self.PageName, "Mods")
+function ModsPage:Initialize()
+  BasePage.Initialize(self, 600, 500, self.PageName, "Mods")
 
   self:Hide()
 
-  local modList = ListView(560, 350, ModListEntry, 26, 8)
+  local modList = self:CreateControl("ListView", 560, 350, "ModListEntry", 26, 8)
    modList.RootFrame:SetColor(Color(0, 0, 0, 1))
    modList.ItemsSelectable = false
    modList:SetPosition(20, 60)
@@ -92,13 +92,13 @@ function ModsPage:__init()
   modList:SetDataList(list)
   
   if(NS2_IO) then
-    local openModsFolder = UIButton("Open Mods Folder", 150)
+    local openModsFolder = self:CreateControl("UIButton", "Open Mods Folder", 150)
       openModsFolder:SetPoint("BottomLeft", 400, -20, "BottomLeft")
       openModsFolder.ClickAction = NS2_IO.OpenModsFolder
     self:AddChild(openModsFolder)
   end
   
-  local enableAll = UIButton("Enable All", 130)
+  local enableAll = self:CreateControl("UIButton", "Enable All", 130)
     enableAll:SetPoint("BottomLeft", 30, -20, "BottomLeft")
     enableAll.ClickAction = function()
       ModLoader:EnableAllMods()
@@ -106,7 +106,7 @@ function ModsPage:__init()
     end
   self:AddChild(enableAll)
   
-  local disableAll = UIButton("Disable All", 130)
+  local disableAll = self:CreateControl("UIButton", "Disable All", 130)
     disableAll:SetPoint("BottomLeft", 180, -20, "BottomLeft")
     disableAll.ClickAction = function()
       ModLoader:DisableAllMods() 

@@ -33,25 +33,25 @@ function ResHelper:IndexOfRes(x, y)
   end
 end
 
-class'OptionsPage'(BasePage)
+ControlClass('OptionsPage', BasePage)
 
 OptionsPage.PageName = "MainOptions"
 
-function OptionsPage:__init()
-  BasePage.__init(self, 600, 500, self.PageName, "Options")
+function OptionsPage:Initialize()
+  BasePage.Initialize(self, 600, 500, self.PageName, "Options")
   BaseControl.Hide(self)
  
   ResHelper:Init()
 
   local topSpaceing = 35
   
-  local nickName = TextBox(100, 20)
+  local nickName = self:CreateControl("TextBox", 100, 20)
     nickName:SetPoint("Top", -76, 40, "Top")
     nickName:SetLabel("Nickname")
     nickName:SetConfigBinding(kNicknameOptionsKey, "NsPlayer")
   self:AddChild(nickName)
   
-  local soundVolume = Slider(250, 20, 0, 100)
+  local soundVolume = self:CreateControl("Slider", 250, 20, 0, 100)
     soundVolume:SetPoint("Top", 0, 80, "Top")
     soundVolume:SetLabel("Sound Volume")
     soundVolume.NoValueChangedWhileDraging = true
@@ -62,14 +62,14 @@ function OptionsPage:__init()
     end
   self:AddChild(soundVolume)
   
-  local musicVolume = Slider(250, 20, 0, 100)
+  local musicVolume = self:CreateControl("Slider", 250, 20, 0, 100)
     musicVolume:SetLabel("Music Volume")
     musicVolume:SetPoint("Top", 0, 120, "Top")
     musicVolume:SetConfigBinding(kMusicVolumeOptionsKey, 90)
     musicVolume.ValueChanged = function(value) Client.SetMusicVolume(value/100) end
   self:AddChild(musicVolume)
 
-  local voiceVolume = Slider(250, 20, 0, 100)
+  local voiceVolume = self:CreateControl("Slider", 250, 20, 0, 100)
     voiceVolume:SetPoint("Top", 0, 155, "Top")
     voiceVolume:SetLabel("Voice Volume")
     voiceVolume.NoValueChangedWhileDraging = true
@@ -81,7 +81,7 @@ function OptionsPage:__init()
     end
   self:AddChild(voiceVolume)
  
-  local mouseSensitivity = Slider(250, 20, 0.01, 2)
+  local mouseSensitivity = self:CreateControl("Slider", 250, 20, 0.01, 2)
     mouseSensitivity:SetPoint("Top", 0, 190, "Top")
     mouseSensitivity:SetConfigBinding(Client.GetMouseSensitivity, Client.SetMouseSensitivity)
     mouseSensitivity:SetStepSize(0.05)
@@ -89,12 +89,12 @@ function OptionsPage:__init()
     mouseSensitivity:SetLabel("Mouse Sensitivity")
   self:AddChild(mouseSensitivity)
 
-  local invertMouse = CheckBox("Invert Mouse", false, true)
+  local invertMouse = self:CreateControl("CheckBox", "Invert Mouse", false, true)
     invertMouse:SetPoint("Top", -85, 225, "Top")
     invertMouse:SetConfigBinding(kInvertedMouseOptionsKey, false)
   self:AddChild(invertMouse)
 
-  local skulkViewTilt = CheckBox("Disable Skulk View Tilt", false, true)
+  local skulkViewTilt = self:CreateControl("CheckBox", "Disable Skulk View Tilt", false, true)
     skulkViewTilt:SetPoint("Top", -53, 260, "Top")
     skulkViewTilt:SetConfigBinding("DisableSkulkViewTilt", false)
     skulkViewTilt.CheckChanged = function(checked)
@@ -106,19 +106,19 @@ function OptionsPage:__init()
 
   local GfxOptionBindings = {}
 
-  local screenRes = ComboBox(140, 20, ResHelper.DisplayModes, self.ResToString)
+  local screenRes = self:CreateControl("ComboBox", 140, 20, ResHelper.DisplayModes, self.ResToString)
    screenRes:SetPoint("Top", -60, 300, "Top")
    screenRes:SetLabel("Resolution")
    GfxOptionBindings[1] = screenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
                                                       {kGraphicsYResolutionOptionsKey, 800, "integer"}}, self.ResConfigConverter):SetDelaySave(true)
   self:AddChild(screenRes)
  
-  local windowed = CheckBox("Run Windowed")
+  local windowed = self:CreateControl("CheckBox", "Run Windowed")
     windowed:SetPoint("Top", 80, 300, "Top")
     GfxOptionBindings[2] = windowed:SetConfigBinding(kFullscreenOptionsKey, false, nil, function(value) return not value end):SetDelaySave(true)
   self:AddChild(windowed)
   
-  local visualDetail = ComboBox(140, 20, OptionsDialogUI_GetVisualDetailSettings())
+  local visualDetail = self:CreateControl("ComboBox", 140, 20, OptionsDialogUI_GetVisualDetailSettings())
     visualDetail:SetPoint("Top", -60, 345, "Top")
     visualDetail:SetLabel("Visual Detail")
     GfxOptionBindings[3] = visualDetail:SetConfigBinding(kDisplayQualityOptionsKey, 0, "integer",
@@ -133,7 +133,7 @@ function OptionsPage:__init()
     //visualDetail.ItemPicked = function() Client.ReloadGraphicsOptions() end
   self:AddChild(visualDetail)
 
-   local applyGFXsButton = UIButton("Apply Gfx Changes", 150)
+   local applyGFXsButton = self:CreateControl("UIButton", "Apply Gfx Changes", 150)
     applyGFXsButton:SetPoint("Top", -10, 395, "Top")
     applyGFXsButton.ClickAction = function() 
       //visualDetail
@@ -143,6 +143,8 @@ function OptionsPage:__init()
       Client.ReloadGraphicsOptions() 
     end
   self:AddChild(applyGFXsButton)
+  
+  MenuManager.PlayMusic("Main Menu")
 end
 
 function OptionsPage.ResToString(entry)

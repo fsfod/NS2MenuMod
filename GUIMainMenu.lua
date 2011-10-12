@@ -1,8 +1,8 @@
-class'PagedMainMenu'(BaseControl)
+ControlClass('PagedMainMenu', BaseControl)
 
 PageFactory:Mixin(PagedMainMenu)
 
-function PagedMainMenu:__init(height, width)
+function PagedMainMenu:Initialize(height, width)
   BaseControl.Initialize(self, height, width)
   PageFactory.__init(self)
 

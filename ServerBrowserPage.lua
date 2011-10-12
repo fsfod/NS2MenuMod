@@ -24,18 +24,18 @@ local Headers = {
 local headerFont = FontTemplate(19)
 headerFont:SetCenterAlignAndAnchor()
 
-class'SBListHeader'(BaseControl)
+ControlClass('SBListHeader', BaseControl)
 
 ButtonMixin:Mixin(SBListHeader)
 
-function SBListHeader:__init(fieldName, label, startDescending)
+function SBListHeader:Initialize(fieldName, label, startDescending)
   
   local text = headerFont:CreateFontString()
    text:SetText(label)
   self.Label = text
   
   BaseControl.Initialize(self, text:GetTextWidth(label)+8, text:GetTextHeight(label)+4)
-  ButtonMixin.__init(self)
+  ButtonMixin.Initialize(self)
   
   self:SetColor(Color(1,1,1,0.2))
   self:AddGUIItemChild(text)
@@ -86,7 +86,7 @@ end
 
 local HotReload = ServerListEntry
 
-class'ServerListEntry'(BaseControl)
+ControlClass('ServerListEntry', BaseControl)
 
 ServerListEntry.FontSize = 14
 ServerListEntry.PingColour100 = Color(0, 1, 0, 1)
@@ -94,9 +94,9 @@ ServerListEntry.PingColour250 = Color(0.8588, 0.8588, 0, 1)
 ServerListEntry.PingColour600 = Color(1, 0.4901, 0, 1)
 ServerListEntry.PingColourWorst = Color(1, 0, 0, 1)
 
-function ServerListEntry:__init(owner, width, height)
+function ServerListEntry:Initialize(owner, width, height)
   
-  BaseControl.__init(self, width, height)
+  BaseControl.Initialize(self, width, height)
   
   self.Owner = owner
   
@@ -246,11 +246,11 @@ function ServerListEntry:SetData(serverData)
 end
 
 
-class'ServerBrowserPage'(BasePage)
+ControlClass('ServerBrowserPage', BasePage)
 
-function ServerBrowserPage:__init()
+function ServerBrowserPage:Initialize()
 
-  BasePage.__init(self, 740, 500, "Server Browser")
+  BasePage.Initialize(self, 740, 500, "Server Browser")
 
   MapList:Init()
 
@@ -265,9 +265,8 @@ function ServerBrowserPage:__init()
   self:SetColor(PageBgColour)
 
   self.ServerCountDisplay = self:CreateFontString(17, nil, 30, 12)
-  
 
-  local ServerList = ListView(700, 350, ServerListEntry)
+  local ServerList = self:CreateControl("ListView", 700, 350, "ServerListEntry")
    ServerList.RootFrame:SetColor(Color(0, 0, 0, 1))
    self:AddChild(ServerList)
    ServerList:SetPosition(20, 60)
@@ -278,20 +277,20 @@ function ServerBrowserPage:__init()
   local width = ServerList.ItemWidth-PasswordedWidth
   
   for i,headerInfo in ipairs(Headers) do
-    local Label = SBListHeader(headerInfo[3] or headerInfo[1], headerInfo[1], headerInfo[4])
+    local Label = self:CreateControl("SBListHeader", headerInfo[3] or headerInfo[1], headerInfo[1], headerInfo[4])
     self:AddChild(Label)
 
     Label:SetPosition(x+(headerInfo[2]*width), 35)
   end  
   
-  local refresh = UIButton("Refresh")
+  local refresh = self:CreateControl("UIButton", "Refresh")
     refresh:SetPoint("BottomLeft", 150, -15, "BottomLeft")
     refresh.ClickAction = {self.RefreshList, self}
   self:AddChild(refresh)
   
   self:AddBackButton("BottomLeft", 20, -15, "BottomLeft")
   
-  local connectButton = UIButton("Connect")
+  local connectButton = self:CreateControl("UIButton", "Connect")
     connectButton:SetPoint("BottomLeft", 300, -15, "BottomLeft")
     connectButton.ClickAction = function()
       local index = ServerList:GetSelectedIndex()
@@ -301,7 +300,7 @@ function ServerBrowserPage:__init()
     end
   self:AddChild(connectButton)
 
-  local pingfilter = ComboBox(70, 20, PingLimits, function(ping) 
+  local pingfilter = self:CreateControl("ComboBox", 70, 20, PingLimits, function(ping) 
       if(ping == 0) then
         return "All"
       else
@@ -315,19 +314,19 @@ function ServerBrowserPage:__init()
     pingfilter:SetLabel("Ping")
   self:AddChild(pingfilter)
 
-  local hasPlayers = CheckBox("Has Players", false)
+  local hasPlayers = self:CreateControl("CheckBox", "Has Players", false)
     hasPlayers:SetPoint("BottomLeft", 580, -55, "BottomLeft")
     hasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
     hasPlayers:SetConfigBindingAndTriggerChange("ServerBrowser/HasPlayers", false)
   self:AddChild(hasPlayers)
   
-  local notFull = CheckBox("Not Full", false)
+  local notFull = self:CreateControl("CheckBox", "Not Full", false)
     notFull:SetPoint("BottomLeft", 580, -20, "BottomLeft")
     notFull.CheckChanged = {self.SetNotFullFilter, self}
     notFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)
   self:AddChild(notFull)
   
-  local mapFilter = TextBox(80, 20)
+  local mapFilter = self:CreateControl("TextBox", 80, 20)
     mapFilter:SetLabel("Map")
     mapFilter:SetPoint("BottomLeft", 490, -22, "BottomLeft")
     mapFilter.TextChanged = {self.SetMapFilter, self}
@@ -698,10 +697,10 @@ function ServerBrowserPage:Update()
   end
 end
 
-class'ServerPasswordPrompt'(BaseWindow)
+ControlClass('ServerPasswordPrompt', BaseWindow)
 
-function ServerPasswordPrompt:__init(owner)
-  BaseWindow.__init(self, 400, 100, "Enter Server Password", true)
+function ServerPasswordPrompt:Initialize(owner)
+  BaseWindow.Initialize(self, 400, 100, "Enter Server Password", true)
   self:Hide()
 
   local connectButton = UIButton("Connect")
@@ -723,7 +722,7 @@ function ServerPasswordPrompt:__init(owner)
   self:AddChild(cancelButton)
   self.CancelBtn = cancelButton
  
-  local passwordBox = TextBox(150, 20, 19)
+  local passwordBox = self:CreateControl("TextBox", 150, 20, 19)
     passwordBox:SetPoint("Top", 20, 20, "Top")
     passwordBox:SetLabel("Enter Password")
     passwordBox.SendKeyEvent = function(tbSelf, key, down)

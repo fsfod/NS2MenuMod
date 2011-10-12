@@ -29,12 +29,12 @@ local FriendlyNames = {
 
 HotReload = KeybindListEntry
 
-class 'KeybindListEntry'(BaseControl)
+ControlClass('KeybindListEntry', BaseControl)
 
 KeybindListEntry.FontSize = 20
 KeybindListEntry.KeyNameOffset = 300
 
-function KeybindListEntry:__init(owner, width, height)
+function KeybindListEntry:Initialize(owner, width, height)
   BaseControl.Initialize(self, width, height)
 
   self.Parent = owner
@@ -78,17 +78,6 @@ function KeybindListEntry:__init(owner, width, height)
   self:AddGUIItemChild(groupLabel)
 end
 
-function KeybindListEntry:OnHide()
-  if(not self.Hidden) then
-    self:Hide()
-  end
-end
-
-function KeybindListEntry:OnShow()
-  if(not self.Hidden) then
-    self:Show()
-  end
-end
 
 function KeybindListEntry:GetRoot()
   return self.RootFrame
@@ -193,17 +182,17 @@ function KeybindListEntry:SetData(data)
 
 end
 
-class'KeybindPage'(BasePage)
+ControlClass('KeybindPage', BasePage)
 
-function KeybindPage:__init()
-  BasePage.__init(self, 600, 500, "Keybinds")
+function KeybindPage:Initialize()
+  BasePage.Initialize(self, 600, 500, "Keybinds")
   BaseControl.Hide(self)
 
   assert(KeyBindInfo, "Keybinds mod is not loaded")
 
   KeyBindInfo:Init(true)
 
-  local keybindList = ListView(500, 400, KeybindListEntry, 20, 4)
+  local keybindList = self:CreateControl("ListView", 500, 400, "KeybindListEntry", 20, 4)
     keybindList:SetPoint("Center", 0, -40, "Center")
     keybindList.RootFrame:SetColor(Color(0, 0, 0, 1))
     keybindList:SetDataList(KeyBindInfo:GetBindingDialogTable())
@@ -212,8 +201,7 @@ function KeybindPage:__init()
     self:AddChild(keybindList)
   self.KeybindList = keybindList
 
-
-  local clearButton = UIButton("Clear Key")
+  local clearButton = self:CreateControl("UIButton", "Clear Key")
     clearButton:SetPoint("BottomLeft", 120, -15, "BottomLeft")
     clearButton.ClickAction = {self.ClearBind, self}
   self:AddChild(clearButton)
@@ -223,8 +211,8 @@ function KeybindPage:__init()
     resetGroupButton:SetPoint("BottomLeft", 230, -15, "BottomLeft")
     resetGroupButton.ClickAction = {self.ResetSelectedGroup, self}
   self:AddChild(resetGroupButton)
-*/  
-  local resetButton = UIButton("Reset Keybinds")
+*/
+  local resetButton = self:CreateControl("UIButton", "Reset Keybinds")
     resetButton:SetPoint("BottomLeft", 450, -15, "BottomLeft")
     resetButton.ClickAction = {self.ResetKeybinds, self}
   self:AddChild(resetButton)
