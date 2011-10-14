@@ -12,7 +12,6 @@ MenuButton.TextOffsetVec = Vector(MenuButton.PaddingX, MenuButton.PaddingY, 0)
 MenuButton.FontSize = 21
 
 
-local MenuEntryFont = FontTemplate(MenuButton.FontSize)
 //MenuEntryFont:SetCenterAlignAndAnchor()
 //MenuEntryFont:SetColour(0, 1, 1, 1)
 
@@ -21,10 +20,9 @@ function MenuButton:Initialize(height, label, action, fontSize)
   BaseControl.Initialize(self, 80, height-1)
   
   self:SetColor(Color(0,1, 0, 0))
-  
-  local text = MenuEntryFont:CreateFontString()
+
+  local text = self:CreateFontString(MenuButton.FontSize)
    text:SetPosition(self.TextOffsetVec)
-   self:AddGUIItemChild(text)
   self.Label = text
 
   if(label) then

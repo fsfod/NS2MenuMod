@@ -190,7 +190,7 @@ end
 
 ControlClass('PlayerListEntry', BaseControl)
 
-PlayerListEntry.FontSize = 14
+PlayerListEntry.FontSize = 15
 PlayerListEntry.DefaultWidth = 300
 PlayerListEntry.PlayerNameOffset = Vector(5, 0, 0)
 PlayerListEntry.TimePlayedOffset = Vector(120, 0, 0)
@@ -203,7 +203,6 @@ function PlayerListEntry:Initialize(owner, width, height)
   self:SetColor(0,0,0,0)
   
   local playerName = self:CreateFontString(self.FontSize)
-   playerName:SetFontSize(self.FontSize)
    playerName:SetPosition(self.PlayerNameOffset)
   self.PlayerName = playerName
 

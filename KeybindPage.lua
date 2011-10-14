@@ -41,41 +41,33 @@ function KeybindListEntry:Initialize(owner, width, height)
 
   self:SetColor(1,1,1,0)
 
-  local name = GUIManager:CreateTextItem()
-   name:SetFontSize(self.FontSize)
+  local name = self:CreateFontString(self.FontSize)
    name:SetPosition(Vector(38, 0, 0))
    //name:SetAnchor(GUIItem.Left, GUIItem.Center)
    name:SetTextAlignmentX(GUIItem.Align_Min)
    name:SetTextAlignmentY(GUIItem.Align_Min)
   self.KeybindName = name
 
-  local bindModeOverlay = GUIManager:CreateGraphicItem()
+  local bindModeOverlay = self:CreateGUIItem()
     bindModeOverlay:SetSize(Vector(120, 20, 0))
     bindModeOverlay:SetPosition(Vector(self.KeyNameOffset-10, 0, 0))
     bindModeOverlay:SetIsVisible(false)
 	  bindModeOverlay:SetColor(Color(0.8666, 0.3843, 0, 1))
   self.BindModeOverlay = bindModeOverlay
 
-  local boundKey = GUIManager:CreateTextItem()
+  local boundKey = self:CreateFontString(self.FontSize)
    boundKey:SetPosition(Vector(self.KeyNameOffset, 0, 0))
-   boundKey:SetFontSize(self.FontSize)
    //boundKey:SetAnchor(GUIItem.Left, GUIItem.Center)
    boundKey:SetTextAlignmentX(GUIItem.Align_Min)
    boundKey:SetTextAlignmentY(GUIItem.Align_Min)
   self.BoundKey = boundKey
   
-  local groupLabel = GUIManager:CreateTextItem()
+  local groupLabel = self:CreateFontString(self.FontSize)
    groupLabel:SetPosition(Vector(8, 0, 0))
-   groupLabel:SetFontSize(self.FontSize)
    groupLabel:SetColor(Color(0.8666, 0.3843, 0, 1))
    groupLabel:SetTextAlignmentX(GUIItem.Align_Min)
    groupLabel:SetTextAlignmentY(GUIItem.Align_Min)
   self.GroupLabel = groupLabel
-
-  self:AddGUIItemChild(name)
-  self:AddGUIItemChild(bindModeOverlay)
-  self:AddGUIItemChild(boundKey)
-  self:AddGUIItemChild(groupLabel)
 end
 
 

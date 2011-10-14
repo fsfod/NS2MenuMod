@@ -100,13 +100,12 @@ function ServerListEntry:Initialize(owner, width, height)
   
   self.Owner = owner
   
-  local passwordIcon = GUIManager:CreateGraphicItem()
+  local passwordIcon = self:CreateGUIItem()
     passwordIcon:SetSize(Vector(10,12, 0))
     passwordIcon:SetTexture("ui/passworded.dds")
   self.Passworded = passwordIcon
   
-  local serverName = GUIManager:CreateTextItem()
-   serverName:SetFontSize(self.FontSize)
+  local serverName = self:CreateFontString(self.FontSize)
    serverName:SetPosition(Vector(18, 0, 0))
  //  serverName:SetAnchor(GUIItem.Left, GUIItem.Top)
    serverName:SetTextAlignmentX(GUIItem.Align_Min)
@@ -114,41 +113,31 @@ function ServerListEntry:Initialize(owner, width, height)
   self.ServerName = serverName
   
   
-  local gameMode = GUIManager:CreateTextItem()
-   gameMode:SetFontSize(self.FontSize)
+  local gameMode = self:CreateFontString(self.FontSize)
   // gameMode:SetAnchor(GUIItem.Left, GUIItem.Top)
    gameMode:SetTextAlignmentX(GUIItem.Align_Min)
    gameMode:SetTextAlignmentY(GUIItem.Align_Min)
   self.GameMode = gameMode
   
-  local map = GUIManager:CreateTextItem()
-   map:SetFontSize(self.FontSize)
+  local map = self:CreateFontString(self.FontSize)
  //  map:SetAnchor(GUIItem.Left, GUIItem.Top)
    map:SetTextAlignmentX(GUIItem.Align_Min)
    map:SetTextAlignmentY(GUIItem.Align_Min)
   self.MapName = map
   
-  local playerCount = GUIManager:CreateTextItem()
-   playerCount:SetFontSize(self.FontSize)
+  local playerCount = self:CreateFontString(self.FontSize)
   // playerCount:SetAnchor(GUIItem.Left, GUIItem.Top)
    playerCount:SetTextAlignmentX(GUIItem.Align_Min)
    playerCount:SetTextAlignmentY(GUIItem.Align_Min)
   self.PlayerCount = playerCount
   
-  local ping = GUIManager:CreateTextItem()
-   ping:SetFontSize(self.FontSize)
+  local ping = self:CreateFontString(self.FontSize)
    //ping:SetAnchor(GUIItem.Left, GUIItem.Top)
    ping:SetTextAlignmentX(GUIItem.Align_Min)
    ping:SetTextAlignmentY(GUIItem.Align_Min)
   self.Ping = ping
 
   self:SetColor(Color(0,0,0,0))
-  self:AddGUIItemChild(passwordIcon)
-  self:AddGUIItemChild(serverName)
-  self:AddGUIItemChild(gameMode)
-  self:AddGUIItemChild(map)
-  self:AddGUIItemChild(playerCount)
-  self:AddGUIItemChild(ping)
 
   self:SetWidth(width)
 end

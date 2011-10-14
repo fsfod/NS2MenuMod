@@ -12,14 +12,14 @@ function PagedMainMenu:Initialize(height, width)
   self.CurrentPageName = "Main"
   self.CurrentPage = self.MainPage
 
-  local optionsMenu = OptionsPageSelector()
+  local optionsMenu = self:CreateControl("OptionsPageSelector")
     //optionsMenu:Hide()
     self:AddChild(optionsMenu)
   self.OptionsMenu = optionsMenu
   
   self.MainPage:Show()
 
-  local switchButton = MenuButton(15, "Switch to classic menu", function() GUIMenuManager:SwitchMainMenu("ClassicMenu") end, 14)                                               
+  local switchButton =  self:CreateControl("MenuButton", 15, "Switch to classic menu", function() GUIMenuManager:SwitchMainMenu("ClassicMenu") end, 14)                                               
    switchButton:SetPoint("BottomLeft", 20, -20)
    self:AddChild(switchButton)
 end
