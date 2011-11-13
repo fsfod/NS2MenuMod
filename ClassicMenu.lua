@@ -7,11 +7,11 @@ ControlClass('MenuButton', BaseControl)
 ButtonMixin:Mixin(MenuButton)
 
 MenuButton.PaddingX = 13
-MenuButton.PaddingY = 1
+MenuButton.PaddingY = 2
 MenuButton.TextOffsetVec = Vector(MenuButton.PaddingX, MenuButton.PaddingY, 0)
 MenuButton.FontSize = 21
 
-
+MenuButton.BGColor = Color(1, 0, 0, 0)
 //MenuEntryFont:SetCenterAlignAndAnchor()
 //MenuEntryFont:SetColour(0, 1, 1, 1)
 
@@ -19,7 +19,7 @@ function MenuButton:Initialize(height, label, action, fontSize)
   
   BaseControl.Initialize(self, 80, height-1)
   
-  self:SetColor(Color(0,1, 0, 0))
+  self:SetColor(self.BGColor)
 
   local text = self:CreateFontString(MenuButton.FontSize)
    text:SetPosition(self.TextOffsetVec)
@@ -29,7 +29,7 @@ function MenuButton:Initialize(height, label, action, fontSize)
     self.Label:SetText(label)
     self.ClickAction = action 
     
-    self:SetWidth(self.Label:GetTextWidth(label) + (2*self.PaddingX))
+    self:SetSize(self.Label:GetTextWidth(label) + (2*self.PaddingX), self.Size.y)
     
     if(fontSize) then
       text:SetFontSize(fontSize)
@@ -40,10 +40,15 @@ end
 function MenuButton:SetData(data)
   self.InfoTable = data
 
-  self.Label:SetText(data[1])
+  if(type(data[1]) == "string") then
+    self.Label:SetText(data[1])
+  else
+    self.Label:SetText(data[1](data, self))
+  end
+
   self.ClickAction = data[2]
 
-  self:SetWidth(self.Label:GetTextWidth(data[1]) + (2*self.PaddingX))
+  self:SetSize(self.Label:GetTextWidth(data[1]) + (2*self.PaddingX), self.Size.y)
 end
 
 function MenuButton:OnEnter()
@@ -60,13 +65,14 @@ ControlClass('MenuEntry', BaseControl)
 MenuEntry.EntryHeight = MenuButton.FontSize+(2*MenuButton.PaddingY)
 
 MenuEntry.EntrySpacing = 6
+MenuEntry.BGColor = Color(0, 1, 0, 0)
 
 function MenuEntry:Initialize(owner, width, height)
   BaseControl.Initialize(self, width, height)
-  self:SetColor(Color(0, 0, 0, 0))
+  self:SetColor(self.BGColor)
 
   local button = self:CreateControl("MenuButton", height)
-    button:SetPoint("Left", 10, 0, "Left")
+    button:SetPosition(10, 0)
   self:AddChild(button)
   
   self.Button = button
@@ -78,7 +84,17 @@ function MenuEntry:SetData(data)
     self:Show()
   end
   
+  if(not data or not data[1] or data == "") then
+    self.Button:Hide()
+   return
+  end
+    
+  if(self.Button.Hidden) then
+    self.Button:Show()
+  end
+  
   self.Button:SetData(data)
+  
 end
 
 MainMenuConnectedLinks = {
@@ -101,15 +117,6 @@ MainMenuLinks = {
   {"Keybinds", function() GUIMenuManager:ShowPage("Keybinds") end},
 
   {"Mods", function() GUIMenuManager:ShowPage("Mods") end},
-   
-  //{"Recreate Menu", function() GUIMenuManager:RecreateMenu() end},
-  
-  /*{"Switch To Paged Menu", 
-    function()
-      GUIMenuManager:SwitchMainMenu("PagedMainMenu")
-      GUIMenuManager.WindowedModeActive = false
-    end
-  },*/
   
   {"Exit", function() Client.Exit() end},
 }
@@ -145,16 +152,20 @@ function ClassicMenu:Initialize(height, width)
 
   local connectedMenu = self:CreateControl("ListView", 300, #MainMenuConnectedLinks*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), "MenuEntry", MenuEntry.EntryHeight, MenuEntry.EntrySpacing)
     connectedMenu:SetDataList(MainMenuConnectedLinks)
-    connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-50, "BottomLeft")
+    connectedMenu:SetPoint("Left", 0, 0, "TopLeft")
     connectedMenu:SetColor(Color(0,0,0,0))
     connectedMenu.ItemsSelectable = false
     if(not Client.GetIsConnected()) then
       connectedMenu:Hide()
     end
+    connectedMenu.ParentSizeChanged = function(controlSelf)
+      ListView.ParentSizeChanged(controlSelf)
+      connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-20, "BottomLeft")
+    end
   self:AddChild(connectedMenu)
   self.ConnectedMenu = connectedMenu
 
-  local switchButton = self:CreateControl("MenuButton", 15, "Switch To Paged Menu", 
+  local switchButton = self:CreateControl("MenuButton", 30, "Switch To Paged Menu", 
     function()
       GUIMenuManager:SwitchMainMenu("PagedMainMenu")
       GUIMenuManager.WindowedModeActive = false
@@ -174,9 +185,9 @@ end
 function ClassicMenu:OnResolutionChanged(oldX, oldY, width, height)
 
   self:SetSize(width, height)
- 
+
   for k,page in pairs(self.Pages) do
-    page:UpdatePosition()
+    page:OnResolutionChanged()
   end
 
 end

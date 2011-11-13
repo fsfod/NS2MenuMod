@@ -30,15 +30,14 @@ ButtonMixin:Mixin(SBListHeader)
 
 function SBListHeader:Initialize(fieldName, label, startDescending)
   
-  local text = headerFont:CreateFontString()
+  local text = self:CreateFontString(headerFont)
    text:SetText(label)
   self.Label = text
-  
+ 
   BaseControl.Initialize(self, text:GetTextWidth(label)+8, text:GetTextHeight(label)+4)
   ButtonMixin.Initialize(self)
   
   self:SetColor(Color(1,1,1,0.2))
-  self:AddGUIItemChild(text)
   
   self.ServerInfoField = fieldName
   
@@ -88,7 +87,7 @@ local HotReload = ServerListEntry
 
 ControlClass('ServerListEntry', BaseControl)
 
-ServerListEntry.FontSize = 14
+ServerListEntry.FontSize = 16
 ServerListEntry.PingColour100 = Color(0, 1, 0, 1)
 ServerListEntry.PingColour250 = Color(0.8588, 0.8588, 0, 1)
 ServerListEntry.PingColour600 = Color(1, 0.4901, 0, 1)
@@ -106,35 +105,35 @@ function ServerListEntry:Initialize(owner, width, height)
   self.Passworded = passwordIcon
   
   local serverName = self:CreateFontString(self.FontSize)
-   serverName:SetPosition(Vector(18, 0, 0))
- //  serverName:SetAnchor(GUIItem.Left, GUIItem.Top)
-   serverName:SetTextAlignmentX(GUIItem.Align_Min)
+   serverName:SetPosition(Vector(18, 1, 0))
+   //serverName:SetAnchor(GUIItem.Left, GUIItem.Top)
+   //serverName:SetTextAlignmentX(GUIItem.Align_Min)
    serverName:SetTextAlignmentY(GUIItem.Align_Min)
   self.ServerName = serverName
   
   
   local gameMode = self:CreateFontString(self.FontSize)
-  // gameMode:SetAnchor(GUIItem.Left, GUIItem.Top)
-   gameMode:SetTextAlignmentX(GUIItem.Align_Min)
-   gameMode:SetTextAlignmentY(GUIItem.Align_Min)
+   //gameMode:SetAnchor(GUIItem.Left, GUIItem.Center)
+   //gameMode:SetTextAlignmentX(GUIItem.Align_Min)
+   //gameMode:SetTextAlignmentY(GUIItem.Align_Center)
   self.GameMode = gameMode
   
   local map = self:CreateFontString(self.FontSize)
- //  map:SetAnchor(GUIItem.Left, GUIItem.Top)
-   map:SetTextAlignmentX(GUIItem.Align_Min)
-   map:SetTextAlignmentY(GUIItem.Align_Min)
+   //map:SetAnchor(GUIItem.Left, GUIItem.Center)
+   //map:SetTextAlignmentX(GUIItem.Align_Min)
+   //map:SetTextAlignmentY(GUIItem.Align_Center)
   self.MapName = map
   
   local playerCount = self:CreateFontString(self.FontSize)
-  // playerCount:SetAnchor(GUIItem.Left, GUIItem.Top)
-   playerCount:SetTextAlignmentX(GUIItem.Align_Min)
-   playerCount:SetTextAlignmentY(GUIItem.Align_Min)
+   //playerCount:SetAnchor(GUIItem.Left, GUIItem.Top)
+   //playerCount:SetTextAlignmentX(GUIItem.Align_Min)
+   //playerCount:SetTextAlignmentY(GUIItem.Align_Min)
   self.PlayerCount = playerCount
   
   local ping = self:CreateFontString(self.FontSize)
-   //ping:SetAnchor(GUIItem.Left, GUIItem.Top)
-   ping:SetTextAlignmentX(GUIItem.Align_Min)
-   ping:SetTextAlignmentY(GUIItem.Align_Min)
+   //ping:SetAnchor(GUIItem.Left, GUIItem.Center)
+   //ping:SetTextAlignmentX(GUIItem.Align_Min)
+   //ping:SetTextAlignmentY(GUIItem.Align_Center)
   self.Ping = ping
 
   self:SetColor(Color(0,0,0,0))
@@ -187,17 +186,19 @@ function ServerListEntry:SetWidth(width)
   local modeX = nameX+(width*GameModeOffset)
   local mapX = nameX+(width*MapOffset)
 
-  local posVec = Vector()
+  local posVec = Vector(0, 1, 0)
  
-  self.ServerName:SetTextClipped(true, modeX-nameX, self.FontSize)
+  local height = self:GetHeight()
+ 
+  self.ServerName:SetTextClipped(true, modeX-nameX, height)
 
   posVec.x = modeX
   self.GameMode:SetPosition(posVec)
-  self.GameMode:SetTextClipped(true, mapX-modeX, self.FontSize)
+  self.GameMode:SetTextClipped(true, mapX-modeX, height)
 
   posVec.x = mapX
   self.MapName:SetPosition(posVec)
-  self.MapName:SetTextClipped(true, playerX-mapX, self.FontSize)
+  self.MapName:SetTextClipped(true, playerX-mapX, height)
   
   posVec.x = playerX
   self.PlayerCount:SetPosition(posVec)
@@ -255,11 +256,18 @@ function ServerBrowserPage:Initialize()
 
   self.ServerCountDisplay = self:CreateFontString(17, nil, 30, 12)
 
-  local ServerList = self:CreateControl("ListView", 700, 350, "ServerListEntry")
+  self.AutoSelectedConnected = true
+
+  local ServerList = self:CreateControl("ListView", 700, 350, "ServerListEntry", ServerListEntry.FontSize+2)
    ServerList.RootFrame:SetColor(Color(0, 0, 0, 1))
    self:AddChild(ServerList)
    ServerList:SetPosition(20, 60)
    ServerList:SetDataList(self.Servers)
+   ServerList.ItemSelected = function() 
+    if(Client.GetIsConnected()) then
+      self.AutoSelectedConnected = false
+    end
+   end
   self.ServerList = ServerList
 
   local x = PasswordedWidth+20
@@ -393,7 +401,9 @@ function ServerBrowserPage:Connect(server, password)
 	end
 	
 	MapList:CheckMountMap(server.Map)
-	
+
+	ConnectedInfo:SetServerInfo(server)
+
   MainMenu_SBJoinServer(server.Address, password)
 end
 
@@ -538,6 +548,9 @@ function ServerBrowserPage:RefreshList()
 
   self.ServerCountDisplay:SetText("")
 
+  self.ConnectedEntry = nil
+  self.AutoSelectedConnected = true
+
   self.Refreshing = true
   self.CurrentCount = 0
   Client.RebuildServerList()
@@ -648,8 +661,14 @@ function ServerBrowserPage:TrySelectServer(server)
 end
 
 function ServerBrowserPage:Update()
+  local connectedAddress
+
+  if(Client.GetIsConnected()) then
+    connectedAddress = ConnectedInfo:GetConnectedAddress()
+  end
  
   local NewCount = Client.GetNumServers()
+  local ServerList = self.ServerList
   
   if(self.Refreshing and self.CurrentCount ~= NewCount) then
     
@@ -672,6 +691,10 @@ function ServerBrowserPage:Update()
 			if(noFilters) then
 				filteredList[#filteredList+1] = server
       end
+      
+      if(server.Address == connectedAddress and server.Address) then
+        self.ConnectedEntry = server
+      end
     end
     
     self:FilterServers(self.CurrentCount+1)
@@ -680,9 +703,15 @@ function ServerBrowserPage:Update()
     
     self:SortList()
     
-    self.ServerList:ListSizeChanged()
+    ServerList:ListSizeChanged()
     
     self:UpdateServerCount()
+  end
+
+  if(self.ConnectedEntry) then
+    if(self.AutoSelectedConnected and ServerList:GetSelectedIndexData() ~= self.ConnectedEntry) then
+      ServerList:SetSelectedListEntry(self.ConnectedEntry)
+    end
   end
 end
 

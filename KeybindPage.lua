@@ -232,11 +232,10 @@ function KeybindPage:SetKeybind(BindName, key)
       self.WarningString:SetText("")
     end
     
-    KeyBindInfo:SetKeybind(key, BindName, true)
+    KeyBindInfo:SetKeybind(key, BindName)
     
-    self.KeybindList:ListDataModifed()
-  else
-    self.WarningString:SetText("")
+    self:SetKeybindsChanged()
+
   end
 end
 
@@ -245,8 +244,17 @@ function KeybindPage:ClearBind()
    
   if(bindinfo and not bindinfo.Keybinds) then
     KeyBindInfo:ClearBind(bindinfo[1])
-    
-    self.KeybindList:ListDataModifed()
+
+    self:SetKeybindsChanged()
+  end
+end
+
+function KeybindPage:SetKeybindsChanged()
+
+  self.KeybindList:ListDataModifed()
+
+  if(not KeybindMapper) then
+    Client.ReloadKeyOptions()
   end
 end
 
@@ -276,21 +284,19 @@ end
 
 function KeybindPage:ResetKeybinds()
   KeyBindInfo:ResetKeybinds()
-  
-  self.KeybindList:ListDataModifed()
+
+  self:SetKeybindsChanged()
 end
 
 function KeybindPage:Show()
   BaseControl.Show(self)
-  KeyBindInfo:OnBindingsUIEntered()
+  //KeyBindInfo:OnBindingsUIEntered()
 end
 
 function KeybindPage:Hide()
   BaseControl.Hide(self)
   
-  KeyBindInfo:OnBindingsUIExited()
-  
-  Client.ReloadKeyOptions()
+  //KeyBindInfo:OnBindingsUIExited()
 end
 
 if(HotReload) then

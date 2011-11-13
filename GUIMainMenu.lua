@@ -120,7 +120,6 @@ function PagedMainMenu:OnResolutionChanged(oldX, oldY, width, height)
   self:SetSize(width, height)
  
   for k,page in pairs(self.Pages) do
-    page:UpdatePosition()
     page:OnResolutionChanged(oldX, oldY, width, height)
   end
   

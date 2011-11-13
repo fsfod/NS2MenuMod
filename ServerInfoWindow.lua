@@ -83,6 +83,10 @@ function ServerInfoWindow:Initialize(serverAddress, queryPort)
   local connectButton = self:CreateControl("UIButton", "Connect", 80, 24)
     connectButton:SetPosition(100, 160)
     connectButton.ClickAction = function()
+      if(self.ServerInfo) then
+        ConnectedInfo:SetServerInfo(self.ServerInfo)
+      end
+       
        MainMenu_SBJoinServer(self.ServerAddress)
     end
   self:AddChild(connectButton)
@@ -112,9 +116,9 @@ function ServerInfoWindow:Initialize(serverAddress, queryPort)
 end
 
 function ServerInfoWindow:ServerCallback(serverInfo)
-  
+
   --we been destroyed so don't update anything
-  if(not self.RootFrame) then
+  if(not IsValidControl(self)) then
     return
   end
 
@@ -122,9 +126,9 @@ function ServerInfoWindow:ServerCallback(serverInfo)
     self:SetBlank()
    return
   end
-  
+
   self.ServerFull = serverInfo.PlayerCount >= serverInfo.MaxPlayers
-  
+
   if(self.ServerFull) then
     self.RetryButton:Show()
   else
@@ -132,9 +136,11 @@ function ServerInfoWindow:ServerCallback(serverInfo)
       self.RetryButton:Hide()
     end
   end
-  
+
   if(self.AutoRetryConnect and not self.ServerFull) then
     self.AutoRetryConnect = false
+
+    ConnectedInfo:SetServerInfo(self.ServerInfo)
     MainMenu_SBJoinServer(self.ServerAddress)
   end
   
@@ -153,7 +159,7 @@ end
 function ServerInfoWindow:PlayerCallback(playerList)
   
   --we been destroyed so don't update anything
-  if(not self.RootFrame) then
+  if(not IsValidControl(self)) then
     return
   end
   
@@ -178,12 +184,12 @@ function ServerInfoWindow:Update()
 end
 
 function ServerInfoWindow:Refresh()
-  
+
   self.LastRefresh = Client.GetTime()
-  
+
   ServerInfo.QueryPlayerList(self.ServerAddress, self.QueryPort, self.PlayerCallbackFunc)
   ServerInfo.QueryGameInfo(self.ServerAddress, self.QueryPort, self.ServerCallbackFunc)
-  
+
   self.ServerQueryActive = true
   self.RefreshActive = true
 end
