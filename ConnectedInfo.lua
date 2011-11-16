@@ -10,6 +10,22 @@ function ConnectedInfo:SetServerInfo(serverInfo)
   self.ServerInfo = table.duplicate(serverInfo)
 end
 
+function ConnectedInfo:ConnectToServer(serverInfo, password)
+
+  if(serverInfo.Passworded and not password) then
+    GUIMenuManager:CreateWindow("ServerPasswordPrompt", serverInfo, self)
+   return
+  end
+
+  self:SetServerInfo(serverInfo)
+
+  self.ServerInfo = table.duplicate(serverInfo)
+
+  MapList:CheckMountMap(serverInfo.Map)
+
+  MainMenu_SBJoinServer(serverInfo.Address, password)
+end
+
 function ConnectedInfo:GetConnectedServerName()
 
   if(self:HasServerName()) then

@@ -211,9 +211,11 @@ end
 function ClassicMenu:SendKeyEvent(key, down, isRepeat)
 
   if not self.Hidden and down and key == InputKey.Escape and not isRepeat and not GUIMenuManager:IsFocusedSet() then
-    
-    if(not GUIMenuManager:TryCloseTopMostWindow() and Client.GetIsConnected()) then
+
+    if(Client.GetIsConnected()) then
       MainMenu_ReturnToGame()
+    else
+      GUIMenuManager:TryCloseTopMostWindow()
     end
    return true
   end

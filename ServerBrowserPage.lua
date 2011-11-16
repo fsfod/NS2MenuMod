@@ -155,7 +155,7 @@ function ServerListEntry:OnClick(button, down)
     self.Owner:SetSelectedItem(self)
     
     //we were rightclicked so show a server info window for this entry
-    GUIMenuManager:CreateWindow("ServerInfoWindow", self.Data.Address, self.Data.QueryPort)
+    GUIMenuManager:CreateWindow("ServerInfoWindow", self.Data)
   elseif(button == InputKey.MouseButton0) then
     
     if(self.LastClicked and (Client.GetTime()-self.LastClicked) < GUIMenuManager.DblClickSpeed) then
@@ -334,21 +334,8 @@ function ServerBrowserPage:Initialize()
   
 end
 
-function ServerBrowserPage:Uninitialize()
-  BaseControl.Uninitialize(self)
-  
-  if(self.PasswordPrompt) then
-    self.PasswordPrompt:Close()
-    self.PasswordPrompt:Uninitialize()
-  end
-end
-
 function ServerBrowserPage:Hide()
   BaseControl.Hide(self)
-  
-  if(self.PasswordPrompt) then
-    self.PasswordPrompt:Close()
-  end
 end
 
 function ServerBrowserPage:SetNotFullFilter(filter)
@@ -380,31 +367,13 @@ function ServerBrowserPage:SetEmptyServersFilter(filter)
 end
 
 function ServerBrowserPage:Connect(server, password)
-  
+
   if(type(server) == "number") then 
 	  --the games server indexs are 0 based
 	  server = self.Servers[server+1]
   end
-	
-	if(server.Passworded and not password) then
-	  self.PasswordPrompt = self.PasswordPrompt or GUIMenuManager:CreateWindow("ServerPasswordPrompt", self)
-  
-    if(self.PasswordPrompt) then
-      GUIMenuManager:BringWindowToFront(self.PasswordPrompt)
-    else
-      self.PasswordPrompt = GUIMenuManager:CreateWindow("ServerPasswordPrompt", self)
-    end
-  
-    self.PasswordPrompt.Server = server
-    self.PasswordPrompt:Show()
-   return
-	end
-	
-	MapList:CheckMountMap(server.Map)
 
-	ConnectedInfo:SetServerInfo(server)
-
-  MainMenu_SBJoinServer(server.Address, password)
+  ConnectedInfo:ConnectToServer(server)
 end
 
 function ServerBrowserPage:RemoveFilter(filter)
@@ -717,29 +686,26 @@ end
 
 ControlClass('ServerPasswordPrompt', BaseWindow)
 
-function ServerPasswordPrompt:Initialize(owner)
+function ServerPasswordPrompt:Initialize(serverInfo, owner)
   BaseWindow.Initialize(self, 400, 100, "Enter Server Password", true)
-  self:Hide()
 
-  local connectButton = UIButton("Connect")
+  self.ServerInfo = serverInfo
+
+  self.Address = self.ServerInfo.Address
+
+  local connectButton = self:CreateControl("UIButton", "Connect")
     connectButton:SetPoint("Bottom", 100, -10, "Bottom")
     connectButton.ClickAction = function()
-      local password = self.PasswordBox:GetText()
-      
-      self:Close()
-    
-      owner:Connect(self.Server, password)
-      self.Server = nil
+      self:Connect()
     end
   self:AddChild(connectButton)
-  self.Connect = connectButton
  
-  local cancelButton = UIButton("Cancel")
+  local cancelButton = self:CreateControl("UIButton", "Cancel")
    cancelButton:SetPoint("Bottom", -100, -10, "Bottom")
    cancelButton.ClickAction = {self.Close, self}
   self:AddChild(cancelButton)
   self.CancelBtn = cancelButton
- 
+
   local passwordBox = self:CreateControl("TextBox", 150, 20, 19)
     passwordBox:SetPoint("Top", 20, 20, "Top")
     passwordBox:SetLabel("Enter Password")
@@ -752,6 +718,19 @@ function ServerPasswordPrompt:Initialize(owner)
     end
   self:AddChild(passwordBox)
   self.PasswordBox = passwordBox
+  
+  self.PasswordBox:SetFocus()
+end
+
+function ServerPasswordPrompt:Connect()
+	
+  if(self.ServerInfo) then
+	  ConnectedInfo:ConnectToServer(self.ServerInfo,  self.PasswordBox:GetText())
+	else
+	  MainMenu_SBJoinServer(self.Address,  self.PasswordBox:GetText())
+	end
+
+	self:Close()
 end
 
 function ServerPasswordPrompt:Show()

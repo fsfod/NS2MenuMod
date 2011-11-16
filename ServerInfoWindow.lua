@@ -39,7 +39,7 @@ local InfoList = {
   "Players",
 }
 
-function ServerInfoWindow:Initialize(serverAddress, queryPort)
+function ServerInfoWindow:Initialize(server, queryPort)
   BaseWindow.Initialize(self, 280, 410, "Server Info")
 
   self.DestroyOnClose = true
@@ -57,10 +57,23 @@ function ServerInfoWindow:Initialize(serverAddress, queryPort)
     self[InfoList[i]] = text
   end
 
-  self.Address:SetText("IP Address: "..serverAddress)
+  if(type(server) == "string") then
+    self.ServerAddress = server
+    
+    self.QueryPort = queryPort or 27015
+  else
+    assert(type(server) == "table")
+
+    self.OldServerInfo = server
+
+    self.ServerInfo = server
+    self.ServerAddress = server.Address
  
-  self.ServerAddress = serverAddress
-  self.QueryPort = queryPort
+    self.QueryPort = server.QueryPort
+  end
+
+  self.Address:SetText("IP Address: "..self.ServerAddress)
+
 
   local playerList = self:CreateControl("ListView", 240, 200, "PlayerListEntry", PlayerListEntry.FontSize)
     playerList:SetPoint("Bottom", 0, -15, "Bottom")
@@ -83,11 +96,12 @@ function ServerInfoWindow:Initialize(serverAddress, queryPort)
   local connectButton = self:CreateControl("UIButton", "Connect", 80, 24)
     connectButton:SetPosition(100, 160)
     connectButton.ClickAction = function()
+      
       if(self.ServerInfo) then
-        ConnectedInfo:SetServerInfo(self.ServerInfo)
+        ConnectedInfo:ConnectToServer(server)
+      else
+        MainMenu_SBJoinServer(self.ServerAddress)
       end
-       
-       MainMenu_SBJoinServer(self.ServerAddress)
     end
   self:AddChild(connectButton)
 
@@ -126,6 +140,8 @@ function ServerInfoWindow:ServerCallback(serverInfo)
     self:SetBlank()
    return
   end
+
+  self.OldServerInfo = serverInfo
 
   self.ServerFull = serverInfo.PlayerCount >= serverInfo.MaxPlayers
 

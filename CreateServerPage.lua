@@ -8,18 +8,16 @@ ControlClass('CreateServerPage', BasePage)
 function CreateServerPage:Initialize()
   BasePage.Initialize(self, 600, 400, "Create Listen Server")
   BaseControl.Hide(self)
-  
-  self:SetColor(Color(0.1, 0.1, 0.1,0.7))
 
   local gameName = self:CreateControl("TextBox", 200, 22)
     gameName:SetPoint("Top", 0, 50, "Top")
-    gameName:SetLabel("Game Name")
+    gameName:SetLabel("Game Name:")
     gameName:SetConfigBinding("serverName", "NS2 Server")
   self:AddChild(gameName)
 
   local password = self:CreateControl("TextBox", 200, 22)
     password:SetPoint("Top", 0, 100, "Top")
-    password:SetLabel("Password (if any)")
+    password:SetLabel("Password (if any):")
     password:SetConfigBinding("serverPassword", "")
   self:AddChild(password)
 
@@ -28,7 +26,7 @@ function CreateServerPage:Initialize()
   local map = self:CreateControl("ComboBox", 200, 20, MapList.Maps, function(entry) return entry.name end)
     map:SetPoint("Top", 0, 150, "Top")
     map:SetConfigBinding("mapName", "", nil, self.MapValueConverter)
-    map:SetLabel("Map")
+    map:SetLabel("Map:")
   self:AddChild(map)
   self.MapComboBox = map
   
@@ -40,8 +38,18 @@ function CreateServerPage:Initialize()
     end
   end
   
+  local port = self:CreateControl("TextBox", 60, 20)
+    port:SetLabel("Port:")
+    port:SetPoint("Top", -70, 240, "Top")
+    port:SetConfigBinding("serverPort", 27015, nil, converter):SetValidator(function(value) 
+      local valid, result = pcall(tonumber, value)
+      
+      return valid and result > 0
+    end)
+  self:AddChild(port)
+  
   local playerLimit = self:CreateControl("TextBox", 30, 20)
-    playerLimit:SetLabel("Player Limit")
+    playerLimit:SetLabel("Player Limit:")
     playerLimit:SetPoint("Top", -85, 200, "Top")
     playerLimit:SetConfigBinding("playerLimit", 16, nil, converter):SetValidator(function(value) 
       local valid, result = pcall(tonumber, value)
@@ -50,7 +58,7 @@ function CreateServerPage:Initialize()
     end)
   self:AddChild(playerLimit)
   
-  local lanGame = self:CreateControl("CheckBox", "Lan Game")
+  local lanGame = self:CreateControl("CheckBox", "Lan Game:")
     lanGame:SetPoint("Top", -10, 200, "Top")
     lanGame:SetConfigBinding("lanGame", true)
   self:AddChild(lanGame)
@@ -66,7 +74,7 @@ end
 function CreateServerPage:CreateServer()
 
   local password      = Client.GetOptionString("serverPassword", "")
-  local port          = 27015
+  local port          = Client.GetOptionInteger("serverPort", 27015)
   local maxPlayers    = Client.GetOptionInteger("playerLimit", 16)
   
   local mapEntry = self.MapComboBox:GetSelectedItem()
