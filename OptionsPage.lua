@@ -102,8 +102,10 @@ function OptionsPage:Initialize()
       if(value) then
         mouseSensitivity:SetValueAndTiggerEvent(value)
       end
+      
+      TextBox.OnFocusLost(sensitivityValue)
     end
-    
+
   self:AddChild(sensitivityValue)
 
   local invertMouse = self:CreateControl("CheckBox", "Invert Mouse", false, true)

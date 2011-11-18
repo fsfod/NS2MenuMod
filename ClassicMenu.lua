@@ -152,7 +152,7 @@ function ClassicMenu:Initialize(height, width)
 
   local connectedMenu = self:CreateControl("ListView", 300, #MainMenuConnectedLinks*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), "MenuEntry", MenuEntry.EntryHeight, MenuEntry.EntrySpacing)
     connectedMenu:SetDataList(MainMenuConnectedLinks)
-    connectedMenu:SetPoint("Left", 0, 0, "TopLeft")
+    connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-30, "BottomLeft")
     connectedMenu:SetColor(Color(0,0,0,0))
     connectedMenu.ItemsSelectable = false
     if(not Client.GetIsConnected()) then
