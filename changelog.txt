@@ -1,10 +1,48 @@
+0.14 14/01/2012
+   Refactored alot systems for build 190 changes of the client VM being recreated on connect/disconnect and the Client lua library not be fully availble during early loading there may still be some sutff i missed
+   Added support for starting the listen server with a custom list of full mods(mods that directly replace ns2 lua files) just drop archive(rar,zip,7z) containging the mod into the FullMods folder
+    this system only works for mods that are purely lua files and have a sane file layout
+   Added a custom config system thats used for Full Mods system and saving the list the of disabled mods(not in light)
+   Added support for mouse wheel scrolling controls without UIHelper being loaded
 
-4/10
+  Keybinds Mod
+    Added Last used weapon keybind
+    Added a keybind to exit the Hive/CC
+    Added direct keybinds for all the sayings menu entrys
+    Mouse wheel up and down are now bindble
+
+0.13 1/12/2011
+    Added the ability to turn off Anti-aliasing and Atmospheric Lights to the option page
+    Updated menu camera to the new system in build 188
+    Removed changing the feedback overlay text that got removed
+
+0.12 20/11/2011
+    Added copy paste support for textboxs using the normal shortcut keys ctl-c and ctl-v
+    Fixed the password prompt not showing when connecting to passworded servers also made it show when connecting using the ServerInfo window
+    Changed Escape to return to game instead of closing windows first when connected
+    Greatly reduced the transparency of the menu pages
+    Added a port option to the create server page
+    Fixed setting more than 1 console command bind in a session breaking other console command binds
+    Fixed the connected menu links not being offset correctly
+
+0.11 13/11/2011
+    Added the name the server to the scoreboard
+    Made the Server Browser auto select the server that your connected to in the server list
+    Added dynamic(none of that GUIScale silliness) ui scaling of the menu and chatframe when running in low resolutions.
+    Added an option to make the ns2 window borderless. Requires UIHelper module
+    Added mouse wheel scrolling for sliders/scrollbars, list, stepper controls. Requires UIHelper module
+    Added a lua auto execute directory/system see autoexec\readme.txt for useage
+    Added a editable value textbox for the mouse sensitivity slider
+    Fixed newly created console command keybinds only becoming active after being bound twice or restarting ns2
+    Fixed keybind changes not always taking effect when using the classic menu
+    Tweaked the layout and spacing of some of things
+
+0.10 4/10
     Added auto retry connect to the ServerInfo window when the server is full
     Fixed losing the cursor in the buymenu when another player closed there armory menu
     Fixed loading lua dll modules when the mod is installed using the second installation method
   
-0.09
+0.09 30/9/2011
 
     Added support for window frames in the GUI system
     Added a brand new windowed style main menu The old paged main menu can still be switched to by clicking on "switch to paged menu" text 
@@ -17,11 +55,11 @@
     Changed the Server Browser text to be clipped
     Redesigned the internal logic for dragging frames
 
-0.08 6/8 Update
+0.08 6/8/2011 Update
 
     Fixed the windowed mode check box not correctly saving its value
 
-0.07 29/7 Update
+0.07 29/7/2011 Update
 
     Refactored the ui backend and made it less fragile to errors
     Added support for setting NextWeapon and PrevWeapon in the keybinds page
@@ -32,13 +70,13 @@
     Fixed a rare stack overflow when pressing escape while chat box is open
 
 
-0.06 11/7 Update
+0.06 11/7/2011
 
     Fixed Escape closing the keybind page when canceling a keybind edit
     Fixed the 64 bit registry path in the launching bat
     Made keybind entrys on the keybind page selectable again
     
-10/7 Update
+0.05 10/7/2011
 
     Updated for build 180
     Greatly improved the escape key behavior for the keybind system mod
@@ -46,23 +84,20 @@
     improved the launcher bat should work on 64 bit windows as well now
     Added support for sub mods to run in the listen server vm
 
-
-28/6 Update
+0.04  28/6/2011
 
     Added a new awesome configurable ChatFrame
     Added my replacement keybind system mod, its disabled by default it can be enabled in the mods option page. the game will be need to restarted after it been enabled
     Added a password prompt when connecting to a passworded server in the server browser
     Esc now returns you to the main menu page if pressed while in a sub page and it will also close the menu if at the main page while ingame
 
-
-18/5 Update
+0.03 18/5/2011
 
     Added Options and Create Server pages
     The Server Browser now remembers what filters you set before
     Keybind changes now take effect without having to restart the game
 
-
-29/4 Update
+0.02 29/4/2011
 
     Added keybind page currently the options button takes you to it
     Added the ability to filter empty and full servers in the server browser

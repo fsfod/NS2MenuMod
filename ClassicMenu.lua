@@ -53,7 +53,7 @@ end
 
 function MenuButton:OnEnter()
 	self.Label:SetColor(Color(0.8666, 0.3843, 0, 1))
-	Shared.PlaySound(nil, "sound/ns2.fev/common/button_enter")
+	PlayerUI_PlayButtonEnterSound()
 end
 
 function MenuButton:OnLeave()
@@ -104,7 +104,7 @@ MainMenuConnectedLinks = {
 		end 
   end},
 
-  {"Disconnect", function()  Client.ConsoleCommand("disconnect") end},
+  {"Disconnect", function()  Shared.ConsoleCommand("disconnect") end},
 }
 
 MainMenuLinks = {

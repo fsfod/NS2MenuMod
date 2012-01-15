@@ -126,7 +126,7 @@ local ButtonList ={
 	Disconnect = {
 		function()
 		  //Client.Disconnect()// seems to break the menu cinematic
-      Client.ConsoleCommand("disconnect") 
+      Shared.ConsoleCommand("disconnect") 
 		end,
 		"Disconnect",
 		"ui/exitgame.dds",

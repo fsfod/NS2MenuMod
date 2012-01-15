@@ -29,15 +29,19 @@ end
 
 function ModListEntry:SetData(modName)
 
-  local disabled, realName, loadState = ModLoader:GetModInfo(modName)
+  if(not self.ModManager ) then
+    self.ModManager = self.Parent.Parent.ModManager
+  end
+
+  local disabled, realName, errorValue = self.ModManager:GetModInfo(modName)
   
   self.Checked = not disabled
   
   self.ModName = modName
   
-  if(loadState < 0) then
+  if(errorValue < 0 or (self.ModManager == FullModsManager and errorValue > 0)) then
     self.ErrorStatus:SetIsVisible(true)
-    self.ErrorStatus:SetText((loadState ~= 0 and tostring(loadState) or ""))
+    self.ErrorStatus:SetText((errorValue ~= 0 and tostring(errorValue) or ""))
   else
     self.ErrorStatus:SetIsVisible(false)
   end
@@ -50,22 +54,16 @@ function ModListEntry:GetRoot()
 	return self.RootFrame
 end
 
-function ModListEntry:OnHide()
-	self:Hide()
-end
-
-function ModListEntry:OnShow()
-	self:Show()
-end
-
 function ModListEntry:OnCheckedToggled()
   self.Checked = not self.Checked
   
   if(self.Checked ) then
-    ModLoader:EnableMod(self.ModName)
+    self.ModManager:EnableMod(self.ModName)
   else
-    ModLoader:DisableMod(self.ModName)
+    self.ModManager:DisableMod(self.ModName)
   end
+
+  self.Parent:ListDataModifed()
   
   return self.Checked
 end
@@ -73,6 +71,9 @@ end
 ControlClass('ModsPage', BasePage)
 
 ModsPage.PageName = "Mods"
+
+//ModListEntry pull this value from us when its created
+ModsPage.ModManager = ModLoader
 
 function ModsPage:Initialize()
   BasePage.Initialize(self, 600, 500, self.PageName, "Mods")

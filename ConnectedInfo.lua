@@ -1,13 +1,61 @@
+//
+//   Created by:   fsfod
+//
 
 ConnectedInfo = {
   ConnectedAddress = "",
 }
+
+local serverInfoFields = {
+  "Address",
+  "Name",
+}
+
+function ConnectedInfo:OnClientLoadComplete()
+
+  ClassHooker:HookFunction("Client", "Connect", self, "Connecting", InstantHookFlag)
+
+  if(StartupLoader.IsMainVM) then
+    return
+  end
+
+  local time = Shared.GetSystemTime()
+  
+  local timestamp = Client.GetOptionInteger("menumod/ConnectedInfo/TimeStamp", 0)
+  
+  if(timestamp ~= 0 and (time-timestamp) < 240) then
+    
+    local serverInfo = {
+      QueryPort = Client.GetOptionInteger("menumod/ConnectedInfo/QueryPort", 27016),
+      Passworded = Client.GetOptionBoolean("menumod/ConnectedInfo/Passworded", false),
+    }
+    
+    for i,fieldName in ipairs(serverInfoFields) do
+      serverInfo[fieldName] = Client.GetOptionString("ConnectedInfo/"..fieldName, "")
+    end
+    
+    self.ServerInfo = serverInfo
+    
+    self.ConnectedAddress = serverInfo.Address
+  end
+  
+  GameGUIManager:CreateFrame("ScoreboardServerInfo")
+end
 
 function ConnectedInfo:SetServerInfo(serverInfo) 
 
   assert(serverInfo and type(serverInfo) == "table")
 
   self.ServerInfo = table.duplicate(serverInfo)
+  
+  for i,fieldName in ipairs(serverInfoFields) do
+    Client.SetOptionString("menumod/ConnectedInfo/"..fieldName, tostring(self.ServerInfo[fieldName] or ""))
+  end
+  
+  Client.SetOptionInteger("menumod/ConnectedInfo/QueryPort", self.ServerInfo.QueryPort or 27016)
+  Client.SetOptionBoolean("menumod/ConnectedInfo/Passworded", self.ServerInfo.Passworded )
+  
+  Client.SetOptionInteger("menumod/ConnectedInfo/TimeStamp", Shared.GetSystemTime())
 end
 
 function ConnectedInfo:ConnectToServer(serverInfo, password)
@@ -21,7 +69,7 @@ function ConnectedInfo:ConnectToServer(serverInfo, password)
 
   self.ServerInfo = table.duplicate(serverInfo)
 
-  MapList:CheckMountMap(serverInfo.Map)
+  //MapList:CheckMountMap(serverInfo.Map)
 
   MainMenu_SBJoinServer(serverInfo.Address, password)
 end
@@ -53,7 +101,7 @@ function ConnectedInfo:Connecting(address)
 end
 
 function ConnectedInfo:Connected()
-  GameGUIManager:CreateFrame("ScoreboardServerInfo")
+  
 end
 
 function ConnectedInfo.Disconnected()
@@ -63,9 +111,6 @@ end
 Event.Hook("ClientDisconnected", ConnectedInfo.Disconnected)
 Event.Hook("ClientConnected", ConnectedInfo.Connected)
 
-ClassHooker:HookFunction("Client", "Connect", ConnectedInfo, "Connecting")
-
-
 ControlClass("ScoreboardServerInfo", BaseControl)
 
 function ScoreboardServerInfo:Initialize()
@@ -73,7 +118,7 @@ function ScoreboardServerInfo:Initialize()
   
   self:SetupHitRec()
   
-  self:SetPoint("Top", 0, 35, "Top")
+  self:SetPoint("Top", 100, 35, "Top")
   
   self:SetColor(Color(0, 0, 0, 0))
 
