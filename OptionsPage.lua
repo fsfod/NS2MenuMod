@@ -1,3 +1,6 @@
+//
+//   Created by:   fsfod
+//
 
 local HotReload = OptionsPage
 
@@ -45,7 +48,7 @@ function OptionsPage:Initialize()
 
   local topSpaceing = 35
   
-  local nickName = self:CreateControl("TextBox", 100, 20)
+  local nickName = self:CreateControl("TextBox", 100, 24)
     nickName:SetPoint("Top", -76, 40, "Top")
     nickName:SetLabel("Nickname")
     nickName:SetConfigBinding(kNicknameOptionsKey, "NsPlayer")
@@ -171,8 +174,18 @@ function OptionsPage:Initialize()
     //visualDetail.ItemPicked = function() Client.ReloadGraphicsOptions() end
   self:AddChild(visualDetail)
 
+  local antialiasing = self:CreateControl("CheckBox", "Anti-aliasing")
+    antialiasing:SetPoint("Top", 70, 345, "Top")
+    self.GFXOptionBindings[4] = antialiasing:SetConfigBinding("graphics/display/antialiasing", true):SetDelaySave(true)
+  self:AddChild(antialiasing)
+
+  local atmosphericLights = self:CreateControl("CheckBox", "Atmospheric Lights", true, true)
+    atmosphericLights:SetPoint("Top", -90, 380, "Top")
+    self.GFXOptionBindings[5] = atmosphericLights:SetConfigBinding("graphics/display/atmospherics", true):SetDelaySave(true)
+  self:AddChild(atmosphericLights)
+
    local applyGFXsButton = self:CreateControl("UIButton", "Apply Gfx Changes", 150)
-    applyGFXsButton:SetPoint("Top", -10, 395, "Top")
+    applyGFXsButton:SetPoint("Top", -40, 425, "Top")
     applyGFXsButton.ClickAction = function() self:ApplyGFXChanges() end
   self:AddChild(applyGFXsButton)
   

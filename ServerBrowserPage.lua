@@ -1,3 +1,7 @@
+//
+//   Created by:   fsfod
+//
+
 local PingLimits = {
   0,
   50,
@@ -66,6 +70,14 @@ local function GetServerRecord(serverIndex)
     local playerCount = Client.GetServerNumPlayers(serverIndex)
     local maxPlayers = Client.GetServerMaxPlayers(serverIndex)
     
+    local playeryCount
+    
+    if(ServerList and ServerList:GetServerBotCount(serverIndex) ~= 0) then
+      playeryCount = string.format("%i(bots %i)/%i", playerCount, Client.GetServerBotCount(serverIndex), maxPlayers)
+    else
+      playeryCount = playerCount.. " / "..maxPlayers
+    end
+
     return
         { 
             Name = Client.GetServerName(serverIndex),
@@ -78,7 +90,8 @@ local function GetServerRecord(serverIndex)
             Address = Client.GetServerAddress(serverIndex),
             Index = serverIndex,
             QueryPort = ServerList and ServerList:GetServerQueryPort(serverIndex),
-            playerCount.." / "..maxPlayers,
+            BotCount = botCount,
+            playeryCount,
         }
 end
 
@@ -323,7 +336,7 @@ function ServerBrowserPage:Initialize()
     notFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)
   self:AddChild(notFull)
   
-  local mapFilter = self:CreateControl("TextBox", 80, 20)
+  local mapFilter = self:CreateControl("TextBox", 80, 24)
     mapFilter:SetLabel("Map")
     mapFilter:SetPoint("BottomLeft", 490, -22, "BottomLeft")
     mapFilter.TextChanged = {self.SetMapFilter, self}

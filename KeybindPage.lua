@@ -89,15 +89,15 @@ end
 
 function KeybindListEntry:SendKeyEvent(key, down)
 
-  if(self.InBindMode and down and key ~= InputKey.MouseX and key ~= InputKey.MouseY) then
-    self:SetBind(key)
-
+  if(self.InBindMode and (down or key == InputKey.MouseZ) and key ~= InputKey.MouseX and key ~= InputKey.MouseY) then
+    self:SetBind(key, down)
+   
     return true
   end
 end
 
-function KeybindListEntry:SetBind(newKey)
-  self.Parent.Parent:SetKeybind(self.Data[1], newKey)
+function KeybindListEntry:SetBind(newKey, down)
+  self.Parent.Parent:SetKeybind(self.Data[1], newKey, down)
   self:ExitBindingMode()
 
   self.Parent:GetGUIManager():ClearFocus()
@@ -219,10 +219,10 @@ function KeybindPage:Initialize()
   self.WarningString = warningString
 end
 
-function KeybindPage:SetKeybind(BindName, key)
+function KeybindPage:SetKeybind(BindName, key, down)
 
   if(key ~= InputKey.Escape) then
-    key = InputKeyHelper:ConvertToKeyName(key)
+    key = InputKeyHelper:ConvertToKeyName(key, down)
     
     local old, isConsoleCmd = KeyBindInfo:GetKeyInfo(key)
     
