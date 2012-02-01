@@ -31,7 +31,7 @@ function ConnectedInfo:OnClientLoadComplete()
     }
     
     for i,fieldName in ipairs(serverInfoFields) do
-      serverInfo[fieldName] = Client.GetOptionString("ConnectedInfo/"..fieldName, "")
+      serverInfo[fieldName] = Client.GetOptionString("menumod/ConnectedInfo/"..fieldName, "")
     end
     
     self.ServerInfo = serverInfo
