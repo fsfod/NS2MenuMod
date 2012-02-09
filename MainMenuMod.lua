@@ -29,6 +29,22 @@ function MainMenuMod:OnLoad()
   self:RegisterDefaultPages()
 end
 
+function MainMenuMod:OnClientLoadComplete(disconnectMsg)
+
+  self:SetSkulkViewTilt()
+
+  if not Client.GetOptionBoolean("graphics/display/bloom", true) then
+    Shared.ConsoleCommand("r_bloom false")
+  end 
+end
+
+function MainMenuMod:SetSkulkViewTilt()
+  
+  if(OnCommandSkulkViewTilt) then
+    OnCommandSkulkViewTilt(Client.GetOptionBoolean("DisableSkulkViewTilt", false) and "false")
+  end
+end
+
 function MainMenuMod:SetHooks()
   self:RemoveAllHooks()
 /*

@@ -40,6 +40,7 @@ ControlClass('OptionsPage', BasePage)
 
 OptionsPage.PageName = "MainOptions"
 
+
 function OptionsPage:Initialize()
   BasePage.Initialize(self, 600, 500, self.PageName, "Options")
   BaseControl.Hide(self)
@@ -115,6 +116,22 @@ function OptionsPage:Initialize()
     invertMouse:SetPoint("Top", -90, 225, "Top")
     invertMouse:SetConfigBinding(kInvertedMouseOptionsKey, false)
   self:AddChild(invertMouse)
+/*
+  local mouseAccel = self:CreateControl("CheckBox", "Mouse Acceleration", false, true)
+    mouseAccel:SetPoint("Top", 100, 225, "Top")
+    mouseAccel:SetConfigBinding("input/mouse/acceleration", false) 
+    mouseAccel.CheckChanged = function(checked)
+      Shared.ConsoleCommand("i_accel "..tostring(checked))
+    end
+  self:AddChild(mouseAccel)
+*/
+  local rawinput = self:CreateControl("CheckBox", "Raw Mouse Input", true, true)
+    rawinput:SetPoint("Top", 80, 225, "Top")
+    rawinput:SetConfigBinding("input/mouse/rawinput", true)
+    rawinput.CheckChanged = function(checked)
+      Shared.ConsoleCommand("i_rawinput "..tostring(checked))
+    end
+  self:AddChild(rawinput)
 
   local skulkViewTilt = self:CreateControl("CheckBox", "Disable Skulk View Tilt", false, true)
     skulkViewTilt:SetPoint("Top", -90, 260, "Top")
@@ -125,22 +142,36 @@ function OptionsPage:Initialize()
       end     
     end
   self:AddChild(skulkViewTilt)
-
-  self.GFXOptionBindings = {}
-
-  local screenRes = self:CreateControl("ComboBox", 140, 20, ResHelper.DisplayModes, self.ResToString)
-   screenRes:SetPoint("Top", -30, 300, "Top")
-   screenRes:SetLabel("Resolution")
-   self.GFXOptionBindings[1] = screenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
-                                                      {kGraphicsYResolutionOptionsKey, 800, "integer"}}, self.ResConfigConverter):SetDelaySave(true)
-  self:AddChild(screenRes)
  
+  local bloom = self:CreateControl("CheckBox", "Bloom", true, true)
+    bloom:SetPoint("Top", 0, 300, "Top")
+    bloom:SetConfigBinding("graphics/display/bloom", true)
+    bloom.CheckChanged = function(checked)
+      Shared.ConsoleCommand("r_bloom "..tostring(checked))
+    end    
+  self:AddChild(bloom)
+ 
+  local antialiasing = self:CreateControl("CheckBox", "Anti-aliasing", true, true)
+    antialiasing:SetPoint("Top", 140, 300, "Top")
+    antialiasing:SetConfigBinding("graphics/display/antialiasing", true):SetDelaySave(true)
+    antialiasing.CheckChanged = function(checked)
+      Shared.ConsoleCommand("r_aa "..tostring(checked))
+    end
+  self:AddChild(antialiasing)
+
+  local atmosphericLights = self:CreateControl("CheckBox", "Atmospheric Lights", true, true)
+    atmosphericLights:SetPoint("Top", -90, 300, "Top")
+    atmosphericLights:SetConfigBinding("graphics/display/atmospherics", true):SetDelaySave(true)
+  self:AddChild(atmosphericLights)
+
+
+/* 
   local windowed = self:CreateControl("CheckBox", "Windowed")
     windowed:SetPoint("Top", 70, 300, "Top")
     self.GFXOptionBindings[2] = windowed:SetConfigBinding(kFullscreenOptionsKey, false, nil, function(value) return not value end):SetDelaySave(true)
   self:AddChild(windowed)
-
-
+  
+ 
   if(SetIsBorderless) then
     local borderless = self:CreateControl("CheckBox", "Borderless")
       borderless:SetPoint("Top", 180, 300, "Top")
@@ -158,9 +189,27 @@ function OptionsPage:Initialize()
       end
     self:AddChild(borderless)
   end
+*/
+  self.GFXOptionBindings = {}
+
+  local windowMode = self:CreateControl("ComboBox", 185, 20, {"Fullscreen", "Windowed", "Windowed Fullscreen"})
+    windowMode:SetPoint("Top", -80, 340, "TopLeft")
+    windowMode:SetLabel("Display Mode")
+    self.GFXOptionBindings[1] = windowMode:SetConfigBinding({{kFullscreenOptionsKey, true},
+                                                             {"borderless_window", false}}, self.WindowConfigConverter):SetDelaySave(true)
+  self:AddChild(windowMode)
+
+  local screenRes = self:CreateControl("ComboBox", 180, 20, ResHelper.DisplayModes, self.ResToString)
+   screenRes:SetPoint("Top", -80, 375, "TopLeft")
+   screenRes:SetLabel("Resolution")
+   self.GFXOptionBindings[2] = screenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
+                                                           {kGraphicsYResolutionOptionsKey, 800,  "integer"}}, self.ResConfigConverter):SetDelaySave(true)
+  self:AddChild(screenRes)
   
-  local visualDetail = self:CreateControl("ComboBox", 140, 20, OptionsDialogUI_GetVisualDetailSettings())
-    visualDetail:SetPoint("Top", -30, 345, "Top")
+  self.ScreenRes = screenRes
+
+  local visualDetail = self:CreateControl("ComboBox", 160, 20, OptionsDialogUI_GetVisualDetailSettings())
+    visualDetail:SetPoint("Top", -80, 410, "TopLeft")
     visualDetail:SetLabel("Visual Detail")
     self.GFXOptionBindings[3] = visualDetail:SetConfigBinding(kDisplayQualityOptionsKey, 0, "integer",
      function(value, index)
@@ -174,18 +223,8 @@ function OptionsPage:Initialize()
     //visualDetail.ItemPicked = function() Client.ReloadGraphicsOptions() end
   self:AddChild(visualDetail)
 
-  local antialiasing = self:CreateControl("CheckBox", "Anti-aliasing")
-    antialiasing:SetPoint("Top", 70, 345, "Top")
-    self.GFXOptionBindings[4] = antialiasing:SetConfigBinding("graphics/display/antialiasing", true):SetDelaySave(true)
-  self:AddChild(antialiasing)
-
-  local atmosphericLights = self:CreateControl("CheckBox", "Atmospheric Lights", true, true)
-    atmosphericLights:SetPoint("Top", -90, 380, "Top")
-    self.GFXOptionBindings[5] = atmosphericLights:SetConfigBinding("graphics/display/atmospherics", true):SetDelaySave(true)
-  self:AddChild(atmosphericLights)
-
    local applyGFXsButton = self:CreateControl("UIButton", "Apply Gfx Changes", 150)
-    applyGFXsButton:SetPoint("Top", -40, 425, "Top")
+    applyGFXsButton:SetPoint("Top", 0, 450, "Top")
     applyGFXsButton.ClickAction = function() self:ApplyGFXChanges() end
   self:AddChild(applyGFXsButton)
   
@@ -199,8 +238,11 @@ function OptionsPage:ApplyGFXChanges()
   end
   
   //clear borderless if its set before changing resolution so the engines values for Client.GetScreenWidth() and Client.GetScreenHeight() don't get inflated by the border size
-  if(GetIsBorderless and GetIsBorderless()) then
-    SetIsBorderless(false)
+  if(GetIsBorderless) then
+    
+    if(not Client.GetOptionBoolean("graphics/display/fullscreen", false) and Client.GetOptionBoolean("borderless_window", false)) then
+      SetIsBorderless(false, false)
+    end
   end
 
   Client.ReloadGraphicsOptions()
@@ -210,6 +252,28 @@ function OptionsPage:ApplyGFXChanges()
   end
 
   //ChangeUIScale()
+end
+
+local windowedModes = {
+  {true,  false}, //Fullscreen
+  {false, false}, //Windowed
+  {false, true}, //Fullscreen windowed
+}
+
+function OptionsPage.WindowConfigConverter(fullscreen, indexOrBorderless)
+
+  if(type(indexOrBorderless) == "number") then
+    return unpack(windowedModes[indexOrBorderless])
+  else
+    
+    if(fullscreen == true) then
+      return 1
+    elseif(indexOrBorderless == true) then
+      return 3
+    else
+      return 2
+    end
+  end
 end
 
 function OptionsPage.ResToString(entry)
