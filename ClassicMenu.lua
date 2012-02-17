@@ -1,27 +1,27 @@
 
-local HotReload = MenuButton
+local HotReload = MenuButton2
 
 
 
-ControlClass('MenuButton', BaseControl)
-ButtonMixin:Mixin(MenuButton)
+ControlClass('MenuButton2', BaseControl)
+ButtonMixin:Mixin(MenuButton2)
 
-MenuButton.PaddingX = 13
-MenuButton.PaddingY = 2
-MenuButton.TextOffsetVec = Vector(MenuButton.PaddingX, MenuButton.PaddingY, 0)
-MenuButton.FontSize = 21
+MenuButton2.PaddingX = 13
+MenuButton2.PaddingY = 2
+MenuButton2.TextOffsetVec = Vector(MenuButton2.PaddingX, MenuButton2.PaddingY, 0)
+MenuButton2.FontSize = 21
 
-MenuButton.BGColor = Color(1, 0, 0, 0)
+MenuButton2.BGColor = Color(1, 0, 0, 0)
 //MenuEntryFont:SetCenterAlignAndAnchor()
 //MenuEntryFont:SetColour(0, 1, 1, 1)
 
-function MenuButton:Initialize(height, label, action, fontSize)
+function MenuButton2:Initialize(height, label, action, fontSize)
   
   BaseControl.Initialize(self, 80, height-1)
   
   self:SetColor(self.BGColor)
 
-  local text = self:CreateFontString(MenuButton.FontSize)
+  local text = self:CreateFontString(MenuButton2.FontSize)
    text:SetPosition(self.TextOffsetVec)
   self.Label = text
 
@@ -37,7 +37,7 @@ function MenuButton:Initialize(height, label, action, fontSize)
   end
 end
 
-function MenuButton:SetData(data)
+function MenuButton2:SetData(data)
   self.InfoTable = data
 
   if(type(data[1]) == "string") then
@@ -51,18 +51,18 @@ function MenuButton:SetData(data)
   self:SetSize(self.Label:GetTextWidth(data[1]) + (2*self.PaddingX), self.Size.y)
 end
 
-function MenuButton:OnEnter()
+function MenuButton2:OnEnter()
 	self.Label:SetColor(Color(0.8666, 0.3843, 0, 1))
 	PlayerUI_PlayButtonEnterSound()
 end
 
-function MenuButton:OnLeave()
+function MenuButton2:OnLeave()
 	self.Label:SetColor(Color(1, 1, 1, 1))
 end
 
 ControlClass('MenuEntry', BaseControl)
 
-MenuEntry.EntryHeight = MenuButton.FontSize+(2*MenuButton.PaddingY)
+MenuEntry.EntryHeight = MenuButton2.FontSize+(2*MenuButton2.PaddingY)
 
 MenuEntry.EntrySpacing = 6
 MenuEntry.BGColor = Color(0, 1, 0, 0)
@@ -71,7 +71,7 @@ function MenuEntry:Initialize(owner, width, height)
   BaseControl.Initialize(self, width, height)
   self:SetColor(self.BGColor)
 
-  local button = self:CreateControl("MenuButton", height)
+  local button = self:CreateControl("MenuButton2", height)
     button:SetPosition(10, 0)
   self:AddChild(button)
   
@@ -165,7 +165,7 @@ function ClassicMenu:Initialize(height, width)
   self:AddChild(connectedMenu)
   self.ConnectedMenu = connectedMenu
 
-  local switchButton = self:CreateControl("MenuButton", 30, "Switch To Paged Menu", 
+  local switchButton = self:CreateControl("MenuButton2", 30, "Switch To Paged Menu", 
     function()
       GUIMenuManager:SwitchMainMenu("PagedMainMenu")
       GUIMenuManager.WindowedModeActive = false
