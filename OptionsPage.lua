@@ -153,7 +153,7 @@ function OptionsPage:Initialize()
  
   local antialiasing = self:CreateControl("CheckBox", "Anti-aliasing", true, true)
     antialiasing:SetPoint("Top", 140, 300, "Top")
-    antialiasing:SetConfigBinding("graphics/display/antialiasing", true):SetDelaySave(true)
+    antialiasing:SetConfigBinding("graphics/display/antialiasing", true)
     antialiasing.CheckChanged = function(checked)
       Shared.ConsoleCommand("r_aa "..tostring(checked))
     end
@@ -161,7 +161,10 @@ function OptionsPage:Initialize()
 
   local atmosphericLights = self:CreateControl("CheckBox", "Atmospheric Lights", true, true)
     atmosphericLights:SetPoint("Top", -90, 300, "Top")
-    atmosphericLights:SetConfigBinding("graphics/display/atmospherics", true):SetDelaySave(true)
+    atmosphericLights:SetConfigBinding("graphics/display/atmospherics", true)
+    atmosphericLights.CheckChanged = function(checked)
+      Shared.ConsoleCommand("r_atmospherics "..tostring(checked))
+    end
   self:AddChild(atmosphericLights)
 
 
