@@ -1,5 +1,5 @@
 EngineBuild = 185
-ValidVM = "client"
+ValidVM = "main_client"
 ModTableName = "MainMenuMod"
 MountSource = true
 
