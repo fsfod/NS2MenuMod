@@ -15,29 +15,23 @@ function ConnectedInfo:OnClientLoadComplete()
 
   ClassHooker:HookFunction("Client", "Connect", self, "Connecting", InstantHookFlag)
 
-  if(StartupLoader.IsMainVM) then
-    return
+  if(StartupLoader.IsMainVM or IsStartupVM or Client.GetOptionInteger("menumod/ConnectedInfo/TimeStamp", -1) == -1) then
+    Client.SetOptionInteger("menumod/ConnectedInfo/TimeStamp", -1)
+   return
   end
 
-  local time = Shared.GetSystemTime()
+  local serverInfo = {
+    QueryPort = Client.GetOptionInteger("menumod/ConnectedInfo/QueryPort", 27016),
+    Passworded = Client.GetOptionBoolean("menumod/ConnectedInfo/Passworded", false),
+  }
   
-  local timestamp = Client.GetOptionInteger("menumod/ConnectedInfo/TimeStamp", 0)
-  
-  if(timestamp ~= 0 and (time-timestamp) < 240) then
-    
-    local serverInfo = {
-      QueryPort = Client.GetOptionInteger("menumod/ConnectedInfo/QueryPort", 27016),
-      Passworded = Client.GetOptionBoolean("menumod/ConnectedInfo/Passworded", false),
-    }
-    
-    for i,fieldName in ipairs(serverInfoFields) do
-      serverInfo[fieldName] = Client.GetOptionString("menumod/ConnectedInfo/"..fieldName, "")
-    end
-    
-    self.ServerInfo = serverInfo
-    
-    self.ConnectedAddress = serverInfo.Address
+  for i,fieldName in ipairs(serverInfoFields) do
+    serverInfo[fieldName] = Client.GetOptionString("menumod/ConnectedInfo/"..fieldName, "")
   end
+  
+  self.ServerInfo = serverInfo
+  
+  self.ConnectedAddress = serverInfo.Address
 end
 
 function ConnectedInfo:SetServerInfo(serverInfo) 
