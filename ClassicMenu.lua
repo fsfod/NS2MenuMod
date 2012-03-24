@@ -133,8 +133,8 @@ function ClassicMenu:Initialize(height, width)
 
   self:SetColor(0,0,0,0)
 
-  local logo = self:CreateControl("BaseControl", 717, 158)
-    logo:SetTexture("ui/logo.dds")
+  local logo = self:CreateControl("BaseControl", 1024, 301)
+    logo:SetTexture("ui/menu/logo.dds")
     logo:SetPoint("Top", 0, 80, "Top")
   self:AddChild(logo)
 
