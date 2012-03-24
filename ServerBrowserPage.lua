@@ -13,9 +13,10 @@ local PingLimits = {
 local PasswordedWidth = 18
 local NameOffset = 0
 local GameModeOffset = 0.4
-local MapOffset = GameModeOffset+0.15
-local PlayerOffset = MapOffset+0.2
-local PingOffset = PlayerOffset+0.15
+local MapOffset = GameModeOffset+0.1
+local PlayerOffset = MapOffset+0.18
+local PingOffset = PlayerOffset+0.10
+local GameTagOffset = PingOffset+0.07
 
 local Headers = {
   {"Name",    NameOffset},
@@ -23,6 +24,7 @@ local Headers = {
   {"Map",     MapOffset},
   {"Players", PlayerOffset,  "PlayerCount", true},
   {"Ping",    PingOffset},
+  {"Tags", GameTagOffset, "GameTag"},
 }
 
 local headerFont = FontTemplate(19)
@@ -91,6 +93,7 @@ local function GetServerRecord(serverIndex)
             Index = serverIndex,
             QueryPort = ServerList and ServerList:GetServerQueryPort(serverIndex),
             BotCount = botCount,
+            GameTag = ServerList and ServerList:GetServerGameTags(serverIndex),
             playeryCount,
         }
 end
@@ -148,6 +151,9 @@ function ServerListEntry:Initialize(owner, width, height)
    //ping:SetTextAlignmentX(GUIItem.Align_Min)
    //ping:SetTextAlignmentY(GUIItem.Align_Center)
   self.Ping = ping
+
+  local gameTag = self:CreateFontString(self.FontSize)
+  self.GameTag = gameTag
 
   self:SetColor(Color(0,0,0,0))
 
@@ -218,6 +224,9 @@ function ServerListEntry:SetWidth(width)
 
   posVec.x = nameX+(width*PingOffset)
   self.Ping:SetPosition(posVec)
+  
+  posVec.x = nameX+(width*PingOffset)+50
+  self.GameTag:SetPosition(posVec)
 end
 
 function ServerListEntry:SetData(serverData)
@@ -234,6 +243,7 @@ function ServerListEntry:SetData(serverData)
   self.MapName:SetText(serverData.Map)
   self.PlayerCount:SetText(serverData[1])
   self.Ping:SetText(tostring(serverData.Ping))
+  self.GameTag:SetText(serverData.GameTag or "")
   
   local ping = serverData.Ping
   
@@ -291,7 +301,7 @@ function ServerBrowserPage:Initialize()
     self:AddChild(Label)
 
     Label:SetPosition(x+(headerInfo[2]*width), 35)
-  end  
+  end
   
   local refresh = self:CreateControl("UIButton", "Refresh")
     refresh:SetPoint("BottomLeft", 150, -15, "BottomLeft")
