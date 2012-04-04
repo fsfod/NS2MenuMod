@@ -253,9 +253,9 @@ function KeybindPage:SetKeybindsChanged()
 
   self.KeybindList:ListDataModifed()
 
-  if(not KeybindMapper) then
+  //if(not KeybindMapper) then
     Client.ReloadKeyOptions()
-  end
+  //end
 end
 
 function KeybindPage:ResetSelectedGroup()
