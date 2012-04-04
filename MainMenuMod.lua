@@ -36,6 +36,10 @@ function MainMenuMod:OnClientLoadComplete(disconnectMsg)
   if not Client.GetOptionBoolean("graphics/display/bloom", true) then
     Shared.ConsoleCommand("r_bloom false")
   end 
+  
+  MainMenu_GetIsOpened = function()
+    return GUIMenuManager:IsMenuOpen()
+  end
 end
 
 function MainMenuMod:SetSkulkViewTilt()
@@ -57,10 +61,6 @@ function MainMenuMod:SetHooks()
   
   self:HookLibraryFunction(HookType.Replace, "MenuManager", "GetMenu", function() return (GUIMenuManager:IsMenuOpen() and "") or nil end)
   */
-end
-
-function MainMenuMod:OnModsLoaded()
-  self:HookFunction("LeaveMenu", false, InstantHookFlag)
 end
 
 function MainMenuMod:RegisterDefaultPages()
