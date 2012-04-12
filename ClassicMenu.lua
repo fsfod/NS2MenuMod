@@ -127,7 +127,7 @@ PageFactory:Mixin(ClassicMenu)
 
 function ClassicMenu:Initialize(height, width)
   BaseControl.Initialize(self, height, width)
-  PageFactory.__init(self)
+  PageFactory.Initialize(self)
 
   GUIMenuManager.WindowedModeActive = true
 

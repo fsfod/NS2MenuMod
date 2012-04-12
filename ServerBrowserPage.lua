@@ -1,6 +1,9 @@
 //
 //   Created by:   fsfod
 //
+ControlClass('ServerBrowserPage', BasePage)
+
+ServerBrowserPage.FallbackToOfflineListTimeOut = 8
 
 local PingLimits = {
   0,
@@ -65,7 +68,6 @@ end
 function SBListHeader:OnLeave()
 	self.Label:SetColor(Color(1, 1, 1, 1))
 end
-
 
 local function GetServerRecord(serverIndex)
     
@@ -258,9 +260,6 @@ function ServerListEntry:SetData(serverData)
   end
 end
 
-
-ControlClass('ServerBrowserPage', BasePage)
-
 function ServerBrowserPage:Initialize()
 
   BasePage.Initialize(self, 740, 500, "Server Browser")
@@ -355,6 +354,8 @@ function ServerBrowserPage:Initialize()
   self.MapTextBox = mapFilter 
   self:AddChild(mapFilter)
   
+  
+  self.ServerListUpdater = self.OnlineUpdateList
 end
 
 function ServerBrowserPage:Hide()
@@ -534,6 +535,9 @@ end
 
 
 function ServerBrowserPage:RefreshList()
+  
+  self.LastUpdate = Client.GetTime()
+  
   self.Servers = {}
   self.FilteredList = {}
   self.ServerList:SetDataList(self.FilteredList)
@@ -545,7 +549,12 @@ function ServerBrowserPage:RefreshList()
 
   self.Refreshing = true
   self.CurrentCount = 0
-  Client.RebuildServerList()
+
+   if(self.ServerListUpdater == self.OfflineUpdateList or (false and MainMenuMod.KnownServers and #MainMenuMod.KnownServers > 0)) then
+    self:OfflineRefresh()
+  else
+    Client.RebuildServerList()
+  end
 end
 
 local function GetSortFunc(SortField, ascending)
@@ -628,12 +637,20 @@ end
 
 function ServerBrowserPage:UpdateServerCount()
   
+  local text
+  
   if(#self.Filters ~= 0) then
-    self.ServerCountDisplay:SetText(string.format("Found %i(%i) Servers", #self.FilteredList, #self.Servers))
+    text = string.format("Found %i(%i) Servers", #self.FilteredList, #self.Servers)
   else
-    self.ServerCountDisplay:SetText(string.format("Found %i Servers", #self.Servers))
+    text = string.format("Found %i Servers", #self.Servers)
   end
 
+
+  if(self.ServerListUpdater == self.OfflineUpdateList) then
+    text = text..", Master Server Offline Mode"
+  end
+  
+  self.ServerCountDisplay:SetText(text)
 end
 
 function ServerBrowserPage:TrySelectServer(server)
@@ -652,57 +669,168 @@ function ServerBrowserPage:TrySelectServer(server)
   return false
 end
 
+function ServerBrowserPage:WriteFoundServerList()
+  
+  local knownServers = {} 
+  
+  for i=1,self.CurrentCount do
+    
+    local server = self.Servers[i]
+    
+    knownServers[i] = {server.Address, server.QueryPort}
+  end
+  
+  MainMenuMod.KnownServers = knownServers
+  
+end
+
+function ServerBrowserPage:OfflineRefresh()
+  ServerList:CancelRefresh()
+  ServerInfo.CancelActiveQuerys()
+  
+  self.ServerListUpdater = self.OfflineUpdateList
+  
+  assert(MainMenuMod.KnownServers and #MainMenuMod.KnownServers > 0)
+  
+  self.SingleQueryResults = {}
+  
+  local callbackFunc = function(serverInfo, arg2, arg3)
+    
+    if(not self.SingleQueryCount) then
+      //were no longer intested in single query results if self.SingleRequestCount is nil or false
+      return
+    end
+ 
+    self.SingleQueryCount = self.SingleQueryCount+1
+    
+    if(not serverInfo) then
+       self.FailedQueryCount = self.FailedQueryCount+1
+      return
+    end
+    
+    if(serverInfo.BotCount ~= 0) then
+      serverInfo[1] = string.format("%i(bots %i)/%i", serverInfo.PlayerCount, serverInfo.BotCount, serverInfo.MaxPlayers)
+    else
+      serverInfo[1] = serverInfo.PlayerCount.. " / "..serverInfo.MaxPlayers
+    end
+        
+    self.SingleQueryResults[#self.SingleQueryResults+1] = serverInfo
+    
+    serverInfo.Index = self.SingleQueryCount-self.FailedQueryCount
+  end
+  
+  for i,server in ipairs(MainMenuMod.KnownServers) do
+    ServerInfo.QueryGameInfo(server[1], server[2], callbackFunc)
+  end
+
+  self.SingleQueryCount = 0
+  self.FailedQueryCount = 0
+end
+
+function ServerBrowserPage:OfflineUpdateList()
+
+  local NewCount = #self.SingleQueryResults
+
+  if(self.SingleQueryCount == #MainMenuMod.KnownServers) then
+    self.Refreshing = false
+  end
+
+  if(NewCount == 0) then
+   return nil
+  end
+
+  for i,server in ipairs(self.SingleQueryResults) do
+    self.Servers[self.CurrentCount+i] = server
+  end
+  
+  local servers = self.SingleQueryResults
+  self.SingleQueryResults = {}
+  
+  return servers
+end
+
+function ServerBrowserPage:OnlineUpdateList()
+  
+  local NewCount = Client.GetNumServers()
+  local servers
+  
+  if(self.CurrentCount ~= NewCount) then    
+  
+    servers = {}
+  
+    NewCount = NewCount-self.CurrentCount
+  
+    for i=1,NewCount do
+			servers[i] = GetServerRecord(self.CurrentCount+(i-1))
+    end
+  end
+  
+  if(ServerList and ServerList.RefreshFinished) then
+    self.Refreshing = false
+    
+    if(self.CurrentCount ~= 0) then
+      self:WriteFoundServerList()
+    end
+  end
+  
+  return servers
+end
+
 function ServerBrowserPage:Update()
+  
+  if(not self.Refreshing) then
+    return
+  end
+
   local connectedAddress
 
   if(Client.GetIsConnected()) then
     connectedAddress = ConnectedInfo:GetConnectedAddress()
   end
- 
-  local NewCount = Client.GetNumServers()
-  local ServerList = self.ServerList
   
-  if(self.Refreshing and self.CurrentCount ~= NewCount) then
-    
-    //if(self.LastUpdate and Client.GetTime()-self.LastUpdate < 1) then
-    //  return
-    //end
-    
-    self.LastUpdate = Client.GetTime()
-    local noFilters = #self.Filters == 0
-    local filteredList = self.FilteredList
-    
-    for i=self.CurrentCount+1,NewCount do
-		 local server = GetServerRecord(i-1)
-      //ServerList:GetServerRules(i-1, RullCallback)
-      //ServerInfo.QueryGameInfo(server.Address, RullCallback)
-			self.Servers[i] = server
-      
-      //GUIMenuManager:CreateWindow("ServerInfoWindow", server.Address, server.QueryPort)
-      
-			if(noFilters) then
-				filteredList[#filteredList+1] = server
-      end
-      
-      if(server.Address == connectedAddress and server.Address) then
-        self.ConnectedEntry = server
-      end
+  local NewServers = self:ServerListUpdater()
+  
+  local time = Client.GetTime()
+  
+  if(not NewServers) then
+    if(self.CurrentCount == 0 and self.ServerListUpdater ~= self.OfflineUpdateList and (time-self.LastUpdate) > self.FallbackToOfflineListTimeOut and
+       MainMenuMod.KnownServers and #MainMenuMod.KnownServers > 0) then
+       
+      self:OfflineRefresh()
     end
-    
-    self:FilterServers(self.CurrentCount+1)
-    
-    self.CurrentCount = NewCount
-    
-    self:SortList()
-    
-    ServerList:ListSizeChanged()
-    
-    self:UpdateServerCount()
+   return
   end
 
+  self.LastUpdate = time
+  
+  local noFilters = #self.Filters == 0
+  local filteredList = self.FilteredList
+  
+  for i,server in ipairs(NewServers) do
+    self.Servers[self.CurrentCount+i] = server
+  
+    if(noFilters) then
+      filteredList[#filteredList+1] = server
+    end
+    
+    if(server.Address == connectedAddress and server.Address) then
+      self.ConnectedEntry = server
+    end
+  end
+  
+  self:FilterServers(self.CurrentCount+1)
+  
+  self.CurrentCount = self.CurrentCount+#NewServers
+  
+  self:SortList()
+  
+  self.ServerList:ListSizeChanged()
+  
+  self:UpdateServerCount()
+
   if(self.ConnectedEntry) then
-    if(self.AutoSelectedConnected and ServerList:GetSelectedIndexData() ~= self.ConnectedEntry) then
-      ServerList:SetSelectedListEntry(self.ConnectedEntry)
+    if(self.AutoSelectedConnected and self.ServerList:GetSelectedIndexData() ~= self.ConnectedEntry) then
+      self.ServerList:SetSelectedListEntry(self.ConnectedEntry)
     end
   end
 end

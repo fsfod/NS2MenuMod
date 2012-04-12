@@ -4,7 +4,7 @@ PageFactory:Mixin(PagedMainMenu)
 
 function PagedMainMenu:Initialize(height, width)
   BaseControl.Initialize(self, height, width)
-  PageFactory.__init(self)
+  PageFactory.Initialize(self)
 
   self:SetColor(Color(0,0,0, 0))
  

@@ -22,3 +22,7 @@ ScriptList = {
 Dependencies = {
   "BaseUIControls",
 }
+
+SavedVaribles = {
+  "KnownServers",
+}
