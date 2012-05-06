@@ -211,7 +211,7 @@ function OptionsPage:Initialize()
   
   self.ScreenRes = screenRes
 
-  local visualDetail = self:CreateControl("ComboBox", 160, 20, OptionsDialogUI_GetVisualDetailSettings())
+  local visualDetail = self:CreateControl("ComboBox", 200, 20, OptionsDialogUI_GetVisualDetailSettings())
     visualDetail:SetPoint("Top", -80, 410, "TopLeft")
     visualDetail:SetLabel("Visual Detail")
     self.GFXOptionBindings[3] = visualDetail:SetConfigBinding(kDisplayQualityOptionsKey, 0, "integer",
