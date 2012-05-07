@@ -247,7 +247,24 @@ function ClassicMenu:ShowPage(name)
   end
 end
 
+function ClassicMenu:DoRecreatePages()
+  
+  if(self.RecreatePageList) then
+    for i,name in ipairs(self.RecreatePageList) do
+      GUIMenuManager:ShowPage(name)
+    end
+    
+    self.RecreatePageList = nil
+  end
+end
+
+
 if(HotReload) then
   //ClassicMenuMod:SetHooks()
+  ClassicMenu.RecreatePageList = GUIMenuManager:GetMenu() and GUIMenuManager:GetMenu():GetActivePages()
+  
   GUIMenuManager:RecreateMenu()
+  
+else
+  GUIMenuManager.RegisterCallback(ClassicMenu, "MenuCreated", "DoRecreatePages")
 end
