@@ -716,7 +716,7 @@ function ServerBrowserPage:OfflineRefresh()
         
     self.SingleQueryResults[#self.SingleQueryResults+1] = serverInfo
     
-    serverInfo.Index = self.SingleQueryCount-self.FailedQueryCount
+    serverInfo.Index = (self.SingleQueryCount-self.FailedQueryCount)-1
   end
   
   for i,server in ipairs(MainMenuMod.KnownServers) do
