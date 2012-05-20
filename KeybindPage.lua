@@ -27,6 +27,13 @@ local FriendlyNames = {
 	JoystickButton10 = "",
 }
 
+local ModifierKeys ={
+  [InputKey.LeftControl] = true,
+  [InputKey.RightControl] = true,
+  [InputKey.LeftShift] = true,
+  [InputKey.RightShift] = true,
+} 
+  
 HotReload = KeybindListEntry
 
 ControlClass('KeybindListEntry', BaseControl)
@@ -87,9 +94,19 @@ function KeybindListEntry:OnFocusLost()
   end
 end
 
+local lastModifer
+
 function KeybindListEntry:SendKeyEvent(key, down)
 
   if(self.InBindMode and (down or key == InputKey.MouseZ) and key ~= InputKey.MouseX and key ~= InputKey.MouseY) then
+
+    local currentKey, groupName = KeyBindInfo:GetBindinfo(self.Data[1])
+
+    if(ModifierKeys[key] and groupName and string.find(groupName, "Commander")) then
+      lastModifer = key
+     return
+    end
+    
     self:SetBind(key, down)
    
     return true
