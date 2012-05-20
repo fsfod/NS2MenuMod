@@ -333,13 +333,13 @@ function ServerBrowserPage:Initialize()
     pingfilter:SetLabel("Ping")
   self:AddChild(pingfilter)
 
-  local hasPlayers = self:CreateControl("CheckBox", "Has Players", false)
+  local hasPlayers = self:CreateControl("CheckBox", {Label = "Has Players", Checked = false})
     hasPlayers:SetPoint("BottomLeft", 580, -55, "BottomLeft")
     hasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
     hasPlayers:SetConfigBindingAndTriggerChange("ServerBrowser/HasPlayers", false)
   self:AddChild(hasPlayers)
   
-  local notFull = self:CreateControl("CheckBox", "Not Full", false)
+  local notFull = self:CreateControl("CheckBox", {Label = "Not Full", Checked = false})
     notFull:SetPoint("BottomLeft", 580, -20, "BottomLeft")
     notFull.CheckChanged = {self.SetNotFullFilter, self}
     notFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)

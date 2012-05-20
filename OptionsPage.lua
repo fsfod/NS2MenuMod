@@ -112,7 +112,7 @@ function OptionsPage:Initialize()
 
   self:AddChild(sensitivityValue)
 
-  local invertMouse = self:CreateControl("CheckBox", "Invert Mouse", false, true)
+  local invertMouse = self:CreateControl("CheckBox", {Label = "Invert Mouse", Checked = false, LabelOnLeft = true})
     invertMouse:SetPoint("Top", -90, 225, "Top")
     invertMouse:SetConfigBinding(kInvertedMouseOptionsKey, false)
   self:AddChild(invertMouse)
@@ -125,7 +125,7 @@ function OptionsPage:Initialize()
     end
   self:AddChild(mouseAccel)
 */
-  local rawinput = self:CreateControl("CheckBox", "Raw Mouse Input", true, true)
+  local rawinput = self:CreateControl("CheckBox", {Label = "Raw Mouse Input", Checked = true, LabelOnLeft = true})
     rawinput:SetPoint("Top", 80, 225, "Top")
     rawinput:SetConfigBinding("input/mouse/rawinput", true)
     rawinput.CheckChanged = function(checked)
@@ -133,7 +133,7 @@ function OptionsPage:Initialize()
     end
   self:AddChild(rawinput)
 
-  local skulkViewTilt = self:CreateControl("CheckBox", "Disable Skulk View Tilt", false, true)
+  local skulkViewTilt = self:CreateControl("CheckBox",  {Label = "Disable Skulk View Tilt", Checked = false, LabelOnLeft = true})
     skulkViewTilt:SetPoint("Top", -90, 260, "Top")
     skulkViewTilt:SetConfigBinding("DisableSkulkViewTilt", false)
     skulkViewTilt.CheckChanged = function(checked)
@@ -142,8 +142,8 @@ function OptionsPage:Initialize()
       end     
     end
   self:AddChild(skulkViewTilt)
- 
-  local bloom = self:CreateControl("CheckBox", "Bloom", true, true)
+
+  local bloom = self:CreateControl("CheckBox", {Label = "Bloom", Checked = true, LabelOnLeft = true})
     bloom:SetPoint("Top", 0, 300, "Top")
     bloom:SetConfigBinding("graphics/display/bloom", true)
     bloom.CheckChanged = function(checked)
@@ -151,7 +151,7 @@ function OptionsPage:Initialize()
     end    
   self:AddChild(bloom)
  
-  local antialiasing = self:CreateControl("CheckBox", "Anti-aliasing", true, true)
+  local antialiasing = self:CreateControl("CheckBox", {Label = "Anti-aliasing", Checked = true, LabelOnLeft = true})
     antialiasing:SetPoint("Top", 140, 300, "Top")
     antialiasing:SetConfigBinding("graphics/display/antialiasing", true)
     antialiasing.CheckChanged = function(checked)
@@ -159,7 +159,7 @@ function OptionsPage:Initialize()
     end
   self:AddChild(antialiasing)
 
-  local atmosphericLights = self:CreateControl("CheckBox", "Atmospheric Lights", true, true)
+  local atmosphericLights = self:CreateControl("CheckBox", {Label = "Atmospheric Lights", Checked = true, LabelOnLeft = true})
     atmosphericLights:SetPoint("Top", -90, 300, "Top")
     atmosphericLights:SetConfigBinding("graphics/display/atmospherics", true)
     atmosphericLights.CheckChanged = function(checked)
@@ -168,31 +168,7 @@ function OptionsPage:Initialize()
   self:AddChild(atmosphericLights)
 
 
-/* 
-  local windowed = self:CreateControl("CheckBox", "Windowed")
-    windowed:SetPoint("Top", 70, 300, "Top")
-    self.GFXOptionBindings[2] = windowed:SetConfigBinding(kFullscreenOptionsKey, false, nil, function(value) return not value end):SetDelaySave(true)
-  self:AddChild(windowed)
-  
- 
-  if(SetIsBorderless) then
-    local borderless = self:CreateControl("CheckBox", "Borderless")
-      borderless:SetPoint("Top", 180, 300, "Top")
-      borderless:SetConfigBinding("borderless_window", false)
-      borderless.CheckChanged = function(checked)
-        
-        if(Client.GetOptionBoolean(kFullscreenOptionsKey, true)) then
-          return
-        end
-        
-        local res = Client.GetStartupDisplayMode()
 
-        //if screen size is the native res of the monitor reset the window to 0,0 when we make it borderless
-        SetIsBorderless(checked, Client.GetScreenWidth() >= res.xResolution and Client.GetScreenHeight() >= res.yResolution)
-      end
-    self:AddChild(borderless)
-  end
-*/
   self.GFXOptionBindings = {}
 
   local windowMode = self:CreateControl("ComboBox", 185, 20, {"Fullscreen", "Windowed", "Windowed Fullscreen"})

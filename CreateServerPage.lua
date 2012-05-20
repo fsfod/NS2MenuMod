@@ -153,7 +153,7 @@ function CreateServerPage:Initialize()
     end)
   self:AddChild(playerLimit)
   
-  local lanGame = self:CreateControl("CheckBox", "Lan Game:")
+  local lanGame = self:CreateControl("CheckBox", {Label = "Lan Game:", Checked = false })
     lanGame:SetPoint("Top", -10+xoffset, 200, "Top")
     lanGame:SetConfigBinding("lanGame", true)
   self:AddChild(lanGame)
