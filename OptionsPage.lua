@@ -55,7 +55,7 @@ function OptionsPage:Initialize()
     nickName:SetConfigBinding(kNicknameOptionsKey, "NsPlayer")
   self:AddChild(nickName)
   
-  local soundVolume = self:CreateControl("Slider", 250, 20, 0, 100)
+  local soundVolume = self:CreateControl("Slider", {Width = 250, Height = 20, MinValue = 0, MaxValue = 100})
     soundVolume:SetPoint("Top", 30, 80, "Top")
     soundVolume:SetLabel("Sound Volume")
     soundVolume.NoValueChangedWhileDraging = true
@@ -66,14 +66,14 @@ function OptionsPage:Initialize()
     end
   self:AddChild(soundVolume)
   
-  local musicVolume = self:CreateControl("Slider", 250, 20, 0, 100)
+  local musicVolume = self:CreateControl("Slider", {Width = 250, Height = 20, MinValue = 0, MaxValue = 100})
     musicVolume:SetLabel("Music Volume")
     musicVolume:SetPoint("Top", 30, 120, "Top")
     musicVolume:SetConfigBinding(kMusicVolumeOptionsKey, 90)
     musicVolume.ValueChanged = function(value) Client.SetMusicVolume(value/100) end
   self:AddChild(musicVolume)
 
-  local voiceVolume = self:CreateControl("Slider", 250, 20, 0, 100)
+  local voiceVolume = self:CreateControl("Slider", {Width = 250, Height = 20, MinValue = 0, MaxValue = 100})
     voiceVolume:SetPoint("Top", 30, 155, "Top")
     voiceVolume:SetLabel("Voice Volume")
     voiceVolume.NoValueChangedWhileDraging = true
@@ -87,7 +87,7 @@ function OptionsPage:Initialize()
   
   local sensitivityValue = self:CreateControl("TextBox", 80, 20)
  
-  local mouseSensitivity = self:CreateControl("Slider", 250, 20, 0.01, 2)
+  local mouseSensitivity = self:CreateControl("Slider", {Width = 250, Height = 20, MinValue = 0, MaxValue = 2, StepSize = 0.01})
     mouseSensitivity:SetPoint("Top", 30, 190, "Top")
     mouseSensitivity.ValueChanged = function(value) 
       sensitivityValue:SetText(string.format("%.5f", value))
