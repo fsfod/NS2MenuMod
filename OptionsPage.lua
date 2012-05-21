@@ -171,14 +171,14 @@ function OptionsPage:Initialize()
 
   self.GFXOptionBindings = {}
 
-  local windowMode = self:CreateControl("ComboBox", 185, 20, {"Fullscreen", "Windowed", "Windowed Fullscreen"})
+  local windowMode = self:CreateControl("ComboBox", {Width = 185, Height = 20, ItemList = {"Fullscreen", "Windowed", "Windowed Fullscreen"}})
     windowMode:SetPoint("Top", -80, 340, "TopLeft")
     windowMode:SetLabel("Display Mode")
     self.GFXOptionBindings[1] = windowMode:SetConfigBinding({{kFullscreenOptionsKey, true},
                                                              {"borderless_window", false}}, self.WindowConfigConverter):SetDelaySave(true)
   self:AddChild(windowMode)
 
-  local screenRes = self:CreateControl("ComboBox", 180, 20, ResHelper.DisplayModes, self.ResToString)
+  local screenRes = self:CreateControl("ComboBox", {Width = 180, Height = 20, ItemList = ResHelper.DisplayModes, LabelCreator = self.ResToString})
    screenRes:SetPoint("Top", -80, 375, "TopLeft")
    screenRes:SetLabel("Resolution")
    self.GFXOptionBindings[2] = screenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
@@ -187,7 +187,7 @@ function OptionsPage:Initialize()
   
   self.ScreenRes = screenRes
 
-  local visualDetail = self:CreateControl("ComboBox", 200, 20, OptionsDialogUI_GetVisualDetailSettings())
+  local visualDetail = self:CreateControl("ComboBox",  {Width = 200, Height = 20, ItemList = OptionsDialogUI_GetVisualDetailSettings()})
     visualDetail:SetPoint("Top", -80, 410, "TopLeft")
     visualDetail:SetLabel("Visual Detail")
     self.GFXOptionBindings[3] = visualDetail:SetConfigBinding(kDisplayQualityOptionsKey, 0, "integer",

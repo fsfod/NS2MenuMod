@@ -10,7 +10,7 @@ function ConflictEntry:Initialize(owner, width, height)
   
   self:SetColor(0.05, 0.05, 0.05, 1)
   
-  local modList = self:CreateControl("ComboBox", 160, height, {})
+  local modList = self:CreateControl("ComboBox", {Width = 160, Height = height, ItemList = {}})
     modList.ItemSelected = function(modname)
       FullModsManager:SetConflictOverride(self.ScriptPath, modname)
     end
@@ -118,7 +118,7 @@ function CreateServerPage:Initialize()
 
   MapList:Init()
   
-  local map = self:CreateControl("ComboBox", 200, 20, MapList.Maps, function(entry) return entry.name end)
+  local map = self:CreateControl("ComboBox", {Width = 200, Height = 20, ItemList = MapList.Maps, LabelCreator = function(entry) return entry.name end})
     map:SetPoint("Top", xoffset, 150, "Top")
     map:SetConfigBinding("mapName", "", nil, self.MapValueConverter)
     map:SetLabel("Map:")

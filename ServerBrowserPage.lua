@@ -319,13 +319,13 @@ function ServerBrowserPage:Initialize()
     end
   self:AddChild(connectButton)
 
-  local pingfilter = self:CreateControl("ComboBox", 70, 20, PingLimits, function(ping) 
+  local pingfilter = self:CreateControl("ComboBox", {Width = 70, Height = 20, ItemList = PingLimits, LabelCreator = function(ping) 
       if(ping == 0) then
         return "All"
       else
         return string.format("< %i", ping)
       end
-    end)
+    end})
 
     pingfilter:SetPoint("BottomLeft", 500, -55, "BottomLeft")
     pingfilter.ItemPicked = {self.SetPingFilter, self}
