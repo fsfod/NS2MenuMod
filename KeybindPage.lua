@@ -193,6 +193,15 @@ end
 
 ControlClass('KeybindPage', BasePage)
 
+KeybindPage.ListSetup = {
+  Width = 500,
+  Height = 400,
+  ItemHeight = 20,
+  ItemSpacing = 4,
+  ItemClass = "KeybindListEntry",
+  ScrollBarWidth = 23,
+}
+
 function KeybindPage:Initialize()
   BasePage.Initialize(self, 600, 500, "Keybinds")
   BaseControl.Hide(self)
@@ -201,12 +210,10 @@ function KeybindPage:Initialize()
 
   KeyBindInfo:Init(true)
 
-  local keybindList = self:CreateControl("ListView", 500, 400, "KeybindListEntry", 20, 4)
+  local keybindList = self:CreateControl("ListView", self.ListSetup)
     keybindList:SetPoint("Center", 0, -40, "Center")
     keybindList.RootFrame:SetColor(Color(0, 0, 0, 1))
-    keybindList:SetDataList(KeyBindInfo:GetBindingDialogTable())
-    keybindList:SetScrollBarWidth(23)
-    
+    keybindList:SetDataList(KeyBindInfo:GetBindingDialogTable())    
     self:AddChild(keybindList)
   self.KeybindList = keybindList
 

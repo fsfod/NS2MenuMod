@@ -75,16 +75,24 @@ ModsPage.PageName = "Mods"
 //ModListEntry pull this value from us when its created
 ModsPage.ModManager = ModLoader
 
+ModsPage.ModListSetup = {
+  Width = 560,
+  Height = 350,
+  ItemHeight = 26,
+  ItemSpacing = 8,
+  ItemClass = "ModListEntry",
+  ItemsSelectable = false,
+  ScrollBarWidth = 25,
+}
+
 function ModsPage:Initialize()
   BasePage.Initialize(self, 600, 500, self.PageName, "Mods")
 
   self:Hide()
 
-  local modList = self:CreateControl("ListView", 560, 350, "ModListEntry", 26, 8)
+  local modList = self:CreateControl("ListView", self.ModListSetup)
    modList.RootFrame:SetColor(Color(0, 0, 0, 1))
-   modList.ItemsSelectable = false
    modList:SetPosition(20, 60)
-   modList.ScrollBar:SetWidth(25)
    self:AddChild(modList)
   self.ModList = modList
   

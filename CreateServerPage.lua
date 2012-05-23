@@ -54,6 +54,16 @@ ControlClass('CreateServerPage', BasePage)
 
 CreateServerPage.ModManager = FullModsManager
 
+CreateServerPage.ModListSetup = {
+  Width = 260,
+  Height = 350,
+  ItemClass = "ModListEntry",
+  ItemHeight = 26,
+  ItemSpacing = 8,
+  ItemsSelectable = false,
+  ScrollBarWidth = 25,
+}
+
 function CreateServerPage:Initialize()
   
   if(SavedVariables) then
@@ -69,7 +79,7 @@ function CreateServerPage:Initialize()
   if(SavedVariables) then
     xoffset = -100
 
-    local modList = self:CreateControl("ListView", 260, 350, "ModListEntry", 26, 8)
+    local modList = self:CreateControl("ListView", self.ModListSetup)
      modList.RootFrame:SetColor(Color(0, 0, 0, 1))
      modList.ItemsSelectable = false
      modList:SetPoint("TopRight", -20, 30, "TopRight")

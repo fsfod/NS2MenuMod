@@ -260,6 +260,15 @@ function ServerListEntry:SetData(serverData)
   end
 end
 
+ServerBrowserPage.ListSetup = {
+  Width = 700,
+  Height = 350,
+  ItemHeight = ServerListEntry.FontSize+2,
+  ItemSpacing = 1,
+  ItemClass = "ServerListEntry",
+  SelectedItemColor = Color(0, 0, 0.3, 1),
+}
+
 function ServerBrowserPage:Initialize()
 
   BasePage.Initialize(self, 740, 500, "Server Browser")
@@ -280,8 +289,9 @@ function ServerBrowserPage:Initialize()
 
   self.AutoSelectedConnected = true
 
-  local ServerList = self:CreateControl("ListView", 700, 350, "ServerListEntry", ServerListEntry.FontSize+2)
-   ServerList.RootFrame:SetColor(Color(0, 0, 0, 1))
+
+  local ServerList = self:CreateControl("ListView", self.ListSetup)
+   ServerList:SetColor(Color(0, 0, 0, 1))
    self:AddChild(ServerList)
    ServerList:SetPosition(20, 60)
    ServerList:SetDataList(self.Servers)

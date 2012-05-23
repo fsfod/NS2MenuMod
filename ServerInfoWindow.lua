@@ -23,6 +23,13 @@
     def("CheckActiveQuerys", &SingleQueryManager::CheckActiveQuerys),
     def("CancelActiveQuerys", &SingleQueryManager::CancelActiveQuerys)
 */
+ControlClass('PlayerListEntry', BaseControl)
+
+PlayerListEntry.FontSize = 15
+PlayerListEntry.DefaultWidth = 300
+PlayerListEntry.PlayerNameOffset = Vector(5, 0, 0)
+PlayerListEntry.TimePlayedOffset = Vector(120, 0, 0)
+PlayerListEntry.ScoreOffset = Vector(190, 0, 0)
 
 ControlClass('ServerInfoWindow', BaseWindow)
 
@@ -37,6 +44,14 @@ local InfoList = {
   "Ping",
   "GameMode",
   "Players",
+}
+
+
+ServerInfoWindow.ListSetup = {
+  Width = 240,
+  Height = 200,
+  ItemClass = "PlayerListEntry",
+  ItemHeight = PlayerListEntry.FontSize,
 }
 
 function ServerInfoWindow:Initialize(server, queryPort)
@@ -75,7 +90,7 @@ function ServerInfoWindow:Initialize(server, queryPort)
   self.Address:SetText("IP Address: "..self.ServerAddress)
 
 
-  local playerList = self:CreateControl("ListView", 240, 200, "PlayerListEntry", PlayerListEntry.FontSize)
+  local playerList = self:CreateControl("ListView", self.ListSetup)
     playerList:SetPoint("Bottom", 0, -15, "Bottom")
     playerList:SetColor(Color(0,0,0,1))
     
@@ -210,13 +225,6 @@ function ServerInfoWindow:Refresh()
   self.RefreshActive = true
 end
 
-ControlClass('PlayerListEntry', BaseControl)
-
-PlayerListEntry.FontSize = 15
-PlayerListEntry.DefaultWidth = 300
-PlayerListEntry.PlayerNameOffset = Vector(5, 0, 0)
-PlayerListEntry.TimePlayedOffset = Vector(120, 0, 0)
-PlayerListEntry.ScoreOffset = Vector(190, 0, 0)
 
 function PlayerListEntry:Initialize(owner, width, height)
 

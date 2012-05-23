@@ -125,6 +125,15 @@ ControlClass('ClassicMenu', BaseControl)
 
 PageFactory:Mixin(ClassicMenu)
 
+ClassicMenu.ListSetup = {
+  Width = 300,
+  MaxVisibleItems = -1, //filled in later
+  ItemClass = "MenuEntry",
+  ItemHeight = MenuEntry.EntryHeight,
+  ItemSpacing = MenuEntry.EntrySpacing,
+  ItemsSelectable = false,
+}
+
 function ClassicMenu:Initialize(height, width)
   BaseControl.Initialize(self, height, width)
   PageFactory.Initialize(self)
@@ -141,20 +150,23 @@ function ClassicMenu:Initialize(height, width)
   self.Logo = logo
 
   local list = MainMenuLinks
+  
+  local MenuLinksSetup = self.ListSetup
+  MenuLinksSetup.MaxVisibleItems = #list
 
-  local menuEntrys = self:CreateControl("ListView", 300, #list*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), "MenuEntry", MenuEntry.EntryHeight, MenuEntry.EntrySpacing)//MenuLinkList(list)
+  local menuEntrys = self:CreateControl("ListView", MenuLinksSetup)
    menuEntrys:SetPoint("BottomLeft", 0, -60, "BottomLeft")
    menuEntrys:SetDataList(list)
    menuEntrys:SetColor(Color(0,0,0,0))
-   menuEntrys.ItemsSelectable = false
    self:AddChild(menuEntrys)
   self.MenuEntrys = menuEntrys
+  
+  MenuLinksSetup.MaxVisibleItems = #MainMenuConnectedLinks
 
-  local connectedMenu = self:CreateControl("ListView", 300, #MainMenuConnectedLinks*(MenuEntry.EntryHeight+MenuEntry.EntrySpacing), "MenuEntry", MenuEntry.EntryHeight, MenuEntry.EntrySpacing)
+  local connectedMenu = self:CreateControl("ListView", MenuLinksSetup)
     connectedMenu:SetDataList(MainMenuConnectedLinks)
     connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-30, "BottomLeft")
     connectedMenu:SetColor(Color(0,0,0,0))
-    connectedMenu.ItemsSelectable = false
     if(not Client.GetIsConnected()) then
       connectedMenu:Hide()
     end
