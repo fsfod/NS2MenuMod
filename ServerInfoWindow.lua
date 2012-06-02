@@ -48,6 +48,7 @@ local InfoList = {
 
 
 ServerInfoWindow.ListSetup = {
+  Type = "ListView",
   Width = 240,
   Height = 200,
   ItemClass = "PlayerListEntry",
@@ -197,7 +198,7 @@ function ServerInfoWindow:PlayerCallback(playerList)
   self.RefreshActive = false    
   
   self.PlayerList = playerList
-  self.PlayerListView:SetDataList(self.PlayerList or {})
+  self.PlayerListView:SetDataList(self.PlayerList or {}, true)
  end
 
 function ServerInfoWindow:SetBlank()

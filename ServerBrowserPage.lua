@@ -4,8 +4,9 @@
 ControlClass('ServerBrowserPage', BasePage)
 
 ServerBrowserPage.FallbackToOfflineListTimeOut = 8
+ServerBrowserFontSize = ServerBrowserFontSize or 20
 
-local PingLimits = {
+ServerBrowserPage.PingLimits = {
   0,
   50,
   100, 
@@ -13,61 +14,9 @@ local PingLimits = {
   250,
 }
 
-local PasswordedWidth = 18
-local NameOffset = 0
-local GameModeOffset = 0.4
-local MapOffset = GameModeOffset+0.1
-local PlayerOffset = MapOffset+0.18
-local PingOffset = PlayerOffset+0.10
-local GameTagOffset = PingOffset+0.07
-
-local Headers = {
-  {"Name",    NameOffset},
-  {"Game",    GameModeOffset, "GameMode"},
-  {"Map",     MapOffset},
-  {"Players", PlayerOffset,  "PlayerCount", true},
-  {"Ping",    PingOffset},
-  {"Tags", GameTagOffset, "GameTag"},
-}
-
 local headerFont = FontTemplate(19)
 headerFont:SetCenterAlignAndAnchor()
 
-ControlClass('SBListHeader', BaseControl)
-
-ButtonMixin:Mixin(SBListHeader)
-
-function SBListHeader:Initialize(fieldName, label, startDescending)
-  
-  local text = self:CreateFontString(headerFont)
-   text:SetText(label)
-  self.Label = text
- 
-  BaseControl.Initialize(self, text:GetTextWidth(label)+8, text:GetTextHeight(label)+4)
-  ButtonMixin.Initialize(self)
-  
-  self:SetColor(Color(1,1,1,0.2))
-  
-  self.ServerInfoField = fieldName
-  
-  self.Ascending = not startDescending
-  
-  self.ClickAction = {self.ButtonClicked, self}
-end
-
-function SBListHeader:ButtonClicked()
-  self.Parent:SetServerSorting(self.ServerInfoField, self.Ascending)
-  self.Ascending = not self.Ascending
-end
-
-function SBListHeader:OnEnter()
-	self.Label:SetColor(Color(0.8666, 0.3843, 0, 1))
-	PlayerUI_PlayButtonEnterSound()
-end
-
-function SBListHeader:OnLeave()
-	self.Label:SetColor(Color(1, 1, 1, 1))
-end
 
 local function GetServerRecord(serverIndex)
     
@@ -105,17 +54,21 @@ local HotReload = ServerListEntry
 
 ControlClass('ServerListEntry', BaseControl)
 
-ServerListEntry.FontSize = 16
+ServerListEntry.FontSize = ServerBrowserFontSize
 ServerListEntry.PingColour100 = Color(0, 1, 0, 1)
 ServerListEntry.PingColour250 = Color(0.8588, 0.8588, 0, 1)
 ServerListEntry.PingColour600 = Color(1, 0.4901, 0, 1)
 ServerListEntry.PingColourWorst = Color(1, 0, 0, 1)
 
-function ServerListEntry:Initialize(owner, width, height)
+ServerListEntry.ValueIndent = 4
+
+function ServerListEntry:Initialize(owner, width, height, fontSize, layout)
   
   BaseControl.Initialize(self, width, height)
   
   self.Owner = owner
+  
+  self.FontSize = fontSize
   
   local passwordIcon = self:CreateGUIItem()
     passwordIcon:SetSize(Vector(10,12, 0))
@@ -127,7 +80,7 @@ function ServerListEntry:Initialize(owner, width, height)
    //serverName:SetAnchor(GUIItem.Left, GUIItem.Top)
    //serverName:SetTextAlignmentX(GUIItem.Align_Min)
    serverName:SetTextAlignmentY(GUIItem.Align_Min)
-  self.ServerName = serverName
+  self.Name = serverName
   
   
   local gameMode = self:CreateFontString(self.FontSize)
@@ -140,7 +93,7 @@ function ServerListEntry:Initialize(owner, width, height)
    //map:SetAnchor(GUIItem.Left, GUIItem.Center)
    //map:SetTextAlignmentX(GUIItem.Align_Min)
    //map:SetTextAlignmentY(GUIItem.Align_Center)
-  self.MapName = map
+  self.Map = map
   
   local playerCount = self:CreateFontString(self.FontSize)
    //playerCount:SetAnchor(GUIItem.Left, GUIItem.Top)
@@ -158,6 +111,8 @@ function ServerListEntry:Initialize(owner, width, height)
   self.GameTag = gameTag
 
   self:SetColor(Color(0,0,0,0))
+
+  self:UpdateLayout(layout)
 
   self:SetWidth(width)
 end
@@ -198,37 +153,23 @@ function ServerListEntry:GetRoot()
   return self.RootFrame
 end
 
-function ServerListEntry:SetWidth(width) 
-  
-  width = width-PasswordedWidth
-
-  local nameX = PasswordedWidth
-  local playerX = nameX+(width*PlayerOffset)
-  local modeX = nameX+(width*GameModeOffset)
-  local mapX = nameX+(width*MapOffset)
-
-  local posVec = Vector(0, 1, 0)
- 
+function ServerListEntry:UpdateLayout(positionList)
   local height = self:GetHeight()
- 
-  self.ServerName:SetTextClipped(true, modeX-nameX, height)
+  local Widths = self.Owner.ColumnWidths
 
-  posVec.x = modeX
-  self.GameMode:SetPosition(posVec)
-  self.GameMode:SetTextClipped(true, mapX-modeX, height)
+  for name,offset in pairs(positionList) do
 
-  posVec.x = mapX
-  self.MapName:SetPosition(posVec)
-  self.MapName:SetTextClipped(true, playerX-mapX, height)
-  
-  posVec.x = playerX
-  self.PlayerCount:SetPosition(posVec)
+    local control = self[name]
+    control:SetPosition(offset)
+    
+    if(name ~= "Passworded") then
+      control:SetTextClipped(true, Widths[name]-self.ValueIndent, height)
+    end
+  end
+end
 
-  posVec.x = nameX+(width*PingOffset)
-  self.Ping:SetPosition(posVec)
-  
-  posVec.x = nameX+(width*PingOffset)+50
-  self.GameTag:SetPosition(posVec)
+function ServerListEntry:SetWidth(width) 
+
 end
 
 function ServerListEntry:SetData(serverData)
@@ -240,16 +181,16 @@ function ServerListEntry:SetData(serverData)
 
   self.Passworded:SetIsVisible(serverData.Passworded)
 
-  self.ServerName:SetText(serverData.Name)
+  self.Name:SetText(serverData.Name)
   self.GameMode:SetText(serverData.GameMode)
-  self.MapName:SetText(serverData.Map)
+  self.Map:SetText(serverData.Map)
   self.PlayerCount:SetText(serverData[1])
   self.Ping:SetText(tostring(serverData.Ping))
   self.GameTag:SetText(serverData.GameTag or "")
   
   local ping = serverData.Ping
   
-  if(ping < 100) then
+  if(ping <= 100) then
     self.Ping:SetColor(self.PingColour100)
   elseif(ping > 600) then
     self.Ping:SetColor(self.PingColourWorst)
@@ -260,18 +201,158 @@ function ServerListEntry:SetData(serverData)
   end
 end
 
-ServerBrowserPage.ListSetup = {
-  Width = 700,
-  Height = 350,
-  ItemHeight = ServerListEntry.FontSize+2,
-  ItemSpacing = 1,
-  ItemClass = "ServerListEntry",
-  SelectedItemColor = Color(0, 0, 0.3, 1),
+local fontsize = 20
+
+ServerBrowserPage.PageSetup = {
+  Width = 840,
+  Height = 500,
+  //Position = {"Left", 30, 150, "Left"},
+  Title = "Server Browser",
+  PageName = "ServerBrowser",
+}
+
+ServerBrowserPage.ControlSetup = {
+  ServerHeader = {
+    Type = "TabHeader",
+    Width = 780,
+    Height = 23,
+    Position = Vector(20, 30, 0),
+    Mode = "ListHeader",
+    FontSize = 20,
+    TabPressed = "ColumnClicked",
+    TabsSwapped = "ColumnSwapped",
+    TabResized = "ColumnResized",
+    GetSavedLayout = "GetSavedHeaderLayout",
+    RestoreSavedOptions = function()
+      return MainMenuMod.ServerBrowser_Settings, {"ResizableTabs", "DraggableTabs"}
+    end,
+    TabList = {
+      {Label = "",        Width = 20,  NameTag = "Passworded", ClickEnabled = false},
+      {Label = "Name",    Width = 353},
+      {Label = "Game",    Width = 60 , NameTag = "GameMode"},
+      {Label = "Map",     Width = 133},
+      {Label = "Players", Width = 70,  NameTag = "PlayerCount", Ascending = true},
+      {Label = "Ping",    Width = 47, MinWidth = 40},
+      {Label = "Tags",    Width = 100, NameTag = "GameTag"},
+    }
+  },
+
+
+
+  LockHeader = {
+    Type = "CheckBox",
+    Height = 20,
+    Position = {"TopRight", -6, 30},
+    Label = "",
+    Checked = false,
+    CheckChanged = "SetLockHeader",
+    ConfigDatabind = {
+      TableKey = "ResizableTabs", 
+      Table = MainMenuMod.ServerBrowser_Settings, 
+      DefaultValue = true, 
+      ValueConverter = function(value)
+        return not value
+      end,
+    },
+  },
+
+  ServerList = {
+    Type = "ListView",
+    Width = 800,
+    Height = 350,
+    Position = Vector(20, 55, 0),
+    Color = Color(0, 0, 0, 1),
+    ItemHeight = ServerBrowserFontSize+2,
+    ItemSpacing = 3,
+    FontSize = ServerBrowserFontSize,
+    ItemClass = "ServerListEntry",
+    SelectedItemColor = Color(0, 0, 0.3, 1),
+    DelayCreateItems = true,
+  },
+      
+  PingFilter = {
+    Type = "ComboBox",
+    Width = 100, 
+    Height = fontsize+2,
+    Position = {"BottomRight", -155, -55, "BottomRight"},
+    
+    Label = "Ping",
+    ItemList = {0, 50, 100, 250}, 
+    LabelCreator = function(ping) 
+      if(ping == 0) then
+        return "All"
+      else
+        return string.format("< %i", ping)
+      end
+    end
+  },
+  
+  MapTextBox = {
+    Type = "TextBox",
+    Width = 100,
+    Height = fontsize+2,
+    Position = {"BottomRight", -155, -20, "BottomRight"},
+    Label = "Map",
+  },
+  
+  HasPlayers = {
+    Type = "CheckBox",
+    Position = {"BottomRight", -120, -55, "BottomRight"},
+    FontSize = fontsize,
+    Label = "Has Players", 
+    Checked = false,
+    CheckChanged = "SetEmptyServersFilter",
+  },
+
+  NotFull = {
+    Type = "CheckBox",
+    Position = {"BottomRight", -120, -20, "BottomRight"},
+    FontSize = fontsize,
+    Label = "Not Full", 
+    Checked = false,
+    CheckChanged = "SetNotFullFilter",
+  },
+  
+  Refresh = {
+    Type = "UIButton",
+    Label = "Refresh",
+    Position = {"BottomLeft", 150, -15, "BottomLeft"},
+    ClickAction = "RefreshList",
+  },
+  
+  ConnectButton = {
+    Type = "UIButton",
+    Label = "Connect",
+    Position = {"BottomLeft", 300, -15, "BottomLeft"},
+  },
+}
+
+ServerBrowserPage.Sorters = {
+  PlayerCount = true,
+  Ping = true,
+  Map = true,
+  Name = true,
+  GameMode = true,
 }
 
 function ServerBrowserPage:Initialize()
 
-  BasePage.Initialize(self, 740, 500, "Server Browser")
+  local settings = MainMenuMod.ServerBrowser_Settings
+  self.Settings = settings
+/*
+  if(Client.GetScreenWidth() > 900) then
+    local width = Client.GetScreenWidth()-200
+    
+    width = math.min(width, 1000)
+    
+    self.PageSetup.Width = width
+    
+    self.ControlSetup.ServerList.Width = width-40
+    self.ControlSetup.ServerHeader.Width = width-60
+  end
+*/
+  self:SetupFromTable(self.PageSetup)
+  self:CreatChildControlsFromTable(self.ControlSetup)
 
   MapList:Init()
 
@@ -288,88 +369,92 @@ function ServerBrowserPage:Initialize()
   self.ServerCountDisplay = self:CreateFontString(17, nil, 30, 12)
 
   self.AutoSelectedConnected = true
+  
+  if(settings.SortColumn) then
+    self:SetServerSorting(settings.SortColumn, settings.SortIsAscending)
+  end
+  
+  local columnOffsets = {}
 
-
-  local ServerList = self:CreateControl("ListView", self.ListSetup)
-   ServerList:SetColor(Color(0, 0, 0, 1))
-   self:AddChild(ServerList)
-   ServerList:SetPosition(20, 60)
-   ServerList:SetDataList(self.Servers)
-   ServerList.ItemSelected = function() 
+  for name,offset in pairs(self.ServerHeader:GetTabOffsets()) do
+    columnOffsets[name] = Vector(offset+ServerListEntry.ValueIndent, 0, 0)
+  end
+  self.ColumnOffsets = columnOffsets
+ 
+  local serverList = self.ServerList
+  serverList.ColumnWidths = self.ServerHeader:GetTabWidths()
+  serverList:SetItemLayout(columnOffsets)
+  serverList:SetDataList(self.Servers)
+  serverList.ItemSelected = function() 
     if(Client.GetIsConnected()) then
       self.AutoSelectedConnected = false
     end
-   end
-  self.ServerList = ServerList
-
-  local x = PasswordedWidth+20
-  local width = ServerList.ItemWidth-PasswordedWidth
-  
-  for i,headerInfo in ipairs(Headers) do
-    local Label = self:CreateControl("SBListHeader", headerInfo[3] or headerInfo[1], headerInfo[1], headerInfo[4])
-    self:AddChild(Label)
-
-    Label:SetPosition(x+(headerInfo[2]*width), 35)
   end
-  
-  local refresh = self:CreateControl("UIButton", "Refresh")
-    refresh:SetPoint("BottomLeft", 150, -15, "BottomLeft")
-    refresh.ClickAction = {self.RefreshList, self}
-  self:AddChild(refresh)
-  
+   
+   
   self:AddBackButton("BottomLeft", 20, -15, "BottomLeft")
-  
-  local connectButton = self:CreateControl("UIButton", "Connect")
-    connectButton:SetPoint("BottomLeft", 300, -15, "BottomLeft")
-    connectButton.ClickAction = function()
-      local index = ServerList:GetSelectedIndex()
-      if(index) then
-        self:Connect(self.FilteredList[index].Index)
-      end
+
+  self.ConnectButton.ClickAction = function()
+    local index = self.ServerList:GetSelectedIndex()
+    if(index) then
+      self:Connect(self.FilteredList[index].Index)
     end
-  self:AddChild(connectButton)
+  end
 
-  local pingfilter = self:CreateControl("ComboBox", {Width = 70, Height = 20, ItemList = PingLimits, LabelCreator = function(ping) 
-      if(ping == 0) then
-        return "All"
-      else
-        return string.format("< %i", ping)
-      end
-    end})
+  self.PingFilter.ItemPicked = {self.SetPingFilter, self}
+  self.PingFilter:SetConfigBindingAndTriggerChange("ServerBrowser/Ping", 0, "number")
 
-    pingfilter:SetPoint("BottomLeft", 500, -55, "BottomLeft")
-    pingfilter.ItemPicked = {self.SetPingFilter, self}
-    pingfilter:SetConfigBindingAndTriggerChange("ServerBrowser/Ping", 0, "number")
-    pingfilter:SetLabel("Ping")
-  self:AddChild(pingfilter)
-
-  local hasPlayers = self:CreateControl("CheckBox", {Label = "Has Players", Checked = false})
-    hasPlayers:SetPoint("BottomLeft", 580, -55, "BottomLeft")
-    hasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
-    hasPlayers:SetConfigBindingAndTriggerChange("ServerBrowser/HasPlayers", false)
-  self:AddChild(hasPlayers)
+  //self.HasPlayers.CheckChanged = {self.SetEmptyServersFilter, self}
+  self.HasPlayers:SetConfigBindingAndTriggerChange("ServerBrowser/HasPlayers", false)
   
-  local notFull = self:CreateControl("CheckBox", {Label = "Not Full", Checked = false})
-    notFull:SetPoint("BottomLeft", 580, -20, "BottomLeft")
-    notFull.CheckChanged = {self.SetNotFullFilter, self}
-    notFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)
-  self:AddChild(notFull)
+  //self.NotFull.CheckChanged = {self.SetNotFullFilter, self}
+  self.NotFull:SetConfigBindingAndTriggerChange("ServerBrowser/Full", false)
   
-  local mapFilter = self:CreateControl("TextBox", 80, 24)
-    mapFilter:SetLabel("Map")
-    mapFilter:SetPoint("BottomLeft", 490, -22, "BottomLeft")
-    mapFilter.TextChanged = {self.SetMapFilter, self}
-    mapFilter:SetConfigBindingAndTriggerChange("ServerBrowser/Map", "")
-    //mapFilter:SetColor(0, 0, 0, 1)
-  self.MapTextBox = mapFilter 
-  self:AddChild(mapFilter)
-  
+  self.MapTextBox.TextChanged = {self.SetMapFilter, self}
+  self.MapTextBox:SetConfigBindingAndTriggerChange("ServerBrowser/Map", "")
   
   self.ServerListUpdater = self.OnlineUpdateList
 end
 
+function ServerBrowserPage:SetLockHeader(locked)
+
+  self.Settings.ResizableTabs = not locked
+  self.Settings.DraggableTabs = not locked
+  
+  self.ServerHeader:SetResizableTabs(not locked)
+  self.ServerHeader:SetDraggableTabs(not locked)
+end
+
+function ServerBrowserPage:GetSavedHeaderLayout()
+  return self.Settings.ColumnOrder, self.Settings.ColumnWidths
+end
+
+function ServerBrowserPage:ColumnSwapped()
+  self.Settings.ColumnOrder = self.ServerHeader:GetTabOrder(self.Settings.ColumnOrder)
+  self:UpdateServerListLayout()
+end
+
+function ServerBrowserPage:ColumnResized()
+  self.Settings.ColumnWidths = self.ServerHeader:GetTabWidths(self.Settings.ColumnWidths) 
+  self.ServerList.ColumnWidths = self.Settings.ColumnWidths
+  self:UpdateServerListLayout()
+end
+
+function ServerBrowserPage:UpdateServerListLayout()
+
+  for name,offset in pairs(self.ServerHeader:GetTabOffsets()) do
+    self.ColumnOffsets[name].x = offset+ServerListEntry.ValueIndent
+  end
+
+  self.ServerList:SetItemLayout(self.ColumnOffsets)
+end
+
 function ServerBrowserPage:Hide()
   BaseControl.Hide(self)
+end
+
+function ServerBrowserPage:ColumnClicked(tab)
+  self:SetServerSorting(tab.NameTag, not tab.Ascending)
 end
 
 function ServerBrowserPage:SetNotFullFilter(filter)
@@ -616,7 +701,16 @@ local function GetSortFunc(SortField, ascending)
 end
 
 function ServerBrowserPage:SetServerSorting(serverField, ascending)
+  
+  if(not self.Sorters[serverField]) then
+    return
+  end  
+  
   local selected = self:GetSelectedServer()
+  
+  self.Settings.SortColumn = serverField
+  self.Settings.SortIsAscending = ascending
+  self.ServerHeader:SetTabSortDirection(serverField, ascending)
   
   self.SortFunction = GetSortFunc(serverField, ascending)
   self:SortList()

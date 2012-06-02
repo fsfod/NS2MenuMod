@@ -126,6 +126,7 @@ ControlClass('ClassicMenu', BaseControl)
 PageFactory:Mixin(ClassicMenu)
 
 ClassicMenu.ListSetup = {
+  Type = "ListView",
   Width = 300,
   MaxVisibleItems = -1, //filled in later
   ItemClass = "MenuEntry",
@@ -154,16 +155,15 @@ function ClassicMenu:Initialize(height, width)
   local MenuLinksSetup = self.ListSetup
   MenuLinksSetup.MaxVisibleItems = #list
 
-  local menuEntrys = self:CreateControl("ListView", MenuLinksSetup)
+  local menuEntrys = self:CreateControlFromTable(MenuLinksSetup)
    menuEntrys:SetPoint("BottomLeft", 0, -60, "BottomLeft")
    menuEntrys:SetDataList(list)
    menuEntrys:SetColor(Color(0,0,0,0))
-   self:AddChild(menuEntrys)
   self.MenuEntrys = menuEntrys
   
   MenuLinksSetup.MaxVisibleItems = #MainMenuConnectedLinks
 
-  local connectedMenu = self:CreateControl("ListView", MenuLinksSetup)
+  local connectedMenu = self:CreateControlFromTable(MenuLinksSetup)
     connectedMenu:SetDataList(MainMenuConnectedLinks)
     connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-30, "BottomLeft")
     connectedMenu:SetColor(Color(0,0,0,0))
@@ -174,7 +174,6 @@ function ClassicMenu:Initialize(height, width)
       ListView.ParentSizeChanged(controlSelf)
       connectedMenu:SetPoint("TopLeft", 0, menuEntrys:GetTop()-20, "BottomLeft")
     end
-  self:AddChild(connectedMenu)
   self.ConnectedMenu = connectedMenu
 
   local switchButton = self:CreateControl("MenuButton2", 30, "Switch To Paged Menu", 

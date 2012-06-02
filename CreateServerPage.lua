@@ -38,11 +38,18 @@ ControlClass('ScriptConflictWindow', BaseWindow)
 function ScriptConflictWindow:Initialize()
   BaseWindow.Initialize(self, 400, 400, "Script Conflicts")
   
-  local scriptList = self:CreateControl("ListView", 380, 350, "ConflictEntry", 20, 8)
+  local scriptList = self:CreateControl("ListView", {
+      Width = 380, 
+      Height = 350, 
+      ItemClass = "ConflictEntry", 
+      ItemHeight = 20, 
+      ItemSpacing = 8,
+      ItemsSelectable = false,
+      ScrollBarWidth = 25,
+    })
+    
     scriptList:SetColor(Color(0, 0, 0, 1))
-    scriptList.ItemsSelectable = false
     scriptList:SetPoint("Top", 0, 30, "Top")
-    scriptList.ScrollBar:SetWidth(25)
     self:AddChild(scriptList)
   self.ScriptList = scriptList
   

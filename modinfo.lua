@@ -1,7 +1,9 @@
-EngineBuild = 185
+EngineBuild = 208
 ValidVM = "main_client"
 ModTableName = "MainMenuMod"
 MountSource = true
+
+MainScript = "GUIMainMenu.lua"
 
 ScriptList = {
   "MainMenuMod.lua",
@@ -25,4 +27,5 @@ Dependencies = {
 
 SavedVaribles = {
   "KnownServers",
+  "ServerBrowser_Settings",
 }
