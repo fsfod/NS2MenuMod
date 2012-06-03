@@ -47,7 +47,7 @@ OptionsPage.ControlSetup = {
       Height = 24,
       Position = {"Top", -76, 40, "Top"},
       Label = "Nickname",
-      ConfigDatabind = {ConfigPath = "kNicknameOptionsKey", DefaultValue = "NsPlayer"},
+      ConfigDataBind = {ConfigPath = "kNicknameOptionsKey", DefaultValue = "NsPlayer"},
       kNicknameOptionsKey, "NsPlayer"
     },
      
@@ -63,7 +63,7 @@ OptionsPage.ControlSetup = {
         Client.SetSoundVolume(value/100)
         PlayerUI_PlayButtonClickSound()
       end,
-      ConfigDatabind = {ConfigPath = kSoundVolumeOptionsKey, DefaultValue = 90}
+      ConfigDataBind = {ConfigPath = kSoundVolumeOptionsKey, DefaultValue = 90}
     },
     
     MusicVolume = {
@@ -77,7 +77,7 @@ OptionsPage.ControlSetup = {
       ValueChanged = function(value) 
         Client.SetMusicVolume(value/100)
       end,
-      ConfigDatabind = {ConfigPath = kMusicVolumeOptionsKey, DefaultValue = 90}
+      ConfigDataBind = {ConfigPath = kMusicVolumeOptionsKey, DefaultValue = 90}
     },
     
     VoiceVolume = {
@@ -91,7 +91,7 @@ OptionsPage.ControlSetup = {
       ValueChanged = function(value, stillDragging) 
         Client.SetVoiceVolume(value/100)
       end,
-      ConfigDatabind = {ConfigPath = kVoiceVolumeOptionsKey, DefaultValue = 90}
+      ConfigDataBind = {ConfigPath = kVoiceVolumeOptionsKey, DefaultValue = 90}
     },
     
     MouseSensitivity = {
@@ -106,7 +106,7 @@ OptionsPage.ControlSetup = {
       ValueChanged = function(value, stillDragging, self) 
         self.Parent.SensitivityValue:SetText(string.format("%.5f", value))
       end,
-      ConfigDatabind = {
+      ConfigDataBind = {
         //We have to wrap these function in our own functions because they won't be loaded into Client libary at this early stage
         ValueGetter = function() return Client.GetMouseSensitivity() end, 
         ValueSetter = function(value) Client.SetMouseSensitivity(value) end, 
@@ -130,7 +130,7 @@ OptionsPage.ControlSetup = {
       Label = "Invert Mouse", 
       Checked = false, 
       LabelOnLeft = true,
-      ConfigDatabind = {ConfigPath = kInvertedMouseOptionsKey, DefaultValue = false}
+      ConfigDataBind = {ConfigPath = kInvertedMouseOptionsKey, DefaultValue = false}
     },
     
     RawInput = {
@@ -139,7 +139,7 @@ OptionsPage.ControlSetup = {
       Label = "Raw Mouse Input", 
       Checked = true,
       LabelOnLeft = true,
-      ConfigDatabind = {ConfigPath = "input/mouse/rawinput",  DefaultValue = true},
+      ConfigDataBind = {ConfigPath = "input/mouse/rawinput",  DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("i_rawinput "..tostring(checked))
       end
@@ -151,7 +151,7 @@ OptionsPage.ControlSetup = {
       Label = "Disable Skulk View Tilt", 
       Checked = false,
       LabelOnLeft = true,
-      ConfigDatabind = {ConfigPath = "DisableSkulkViewTilt", DefaultValue = false},
+      ConfigDataBind = {ConfigPath = "DisableSkulkViewTilt", DefaultValue = false},
       CheckChanged = function(checked)
         if(OnCommandSkulkViewTilt) then
           OnCommandSkulkViewTilt(checked and "false") 
@@ -165,7 +165,7 @@ OptionsPage.ControlSetup = {
       Label = "Bloom",
       LabelOnLeft = true,
       Checked = true,
-      ConfigDatabind = {ConfigPath = "graphics/display/bloom", DefaultValue = true},
+      ConfigDataBind = {ConfigPath = "graphics/display/bloom", DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_bloom "..tostring(checked))
       end
@@ -177,7 +177,7 @@ OptionsPage.ControlSetup = {
       Label = "Anti-aliasing",
       LabelOnLeft = true,
       Checked = true,
-      ConfigDatabind = {ConfigPath = "graphics/display/antialiasing", DefaultValue = true},
+      ConfigDataBind = {ConfigPath = "graphics/display/antialiasing", DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_aa "..tostring(checked))
       end
@@ -189,7 +189,7 @@ OptionsPage.ControlSetup = {
       Label = "Atmospheric Lights",
       LabelOnLeft = true,
       Checked = true,
-      ConfigDatabind = {ConfigPath = "graphics/display/atmospherics", DefaultValue = true},
+      ConfigDataBind = {ConfigPath = "graphics/display/atmospherics", DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_atmospherics "..tostring(checked))
       end
@@ -221,15 +221,7 @@ OptionsPage.ControlSetup = {
       Position = {"Top", -80, 410, "TopLeft"}, 
       ItemList = "OptionsDialogUI_GetVisualDetailSettings",
       Label = "Visual Detail",
-    },
-    
-    ApplyGFX = {
-      Type = "UIButton",
-      Width = 150, 
-      Position = {"Top", 0, 450, "Top"}, 
-      Label = "Apply Gfx Changes",
-      ClickAction = "ApplyGFXChanges",
-      
+
       ConfigDataBind = {
         ConfigPath = kDisplayQualityOptionsKey,
         DefaultValue = 0,
@@ -243,6 +235,14 @@ OptionsPage.ControlSetup = {
           end
         end,
       }
+    },
+    
+    ApplyGFX = {
+      Type = "UIButton",
+      Width = 150, 
+      Position = {"Top", 0, 450, "Top"}, 
+      Label = "Apply Gfx Changes",
+      ClickAction = "ApplyGFXChanges",
     },
 }
 
@@ -281,6 +281,8 @@ function OptionsPage:Initialize()
 
    self.GFXOptionBindings[2] = self.ScreenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
                                                                 {kGraphicsYResolutionOptionsKey, 800,  "integer"}}, self.ResConfigConverter):SetDelaySave(true)
+
+  self.GFXOptionBindings[3] = self.VisualDetail.ConfigBinding
 
 /*
     self.GFXOptionBindings[3] = visualDetail:SetConfigBinding(kDisplayQualityOptionsKey, 0, "integer",
