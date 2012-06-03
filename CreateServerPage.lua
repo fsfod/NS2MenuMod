@@ -196,10 +196,9 @@ function CreateServerPage:CreateServer()
   if(mapEntry) then
     if(mapEntry.archiveType) then
       MapList:CheckMountMap(mapEntry.name)
-      mapName = mapEntry.name..".level"
-    else
-      mapName = mapEntry.fileName
     end
+
+    mapName = mapEntry.name
     
     //vm is recreated so we can't call this here FullModsManager:MountEnabledMods()
 
