@@ -70,6 +70,7 @@ end
 
 ControlClass('SteamModListEntry', BaseControl)
 
+
 function SteamModListEntry:Initialize(listview, width, height)
 
   BaseControl.Initialize(self, width, height)
@@ -77,7 +78,7 @@ function SteamModListEntry:Initialize(listview, width, height)
 
   self:SetColor(Color(0,0,0,0))
 
-  local modName = self:CreateFontString(22, "Left", height+30, 0)
+  local modName = self:CreateFontString(22, "Left", 20, 0)
     modName:SetTextAlignmentY(GUIItem.Align_Center)
     self:AddGUIItemChild(modName)
   self.ModNameText = modName
@@ -88,25 +89,55 @@ function SteamModListEntry:Initialize(listview, width, height)
     self:AddGUIItemChild(status)
   self.Status = status
   
+  local install = self:CreateControl("UIButton", "Reinstall", 80, height)
+    //status:SetColor(Color(1,0,0,1))
+    install:SetPosition(Vector(550, 0, 0))
+    install.ClickAction = {self.InstallMod, self}
+    self:AddChild(install)
+  self.Install = install
 end
 
-function SteamModListEntry:SetData(modIndex)
+function SteamModListEntry:InstallMod()
+  
+  if(self.ModInfo and type(self.ModInfo) ~= "number") then
+    Client.InstallMod(self.ModInfo.ModIndex)
+  end
+end
+
+function SteamModListEntry:SetData(modInfo)
 
   self:Show()
 
   self.ModManager = self.Parent.Parent.ModManager
   
-  self.ModIndex = modIndex
+  self.ModInfo = modInfo
  
-  if(not Client.ModDetailsAreKnown(modIndex)) then
-    self.ModNameText:SetText("Unknown")
-    self.Status:SetText("Unknown")
+  if(type(modInfo) == "number") then
+    self.ModNameText:SetText("Mod "..modInfo)
+    self.Status:SetText("Fetching Mod Details")
   else
-    local active, realName, statusText = SteamWorkshopModManager:GetModInfo(modIndex)
-
-    self.ModNameText:SetText(realName)
-  
-    self.Status:SetText(realName)
+    self.ModNameText:SetText(modInfo.Name)
+    
+    local status = SteamModManager:GetModStatus(modInfo.ModIndex)
+    
+    if(status == "Updating") then
+      local downloading, downloadedBytes, totalBytes = Client.GetModDownloadProgress(modInfo.ModIndex)
+      
+      if(not downloading or totalBytes == 0) then
+        status = "Updating %%0(0/?)"
+      else
+        status = string.format("Updating %i%%(%i/%ikb)", 100*(downloadedBytes/totalBytes), downloadedBytes/1000, totalBytes/1000)
+      end
+      
+    end
+    
+    if(status == "Not Installed") then
+      self.Install:SetLabel("Install")
+    else
+      self.Install:SetLabel("Reinstall")
+    end
+    
+    self.Status:SetText(status)
   end
 end
 
@@ -131,7 +162,7 @@ ModsPage.ControlSetup = {
     TabPressed = "TabClicked",
     ActiveTab = "ModLoader",
     TabList = {
-      {Label = "Steam Workshop", NameTag = "SteamWorkshop"},
+      {Label = "Steam Workshop", NameTag = "SteamModManager"},
       {Label = "Internal", NameTag = "ModLoader"},
       {Label = "Raw Mods", NameTag = "FullModsManager"},
     },
@@ -139,9 +170,9 @@ ModsPage.ControlSetup = {
 
   ModList = {
     Type = "ListView",
-    Position = Vector(40, 60, 0),
-    Width = 560,
-    Height = 350,
+    Position = Vector(20, 60, 0),
+    Width = 660,
+    Height = 440,
     ItemHeight = 26,
     ItemSpacing = 8,
     ItemClass = "ModListEntry",
@@ -151,37 +182,50 @@ ModsPage.ControlSetup = {
 
   EnableAllButton = {
     Type = "UIButton",
-    Width = 130,
-    Position = {"BottomLeft", 30, -20, "BottomLeft"},
+    Width = 120,
+    Position = {"BottomLeft", 30, -10, "BottomLeft"},
     Label = "Enable All", 
     ClickAction = "EnableAll",
   },
   
   DisableAllButton = {
     Type = "UIButton",
-    Width = 130,
-    Position = {"BottomLeft", 180, -20, "BottomLeft"},
+    Width = 120,
+    Position = {"BottomLeft", 180, -10, "BottomLeft"},
     Label = "Disable All", 
     ClickAction = "DisableAll",
+  },
+  
+  RefreshButton = {
+    Type = "UIButton",
+    Width = 120,
+    Position = {"BottomLeft", 340, -10, "BottomLeft"},
+    Label = "Refresh", 
+    ClickAction = "RefreshModList"
   },
 }
 
 function ModsPage:Initialize()
-  BasePage.Initialize(self, 600, 500, self.PageName, "Mods")
+  BasePage.Initialize(self, 700, 600, self.PageName, "Mods")
 
   self:Hide()
   self:CreatChildControlsFromTable(self.ControlSetup)
 
   self.ModList:SetColor(Color(0, 0, 0, 1))
-    
-  if(NS2_IO) then
-    local openModsFolder = self:CreateControl("UIButton", "Open Mods Folder", 150)
-      openModsFolder:SetPoint("BottomLeft", 400, -20, "BottomLeft")
-      openModsFolder.ClickAction = NS2_IO.OpenModsFolder
-    self:AddChild(openModsFolder)
-  end
+
+  local openModsFolder = self:CreateControl("UIButton", "Open Steamworks Folder", 190)
+    openModsFolder:SetPoint("BottomLeft", 490, -10, "BottomLeft")
+    openModsFolder.ClickAction = {self.OpenFolder, self}
+  self:AddChild(openModsFolder)
+  
+  self.OpneFolder = openModsFolder
+  
   
   self:SetModList("ModLoader")
+end
+
+function ModsPage:OpenFolder()
+  OpenSteamWorkshopFolder()
 end
 
 function ModsPage:TabClicked(tab)
@@ -196,24 +240,34 @@ end
 
 function ModsPage:Update()
 
-  if(not Client.ModListIsBeingRefreshed() or self.ModManager ~= SteamWorkshopModManager) then
+  if(self.ModManager ~= SteamModManager) then
     return
   end
   
-  local count = Client.GetNumMods()
-  local new = count-self.LastModCount
+  local newEntrys = SteamModManager:CheckGetNewEntrys(self.ModEntryList)
   
-  if(new == 0) then
-    return
-  end
-
-  for i=self.LastModCount+1,count do
-    self.ModEntryList[i] = i
-  end
-
-  self.ModList:ListDataModifed()
+  local fetched = SteamModManager:GetNewModDetailsFetched()
   
-  self.LastModCount =  count
+  if(fetched) then
+    for modIndex, modEntry in pairs(fetched) do
+      self.ModEntryList[modIndex] = modEntry
+    end
+  end
+  
+  local downloadsActive = true
+  
+  if(Shared.GetBuildNumber() > 209) then
+    downloadsActive = Client.GetModDownloadProgress()
+  end
+  
+  //we trigger one last update after a mod has finshed download otherwise the list item still be left showing 99% downloaded
+  if(fetched or newEntrys or downloadsActive or self.DownloadsActive or Client.ModListIsBeingRefreshed()) then
+    self.ModList:ListDataModifed()
+  end
+  
+  //
+  self.DownloadsActive = downloadsActive
+  
 end
 
 function ModsPage:SetModList(modManager)
@@ -223,26 +277,43 @@ function ModsPage:SetModList(modManager)
   self.ModList:SetDataList(list)
   
   if(modManager == "ModLoader" or modManager == "FullModsManager") then
-    self.ModManager = _G[modManager]
     
+    self.ModManager = _G[modManager]
     self.ModList:ChangeItemClass("ModListEntry")
     
-    list = self.ModManager:GetModList(true)
-    table.sort(list)
+  elseif(modManager == "SteamModManager") then
     
-  elseif(modManager == "SteamWorkshop") then
-    self.ModManager = SteamWorkshopModManager
-   
-    Client.RefreshModList()
-    self.LastModCount = 0
-
+    self.ModManager = SteamModManager
     self.ModList:ChangeItemClass("SteamModListEntry")
   end
+
+  self:RefreshModList(true)
+end
+
+function ModsPage:RefreshModList(managerSwitched)
+
+  if(managerSwitched ~= true and self.ModManager == ModLoader) then
+    //no support for refreshing modloader yet
+    return
+  end
+
+  local list
+  local modManager = self.ModManager
+
+  if(modManager.RefreshModList) then
+    modManager:RefreshModList()
+  end
   
+  if(modManager == SteamModManager) then
+    list = {}
+  else
+  
+    list = modManager:GetModList(true)
+    table.sort(list)
+  end
+
   self.ModEntryList = list
-  
   self.ModList:SetDataList(list)
-  
 end
 
 function ModsPage:EnableAll()
@@ -258,54 +329,132 @@ function ModsPage:DisableAll()
 end
 
 
-SteamWorkshopModManager = SteamWorkshopModManager or {}
+SteamModManager = SteamModManager or {
+}
 
-function SteamWorkshopModManager:EnableAllMods()
+function SteamModManager:EnableAllMods()
 end
 
-function SteamWorkshopModManager:DisableAllMods()
+function SteamModManager:DisableAllMods()
 end
 
-function SteamWorkshopModManager:EnableMod(modIndex)
+function SteamModManager:EnableMod(modIndex)
   //Client.ActivateMod(modIndex)
 end
 
-function SteamWorkshopModManager:DisableMod(modIndex)
+function SteamModManager:DisableMod(modIndex)
  // Client.ActivateMod(modIndex)
 end
 
-function SteamWorkshopModManager:GetModList()
+function SteamModManager:RefreshModList()
+  Client.RefreshModList()
+  
+  self.ModsUpdating = {}
+  self.ModEntrys = {}
+  self.LastModCount = 0
+  
+  self.ActiveFetchs = {}
+end
+
+function SteamModManager:CheckGetNewEntrys(modList)
+
+  local count = Client.GetNumMods()
+  local new = count-self.LastModCount
+  
+  if(new == 0) then
+    return nil
+  end
+
+  modList = modList or {}
+
+  for i=self.LastModCount+1,count do
+    self.ActiveFetchs[i] = true
+    table.insert(modList, i)
+  end
+  
+  self.LastModCount = count
+
+  return modList
+end
+
+function SteamModManager:ModDetailsBeingFetched()
+  return next(self.ActiveFetchs) ~= nil
+end
+
+function SteamModManager:BuildEntry(modIndex)
+
+  local state = Client.GetModState(modIndex)
+ 
+  if(state == Client.ModVersionState_Updating or state == Client.ModVersionState_QueuedForUpdate) then
+    self.ModsUpdating[modIndex] = true
+
+    state = state
+  end
+
+  local entry = {
+    ModIndex = modIndex,
+    Name = Client.GetModTitle(modIndex), 
+    State = self.ModStates[state],
+  }
+
+  self.ModEntrys[modIndex] = entry
+  
+  return entry
+end
+
+function SteamModManager:GetNewModDetailsFetched()
+
+  local fetched
+
+  for modIndex,_ in pairs(self.ActiveFetchs) do
+    
+    if(Client.ModDetailsAreKnown(modIndex)) then
+      self.ActiveFetchs[modIndex] = nil
+      fetched = fetched or {}
+
+      fetched[modIndex] = self:BuildEntry(modIndex)
+    end
+  end
+
+  return fetched
+end
+
+function SteamModManager:GetModList()
 
   local list = {}
  
   for i=1,Client.GetNumMods() do
-    list[i] = i
+    list[i] = self.ModEntrys[i] or i
   end
   
   return list
 end
 
-function SteamWorkshopModManager:GetModInfo(modIndex)
+function SteamModManager:GetModInfo(modIndex)
   //disabled, realName, errorValue
   
   //local value1, value2, Client.GetModInfo(modIndex)
   return Client.ModIsActive(modIndex), Client.GetModTitle(modIndex), self.ModStates[Client.GetModState(modIndex)]
 end
 
+function SteamModManager:GetModStatus(modIndex)
+  return self.ModStates[Client.GetModState(modIndex)]
+end
+
 Event.Hook("LoadComplete", function()
   
   local modStates = {}
   
-  SteamWorkshopModManager.ModStates = modStates
+  SteamModManager.ModStates = modStates
   
   modStates[Client.ModVersionState_ErroneousInstall] = "Erroneous Install"
-  modStates[Client.ModVersionState_NotInstalled] = "NotInstalled"
-  modStates[Client.ModVersionState_OutOfDate] = "Out of date" 
+  modStates[Client.ModVersionState_NotInstalled] = "Not Installed"
+  modStates[Client.ModVersionState_OutOfDate] = "Out of Date" 
   modStates[Client.ModVersionState_Unknown] = "Unknown"
-  modStates[Client.ModVersionState_UnknownInstalled] = "Unknown installed"
+  modStates[Client.ModVersionState_UnknownInstalled] = "Unknown Installed"
   modStates[Client.ModVersionState_Updating] = "Updating"
-  modStates[Client.ModVersionState_QueuedForUpdate] = "Queued for update"
-  modStates[Client.ModVersionState_UpToDate] = "Uptodate"
+  modStates[Client.ModVersionState_QueuedForUpdate] = "Queued for Update"
+  modStates[Client.ModVersionState_UpToDate] = "Up to Date"
 end)
 
 
@@ -317,6 +466,8 @@ function MakeStateNumberToString()
   Client.ModDownloadProgress()
   Client.RefreshModList()
   Client.ModListIsBeingRefreshed()
+  Client.GetNumModsInDownloadQueue()
+  Client.GetNameOfDownloadingMod()
 end
 
 if(HotReload) then
