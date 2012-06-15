@@ -23,10 +23,11 @@ local function GetServerRecord(serverIndex)
     local playerCount = Client.GetServerNumPlayers(serverIndex)
     local maxPlayers = Client.GetServerMaxPlayers(serverIndex)
     
-    local playeryCount
+    local playeryCount, botCount
+    local botCount = (ServerList and ServerList:GetServerBotCount(serverIndex)) or 0
     
-    if(ServerList and ServerList:GetServerBotCount(serverIndex) ~= 0) then
-      playeryCount = string.format("%i(bots %i)/%i", playerCount, Client.GetServerBotCount(serverIndex), maxPlayers)
+    if(botCount ~= 0) then
+      playeryCount = string.format("%i(bots %i)/%i", playerCount, botCount, maxPlayers)
     else
       playeryCount = playerCount.. " / "..maxPlayers
     end
