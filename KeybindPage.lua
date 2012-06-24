@@ -84,6 +84,7 @@ end
 function KeybindButton:ExitBindingMode()
 	self:SetColor(self.NonActiveColor)
 	self.InBindMode = false
+	self.LastModifer = nil
 	
 	local keyname = KeyBindInfo:GetBoundKey(self.BindName, self.KeyIndex) or ""
 	self.BoundKey:SetText(FriendlyNames[keyname] or keyname )
@@ -102,26 +103,44 @@ end
 
 local lastModifer
 
-function KeybindButton:SendKeyEvent(key, down)
-
-  if(self.InBindMode and (down or key == InputKey.MouseZ) and key ~= InputKey.MouseX and key ~= InputKey.MouseY) then
-
-    local currentKey, groupName = KeyBindInfo:GetBindinfo(self.BindName)
-
-    if(ModifierKeys[key] and groupName and string.find(groupName, "Commander")) then
-      lastModifer = key
-     return
-    end
-    
-    self:SetBind(key, down)
-   
-    return true
+function KeybindButton:SendKeyEvent(key, down, isRepeat)
+  
+  if(not self.InBindMode or key == InputKey.MouseX or key == InputKey.MouseY or isRepeat) then
+    return
   end
+  
+  if(ModifierKeys[key]) then
+    if(down) then
+      //cant really bind using 2 modifers
+      if(self.LastModifer) then
+        self:ExitBindingMode()
+      end
+      
+      self.LastModifer = key
+     return
+     
+    else
+      //we set the bind for modifier keys on the up event incase there doing a modifer+key keybind
+      down = true
+    end
+  end
+  
+  if(not down and key ~= InputKey.MouseZ) then
+    return
+  end
+
+  if(self.LastModifer and key ~= self.LastModifer) then
+    self:SetBind(key, down, self.LastModifer)
+  else
+    self:SetBind(key, down)
+  end
+
+  return true
 end
 
-function KeybindButton:SetBind(key, down)
+function KeybindButton:SetBind(key, down, modifer)
   
-  self.Parent.Parent.Parent:SetKeybind(self.BindName, key, down, self.KeyIndex)
+  self.Parent.Parent.Parent:SetKeybind(self.BindName, key, down, self.KeyIndex, modifer)
    
   self:ExitBindingMode()
    
@@ -145,7 +164,6 @@ function KeybindButton:OnClick(button, down, x, y)
        GUIMenuManager:SetFocus(self)
       return true
     else
-      self:SetColor(ControlGrey2) 
       self.Parent.Parent.Parent:SetSelectedButton(self)
     end
     
@@ -156,10 +174,20 @@ function KeybindButton:OnClick(button, down, x, y)
   return false
 end
 
+function KeybindButton:SetSelected()
+  self.Selected = true
+  self:SetColor(ControlGrey2) 
+end
+
+function KeybindButton:ClearSelected()
+  self.Selected = false
+  self:SetColor(self.NonActiveColor)  
+end
+
 ControlClass('KeybindListEntry', BaseControl)
 
 KeybindListEntry.FontSize = 24
-KeybindListEntry.KeyNameOffset = 280
+KeybindListEntry.KeyNameOffset = 300
 
 function KeybindListEntry:Initialize(owner, width, height)
   BaseControl.Initialize(self, width, height)
@@ -175,13 +203,13 @@ function KeybindListEntry:Initialize(owner, width, height)
    name:SetTextAlignmentY(GUIItem.Align_Min)
   self.KeybindName = name
 
-  local key1 = self:CreateControl("KeybindButton", 140, height, 1)
+  local key1 = self:CreateControl("KeybindButton", 190, height, 1)
     key1:SetPosition(Vector(self.KeyNameOffset-10, 0, 0))
     self:AddChild(key1)
   self.Key1 = key1
   
-  local key2 = self:CreateControl("KeybindButton", 140, height, 2)
-    key2:SetPosition(Vector(self.KeyNameOffset+150, 0, 0))
+  local key2 = self:CreateControl("KeybindButton", 190, height, 2)
+    key2:SetPosition(Vector(self.KeyNameOffset+200, 0, 0))
     self:AddChild(key2)
   self.Key2 = key2
 
@@ -227,7 +255,7 @@ end
 ControlClass('KeybindPage', BasePage)
 
 KeybindPage.ListSetup = {
-  Width = 600,
+  Width = 750,
   Height = 500,
   ItemHeight = 26,
   ItemSpacing = 4,
@@ -237,7 +265,7 @@ KeybindPage.ListSetup = {
 }
 
 function KeybindPage:Initialize()
-  BasePage.Initialize(self, 700, 600, "Keybinds")
+  BasePage.Initialize(self, 800, 600, "Keybinds")
   BaseControl.Hide(self)
 
   assert(KeyBindInfo, "Keybinds mod is not loaded")
@@ -273,26 +301,34 @@ function KeybindPage:Initialize()
    warningString:SetColor(Color(0.3, 0, 0, 1))
    warningString:SetFontSize(25)
    warningString:SetTextAlignmentX(GUIItem.Align_Center)
-   warningString:SetPosition(Vector(0, -80, 0))
+   warningString:SetPosition(Vector(0, -70, 0))
    warningString:SetAnchor(GUIItem.Middle, GUIItem.Bottom)
    self:AddGUIItemChild(warningString)
   self.WarningString = warningString
 end
 
-function KeybindPage:SetKeybind(BindName, key, down, keyIndex)
+function KeybindPage:SetKeybind(BindName, key, down, keyIndex, modifer)
 
   if(key ~= InputKey.Escape) then
     key = InputKeyHelper:ConvertToKeyName(key, down)
     
-    local old, isConsoleCmd = KeyBindInfo:GetKeyInfo(key)
+    if(modifer) then
+      modifer = InputKeyHelper:ConvertToKeyName(modifer)
+    end
     
-    if(not KeyBindInfo:IsBindOverrider(BindName) and old and old ~= BindName) then
+    local old
+    
+    if(modifer) then 
+      old = KeyBindInfo:SetKeybindWithModifier(key, modifer, BindName, keyIndex)
+    else
+      old = KeyBindInfo:SetKeybind(key, BindName, keyIndex)
+    end
+    
+    if(old and old ~= BindName) then
       self.WarningString:SetText(string.format("%s was unbound", old))
     else
       self.WarningString:SetText("")
     end
-    
-    KeyBindInfo:SetKeybind(key, BindName, keyIndex)
     
     self:SetKeybindsChanged()
 
@@ -302,11 +338,17 @@ end
 function KeybindPage:SetSelectedButton(button)
   
   if(self.SelectedButton) then
-    self.SelectedButton.Selected = false
+    
+    //don't try to selctect a button that
+    if(button == self.SelectedButton and button.Selected) then
+      return
+    end
+    
+    self.SelectedButton:ClearSelected()
   end
   
   self.SelectedButton = button
-  button.Selected = true
+  button:SetSelected()
 end
 
 function KeybindPage:ClearBind()
