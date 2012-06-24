@@ -177,7 +177,7 @@ OptionsPage.ControlSetup = {
       Label = "Anti-aliasing",
       LabelOnLeft = true,
       Checked = true,
-      ConfigDataBind = {ConfigPath = "graphics/display/antialiasing", DefaultValue = true},
+      ConfigDataBind = {ConfigPath = "graphics/display/anti-aliasing", DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_aa "..tostring(checked))
       end
@@ -194,12 +194,48 @@ OptionsPage.ControlSetup = {
         Shared.ConsoleCommand("r_atmospherics "..tostring(checked))
       end
     },
+    
+    Shadows = {
+      Type = "CheckBox",
+      Position = {"Top", -90, 340, "Top"},
+      Label = "Shadows",
+      LabelOnLeft = true,
+      Checked = true,
+      ConfigDataBind = {ConfigPath = "graphics/display/shadows", DefaultValue = true},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_shadows "..tostring(checked))
+      end
+    },
+    
+    ShadowFading = {
+      Type = "CheckBox",
+      Position = {"Top", 70, 340, "Top"},
+      Label = "Shadow Fading",
+      LabelOnLeft = true,
+      Checked = true,
+      ConfigDataBind = {ConfigPath = "graphics/display/shadow-fading", DefaultValue = true},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_shadowsfade "..tostring(checked))
+      end
+    },
+    
+    Anisotropic = {
+      Type = "CheckBox",
+      Position = {"Top", 260, 340, "Top"},
+      Label = "Anisotropic Filtering",
+      LabelOnLeft = true,
+      Checked = true,
+      ConfigDataBind = {ConfigPath = "graphics/display/anisotropic-filtering", DefaultValue = true},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_anisotropic "..tostring(checked))
+      end
+    },
 
     WindowMode = {
       Type = "ComboBox",
       Width = 185, 
       Height = 20, 
-      Position = {"Top", -80, 340, "TopLeft"},
+      Position = {"Top", -80, 400, "TopLeft"},
       ItemList = {"Fullscreen", "Windowed", "Windowed Fullscreen"},
       Label = "Display Mode",
     },
@@ -208,7 +244,7 @@ OptionsPage.ControlSetup = {
       Type = "ComboBox",
       Width = 180,
       Height = 20,
-      Position = {"Top", -80, 375, "TopLeft"},
+      Position = {"Top", -80, 440, "TopLeft"},
       LabelCreator = "ResToString",
       Label = "Resolution",
       ItemList = {},
@@ -218,7 +254,7 @@ OptionsPage.ControlSetup = {
       Type = "ComboBox",
       Width = 200, 
       Height = 20,
-      Position = {"Top", -80, 410, "TopLeft"}, 
+      Position = {"Top", -80, 480, "TopLeft"}, 
       ItemList = "OptionsDialogUI_GetVisualDetailSettings",
       Label = "Visual Detail",
 
@@ -240,7 +276,7 @@ OptionsPage.ControlSetup = {
     ApplyGFX = {
       Type = "UIButton",
       Width = 150, 
-      Position = {"Top", 0, 450, "Top"}, 
+      Position = {"Top", 0, 520, "Top"}, 
       Label = "Apply Gfx Changes",
       ClickAction = "ApplyGFXChanges",
     },
@@ -248,7 +284,7 @@ OptionsPage.ControlSetup = {
 
 
 function OptionsPage:Initialize()
-  BasePage.Initialize(self, 600, 500, self.PageName, "Options")
+  BasePage.Initialize(self, 600, 600, self.PageName, "Options")
   BaseControl.Hide(self)
  
   ResHelper:Init()
