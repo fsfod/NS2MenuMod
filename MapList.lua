@@ -97,20 +97,33 @@ function MapList:CheckMountMap(name)
     else
       
       local folders = archive:FindDirectorys("", "*")
+      local mapsPath = "/maps/"
       
-      if(#folders == 1 and archive:FileExists(string.format("%s/%s.level", folders[1], name))) then
+      if(#folders == 1) then
         
-        archive:MountFiles(folders[1], "/maps")
-        
+        if(archive:FileExists(string.format("%s/%s.level", folders[1], name))) then
+          mapsPath = folders[1].."/"
+        else
+          if(archive:DirectoryExists(folders[1].."/maps")) then
+            mapsPath = folders[1].."/maps/"
+          elseif(archive:DirectoryExists(folders[1].."ns2/maps")) then
+            mapsPath = folders[1].."/ns2/maps/"
+          end
+        end
+
+        if(not archive:FileExists(mapsPath..name..".level")) then
+          error("could not find matching map with the same name as the archive")
+        end
+          
+        archive:MountFiles(mapsPath, "/maps")
       else
       
-        if(not archive:FileExists("maps/"..name..".level")) then
+        if(not archive:FileExists(mapsPath..name..".level")) then
           error("could not find matching map with the same name as the archive")
         end
       
         NS2_IO.MountMapArchive(archive)
       end
-      
     end
 
     self.MapArchive = archive

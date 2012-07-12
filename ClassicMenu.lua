@@ -116,11 +116,11 @@ MainMenuLinks = {
   
   {"Keybinds", function() GUIMenuManager:ShowPage("Keybinds") end},
   
+  {"Mods", function() GUIMenuManager:ShowPage("Mods") end},
+  
   //have to sort by most recent because theres a bug with the normal view where it doesn't show all the mods no matter the number per page
   {"Open SteamWorkshop", function() Client.ShowWebpage("http://steamcommunity.com/workshop/browse/?appid=4920&p=1&browsesort=mostrecent&browsefilter=mostrecent") end},
 
-  {"Mods", function() GUIMenuManager:ShowPage("Mods") end},
-  
   {"Exit", function() Client.Exit() end},
 }
 

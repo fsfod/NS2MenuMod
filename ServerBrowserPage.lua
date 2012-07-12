@@ -206,44 +206,18 @@ local fontsize = 20
 
 ServerBrowserPage.PageSetup = {
   Width = 840,
-  Height = 500,
+  Height = 700,
   //Position = {"Left", 30, 150, "Left"},
   Title = "Server Browser",
   PageName = "ServerBrowser",
 }
 
 ServerBrowserPage.ControlSetup = {
-  ServerHeader = {
-    Type = "TabHeader",
-    Width = 780,
-    Height = 23,
-    Position = Vector(20, 30, 0),
-    Mode = "ListHeader",
-    FontSize = 20,
-    TabPressed = "ColumnClicked",
-    TabsSwapped = "ColumnSwapped",
-    TabResized = "ColumnResized",
-    GetSavedLayout = "GetSavedHeaderLayout",
-    RestoreSavedOptions = function()
-      return MainMenuMod.ServerBrowser_Settings, {"ResizableTabs", "DraggableTabs"}
-    end,
-    TabList = {
-      {Label = "",        Width = 20,  NameTag = "Passworded", ClickEnabled = false},
-      {Label = "Name",    Width = 353},
-      {Label = "Game",    Width = 60 , NameTag = "GameMode"},
-      {Label = "Map",     Width = 133},
-      {Label = "Players", Width = 70,  NameTag = "PlayerCount", Ascending = true},
-      {Label = "Ping",    Width = 47, MinWidth = 40},
-      {Label = "Tags",    Width = 100, NameTag = "GameTag"},
-    }
-  },
-
-
-
+  
   LockHeader = {
     Type = "CheckBox",
-    Height = 20,
-    Position = {"TopRight", -6, 30},
+    Height = 18,
+    Position = {"TopRight", -2, 30},
     Label = "",
     Checked = false,
     CheckChanged = "SetLockHeader",
@@ -259,9 +233,37 @@ ServerBrowserPage.ControlSetup = {
 
   ServerList = {
     Type = "ListView",
-    Width = 800,
-    Height = 350,
-    Position = Vector(20, 55, 0),
+    
+    Header = {
+      Type = "TabHeader",
+      Width = 780,
+      Height = 23,
+      Position = Vector(0, 0, 0),
+      Mode = "ListHeader",
+      FontSize = 20,
+      TabPressed = "ColumnClicked",
+      TabsSwapped = "ColumnSwapped",
+      TabResized = "ColumnResized",
+      GetSavedLayout = "GetSavedHeaderLayout",
+      RestoreSavedOptions = function()
+        return MainMenuMod.ServerBrowser_Settings, {"ResizableTabs", "DraggableTabs"}
+      end,
+      
+      TabList = {
+        {Label = "",        Width = 20,  NameTag = "Passworded", ClickEnabled = false},
+        {Label = "Name",    Width = 353},
+        {Label = "Game",    Width = 60 , NameTag = "GameMode"},
+        {Label = "Map",     Width = 133},
+        {Label = "Players", Width = 70,  NameTag = "PlayerCount", Ascending = true},
+        {Label = "Ping",    Width = 47, MinWidth = 40},
+        {Label = "Tags",    Width = 100, NameTag = "GameTag"},
+      }
+    },
+    
+    //Width = 800,
+    //Height = 350,
+    Position = {"TopLeft", 20, 30},
+    Point2 = {"BottomRight", -20, -90},
     Color = Color(0, 0, 0, 1),
     ItemHeight = ServerBrowserFontSize+2,
     ItemSpacing = 3,
@@ -326,6 +328,11 @@ ServerBrowserPage.ControlSetup = {
     Label = "Connect",
     Position = {"BottomLeft", 300, -15, "BottomLeft"},
   },
+  
+//  Resize = {
+//    Type = "ResizeButton",
+//    Position = {"BottomRight", 0, 0},
+//  },  
 }
 
 ServerBrowserPage.Sorters = {
@@ -354,6 +361,8 @@ function ServerBrowserPage:Initialize()
 */
   self:SetupFromTable(self.PageSetup)
   self:CreatChildControlsFromTable(self.ControlSetup)
+
+  self.ServerHeader = self.ServerList.Header
 
   MapList:Init()
 
@@ -431,19 +440,19 @@ function ServerBrowserPage:GetSavedHeaderLayout()
 end
 
 function ServerBrowserPage:ColumnSwapped()
-  self.Settings.ColumnOrder = self.ServerHeader:GetTabOrder(self.Settings.ColumnOrder)
+  self.Settings.ColumnOrder = self.ServerList.Header:GetTabOrder(self.Settings.ColumnOrder)
   self:UpdateServerListLayout()
 end
 
 function ServerBrowserPage:ColumnResized()
-  self.Settings.ColumnWidths = self.ServerHeader:GetTabWidths(self.Settings.ColumnWidths) 
+  self.Settings.ColumnWidths = self.ServerList.Header:GetTabWidths(self.Settings.ColumnWidths) 
   self.ServerList.ColumnWidths = self.Settings.ColumnWidths
   self:UpdateServerListLayout()
 end
 
 function ServerBrowserPage:UpdateServerListLayout()
 
-  for name,offset in pairs(self.ServerHeader:GetTabOffsets()) do
+  for name,offset in pairs(self.ServerList.Header:GetTabOffsets()) do
     self.ColumnOffsets[name].x = offset+ServerListEntry.ValueIndent
   end
 
@@ -706,19 +715,13 @@ function ServerBrowserPage:SetServerSorting(serverField, ascending)
   if(not self.Sorters[serverField]) then
     return
   end  
-  
-  local selected = self:GetSelectedServer()
-  
+
   self.Settings.SortColumn = serverField
   self.Settings.SortIsAscending = ascending
   self.ServerHeader:SetTabSortDirection(serverField, ascending)
   
   self.SortFunction = GetSortFunc(serverField, ascending)
   self:SortList()
-  
-  if(selected) then
-	  self:TrySelectServer(selected)
-	end
 end
 
 function ServerBrowserPage:SortList(dontUpdateUI)
@@ -727,7 +730,7 @@ function ServerBrowserPage:SortList(dontUpdateUI)
     table.sort(self.FilteredList, self.SortFunction)
 
     if(not dontUpdateUI) then
-      self.ServerList:ListDataModifed()
+      self.ServerList:ListDataModifed(true)
     end
    return true
   end
@@ -936,6 +939,11 @@ function ServerBrowserPage:Update()
   if(self.ConnectedEntry) then
     if(self.AutoSelectedConnected and self.ServerList:GetSelectedIndexData() ~= self.ConnectedEntry) then
       self.ServerList:SetSelectedListEntry(self.ConnectedEntry)
+    end
+  else
+    
+    if(not Client.GetIsConnected()) then
+      //self:TrySelectServer(server)
     end
   end
 end
