@@ -52,16 +52,6 @@ end
 
 function MainMenuMod:SetHooks()
   self:RemoveAllHooks()
-/*
-  self:HookLibraryFunction(HookType.Replace, "MenuManager", "SetMenu")
-  
-
-  self:ReplaceFunction("ShowInGameMenu")
-  
-  self:ReplaceFunction("MainMenu_SetAlertMessage")
-  
-  self:HookLibraryFunction(HookType.Replace, "MenuManager", "GetMenu", function() return (GUIMenuManager:IsMenuOpen() and "") or nil end)
-  */
 end
 
 function MainMenuMod:RegisterDefaultPages()
