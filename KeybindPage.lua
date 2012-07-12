@@ -330,6 +330,10 @@ function KeybindPage:SetKeybind(BindName, key, down, keyIndex, modifer)
       self.WarningString:SetText("")
     end
     
+    if(KeybindInfo.EngineProcessed[BindName]) then
+      Client.SetOptionString("input/"..BindName, key)
+    end
+    
     self:SetKeybindsChanged()
 
   end
