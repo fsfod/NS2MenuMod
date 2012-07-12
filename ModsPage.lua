@@ -115,6 +115,7 @@ function SteamModListEntry:SetData(modInfo)
   if(type(modInfo) == "number") then
     self.ModNameText:SetText("Mod "..modInfo)
     self.Status:SetText("Fetching Mod Details")
+    self.Install:Hide()
   else
     self.ModNameText:SetText(modInfo.Name)
     
@@ -133,8 +134,10 @@ function SteamModListEntry:SetData(modInfo)
     
     if(status == "Not Installed") then
       self.Install:SetLabel("Install")
+      self.Install:Show()
     else
-      self.Install:SetLabel("Reinstall")
+      self.Install:Hide()
+      //self.Install:SetLabel("Reinstall")
     end
     
     self.Status:SetText(status)
@@ -203,6 +206,15 @@ ModsPage.ControlSetup = {
     Label = "Refresh", 
     ClickAction = "RefreshModList"
   },
+  
+  UnsubscribeButton = {
+    Type = "UIButton",
+    Width = 130,
+    Position = {"BottomRight", -40, -56, "BottomRight"},
+    Label = "Unsubscribe Mod", 
+    ClickAction = "UnsubscribeMod"
+  },
+  
 }
 
 function ModsPage:Initialize()
@@ -228,14 +240,8 @@ function ModsPage:OpenFolder()
   OpenSteamWorkshopFolder()
 end
 
-function ModsPage:TabClicked(tab)
+function ModsPage:TabClicked(tab)  
   self:SetModList(tab.NameTag)
-  
-  if(self.ModList.ItemClass == "LVTextItem") then 
-   // self.ModList:ChangeItemClass("ModListEntry")
-  else
-    //self.ModList:ChangeItemClass("SteamModListEntry")
-  end
 end
 
 function ModsPage:Update()
@@ -243,6 +249,8 @@ function ModsPage:Update()
   if(self.ModManager ~= SteamModManager) then
     return
   end
+  
+  local selected = self.ModList:GetSelectedIndexData()
   
   local newEntrys = SteamModManager:CheckGetNewEntrys(self.ModEntryList)
   
@@ -256,36 +264,59 @@ function ModsPage:Update()
   
   local downloadsActive = true
   
-  if(Shared.GetBuildNumber() > 209) then
+  if(Shared.GetBuildNumber() > 210) then
     downloadsActive = Client.GetModDownloadProgress()
   end
   
-  //we trigger one last update after a mod has finshed download otherwise the list item still be left showing 99% downloaded
-  if(fetched or newEntrys or downloadsActive or self.DownloadsActive or Client.ModListIsBeingRefreshed()) then
-    self.ModList:ListDataModifed()
-  end
+  local listChanged = false
   
+  if(newEntrys) then
+    self.ModList:ListDataModifed()
+    listChanged = true
+  elseif(fetched or downloadsActive or self.DownloadsActive or Client.ModListIsBeingRefreshed()) then
+    //we trigger one last update after a mod has finshed download otherwise the list item still be left showing 99% downloaded
+    self.ModList:RefreshItems()
+    listChanged = true
+  end
+
+  if(selected and listChanged) then
+    if(type(selected) == "number") then
+      selected = self.ModEntryList[selected]
+    end
+    
+    self.ModList:SetSelectedListEntry(selected)
+  end
+
   //
   self.DownloadsActive = downloadsActive
-  
 end
 
 function ModsPage:SetModList(modManager)
  
   local list = {}
   
-  self.ModList:SetDataList(list)
-  
   if(modManager == "ModLoader" or modManager == "FullModsManager") then
     
     self.ModManager = _G[modManager]
-    self.ModList:ChangeItemClass("ModListEntry")
+    self.ModList:ChangeItemClass("ModListEntry", true)
+    
+    self.EnableAllButton:Show()
+    self.DisableAllButton:Show()
+    self.UnsubscribeButton:Hide()
     
   elseif(modManager == "SteamModManager") then
     
     self.ModManager = SteamModManager
-    self.ModList:ChangeItemClass("SteamModListEntry")
+    self.ModList:ChangeItemClass("SteamModListEntry", true)
+    
+    self.EnableAllButton:Hide()
+    self.DisableAllButton:Hide()
+    self.UnsubscribeButton:Show()
   end
+  
+  self.ModList:SetDataList(list)
+
+  self.ModList:SetItemsSelectable(modManager == "SteamModManager")
 
   self:RefreshModList(true)
 end
@@ -295,6 +326,11 @@ function ModsPage:RefreshModList(managerSwitched)
   if(managerSwitched ~= true and self.ModManager == ModLoader) then
     //no support for refreshing modloader yet
     return
+  end
+  
+  if(self.ModManager == SteamModManager and Client.GetNumModsInDownloadQueue() > 0) then
+    //dont refresh while prevent crash 
+    //return
   end
 
   local list
@@ -326,6 +362,16 @@ function ModsPage:DisableAll()
   
   self.ModManager:DisableAllMods() 
   self.ModList:ListDataModifed()
+end
+
+function ModsPage:UnsubscribeMod()
+  
+  local entry = self.ModList:GetSelectedIndexData()
+  
+  if(entry) then
+    Client.SubscribeToMod((type(entry) == "number" and entry) or entry.ModIndex, false)
+    self:RefreshModList()
+  end
 end
 
 
@@ -381,6 +427,32 @@ function SteamModManager:ModDetailsBeingFetched()
   return next(self.ActiveFetchs) ~= nil
 end
 
+function SteamModManager:UnsubscribeMod(modIndex)
+  Client.SubscribeToMod(modIndex, false)
+  self:RefreshModList()
+end
+
+function SteamModManager:CheckStateChanges()
+  
+  local changed = false
+  
+  for i=1,Client.GetNumMods() do
+    
+    local entry = self.ModEntrys[i] 
+    
+    if(entry) then
+      local state = self.ModStates[Client.GetModState(i)]
+      
+      if(entry.State ~= state) then
+        entry.State = state
+        changed = true
+      end
+    end
+  end
+
+  return changed
+end
+  
 function SteamModManager:BuildEntry(modIndex)
 
   local state = Client.GetModState(modIndex)
@@ -395,6 +467,7 @@ function SteamModManager:BuildEntry(modIndex)
     ModIndex = modIndex,
     Name = Client.GetModTitle(modIndex), 
     State = self.ModStates[state],
+    ModKind = Client.GetModKind(modIndex), 
   }
 
   self.ModEntrys[modIndex] = entry
@@ -455,6 +528,17 @@ Event.Hook("LoadComplete", function()
   modStates[Client.ModVersionState_Updating] = "Updating"
   modStates[Client.ModVersionState_QueuedForUpdate] = "Queued for Update"
   modStates[Client.ModVersionState_UpToDate] = "Up to Date"
+  
+  local kind = {
+    [Client.ModKind_Cosmetic] = "Cosmetic",
+    [Client.ModKind_Game] = "Game",
+    [Client.ModKind_Gameplay] = "Gameplay",
+    [Client.ModKind_Level] = "Map",
+    [Client.ModKind_Server] = "Server",
+    [Client.ModKind_Unknown] = "Unknown",
+  }
+  
+  SteamModManager.ModKind = kind
 end)
 
 
