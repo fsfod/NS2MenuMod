@@ -297,7 +297,7 @@ function OptionsPage:Initialize()
   sensitivityValue:SetText(string.format("%.5f", Client.GetMouseSensitivity()))
 
   sensitivityValue.OnFocusLost = function() 
-    local value = sensitivityValue:TryParseNumber(self.MouseSensitivity:GetValue(), 0.01, 2)
+    local value = sensitivityValue:TryParseNumber(self.MouseSensitivity:GetValue(), 0, 20)
     
     if(value) then
       self.MouseSensitivity:SetValueAndTiggerEvent(value)
