@@ -100,9 +100,9 @@ OptionsPage.ControlSetup = {
       Height = 20,
       Position = {"Top", 30, 190, "Top"},
       Label = "Mouse Sensitivity",
-      MinValue = 0,
-      MaxValue = 2,
-      StepSize = 0.01,
+      MinValue = 1,
+      MaxValue = 20,
+      StepSize = 0.1,
       ValueChanged = function(value, stillDragging, self) 
         self.Parent.SensitivityValue:SetText(string.format("%.5f", value))
       end,
