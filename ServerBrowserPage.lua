@@ -364,8 +364,6 @@ function ServerBrowserPage:Initialize()
 
   self.ServerHeader = self.ServerList.Header
 
-  MapList:Init()
-
   self.CurrentCount = 0
   self.Servers = {}
   self.Filters = {}

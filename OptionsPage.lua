@@ -123,10 +123,47 @@ OptionsPage.ControlSetup = {
        self:SetText(string.format("%.5f", value))
       end
     },
+       
+    MouseAcceleration = {
+      Type = "Slider",
+      Width = 250,
+      Height = 20,
+      Position = {"Top", 30, 225, "Top"},
+      Label = "Mouse Acceleration",
+      MinValue = 1,
+      MaxValue = 1.4,
+      StepSize = function() return 0.4/100 end,
+      ValueChanged = function(value, stillDragging, self)
+        
+        local accelerationValue = self.Parent.AccelerationValue
+        
+        //Shared.ConsoleCommand("i_accel "..tostring(checked))
+        
+        if(value <= 1) then
+          accelerationValue:SetText("OFF")
+          Client.SetOptionBoolean("input/mouse/acceleration", false)
+        else
+          Client.SetOptionBoolean("input/mouse/acceleration", true)
+          accelerationValue:SetText(string.format("%.5f", value))
+        end
+      end,
+      
+      ConfigDataBind = {ConfigPath = "input/mouse/acceleration-amount", DefaultValue = 1},
+    },
+    
+    AccelerationValue = {
+      Type = "TextBox",
+      Width = 80,
+      Height = 20,
+      Position = {"Top", 200, 225, "Top"},
+      ValueChanged = function(value, self) 
+        self:SetText(string.format("%.5f", value))
+      end
+    },
     
     InvertMouse = {
       Type = "CheckBox",
-      Position = {"Top", -90, 225, "Top"},
+      Position = {"Top", -90, 260, "Top"},
       Label = "Invert Mouse", 
       Checked = false, 
       LabelOnLeft = true,
@@ -135,7 +172,7 @@ OptionsPage.ControlSetup = {
     
     RawInput = {
       Type = "CheckBox",
-      Position = {"Top", 80, 225, "Top"},
+      Position = {"Top", 80, 260, "Top"},
       Label = "Raw Mouse Input", 
       Checked = true,
       LabelOnLeft = true,
@@ -147,7 +184,7 @@ OptionsPage.ControlSetup = {
     
     SkulkViewTilt = {
       Type = "CheckBox",
-      Position = {"Top", -90, 260, "Top"},
+      Position = {"Top", -90, 295, "Top"},
       Label = "Disable Skulk View Tilt", 
       Checked = false,
       LabelOnLeft = true,
@@ -161,7 +198,7 @@ OptionsPage.ControlSetup = {
     
     Bloom = {
       Type = "CheckBox",
-      Position = {"Top", 0, 300, "Top"},
+      Position = {"Top", 0, 325, "Top"},
       Label = "Bloom",
       LabelOnLeft = true,
       Checked = true,
@@ -173,7 +210,7 @@ OptionsPage.ControlSetup = {
     
     Antialiasing = {
       Type = "CheckBox",
-      Position = {"Top", 140, 300, "Top"},
+      Position = {"Top", 140, 325, "Top"},
       Label = "Anti-aliasing",
       LabelOnLeft = true,
       Checked = true,
@@ -185,7 +222,7 @@ OptionsPage.ControlSetup = {
     
     AtmosphericLights = {
       Type = "CheckBox",
-      Position = {"Top", -90, 300, "Top"},
+      Position = {"Top", -90, 325, "Top"},
       Label = "Atmospheric Lights",
       LabelOnLeft = true,
       Checked = true,
@@ -197,7 +234,7 @@ OptionsPage.ControlSetup = {
     
     Shadows = {
       Type = "CheckBox",
-      Position = {"Top", -90, 340, "Top"},
+      Position = {"Top", -90, 360, "Top"},
       Label = "Shadows",
       LabelOnLeft = true,
       Checked = true,
@@ -209,7 +246,7 @@ OptionsPage.ControlSetup = {
     
     ShadowFading = {
       Type = "CheckBox",
-      Position = {"Top", 70, 340, "Top"},
+      Position = {"Top", 70, 360, "Top"},
       Label = "Shadow Fading",
       LabelOnLeft = true,
       Checked = true,
@@ -221,7 +258,7 @@ OptionsPage.ControlSetup = {
     
     Anisotropic = {
       Type = "CheckBox",
-      Position = {"Top", 260, 340, "Top"},
+      Position = {"Top", 260, 360, "Top"},
       Label = "Anisotropic Filtering",
       LabelOnLeft = true,
       Checked = true,
@@ -230,13 +267,53 @@ OptionsPage.ControlSetup = {
         Shared.ConsoleCommand("r_anisotropic "..tostring(checked))
       end
     },
+    
+    MulticoreRendering = {
+      Type = "CheckBox",
+      Position = {"Top", 240, 400, "Top"},
+      Label = "Multicore Rendering",
+      LabelOnLeft = true,
+      Checked = true,
+      ConfigDataBind = {ConfigPath = "graphics/multithreaded", DefaultValue = true},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_mt "..tostring(checked))
+      end
+    },
+    
+/*
+   Reflections = {
+      Type = "CheckBox",
+      Position = {"Top", 300, 400, "Top"},
+      Label = "Reflections",
+      LabelOnLeft = true,
+      Checked = false,
+      ConfigDataBind = {ConfigPath = "graphics/display/reflections", DefaultValue = false},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_ao "..tostring(checked))
+      end
+    },
+
+    
+ 
+    Reflections = {
+      Type = "CheckBox",
+      Position = {"Top", 300, 400, "Top"},
+      Label = "Reflections",
+      LabelOnLeft = true,
+      Checked = false,
+      ConfigDataBind = {ConfigPath = "graphics/display/reflections", DefaultValue = false},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_reflect "..tostring(checked))
+      end
+    },
+*/
 
     WindowMode = {
       Type = "ComboBox",
       Width = 185, 
       Height = 20, 
-      Position = {"Top", -80, 400, "TopLeft"},
-      ItemList = {"Fullscreen", "Windowed", "Windowed Fullscreen"},
+      Position = {"Top", -180, 400, "TopLeft"},
+      ItemList = {"windowed", "fullscreen", "fullscreen-windowed"},
       Label = "Display Mode",
     },
     
@@ -244,7 +321,7 @@ OptionsPage.ControlSetup = {
       Type = "ComboBox",
       Width = 180,
       Height = 20,
-      Position = {"Top", -80, 440, "TopLeft"},
+      Position = {"Top", -180, 440, "TopLeft"},
       LabelCreator = "ResToString",
       Label = "Resolution",
       ItemList = {},
@@ -254,7 +331,7 @@ OptionsPage.ControlSetup = {
       Type = "ComboBox",
       Width = 200, 
       Height = 20,
-      Position = {"Top", -80, 480, "TopLeft"}, 
+      Position = {"Top", -180, 480, "TopLeft"}, 
       ItemList = "OptionsDialogUI_GetVisualDetailSettings",
       Label = "Visual Detail",
 
@@ -276,7 +353,7 @@ OptionsPage.ControlSetup = {
     ApplyGFX = {
       Type = "UIButton",
       Width = 150, 
-      Position = {"Top", 0, 520, "Top"}, 
+      Position = {"Top", -100, 520, "Top"}, 
       Label = "Apply Gfx Changes",
       ClickAction = "ApplyGFXChanges",
     },
@@ -305,18 +382,29 @@ function OptionsPage:Initialize()
     
     TextBox.OnFocusLost(sensitivityValue)
   end
+  
+  local accelerationValue = self.AccelerationValue
+  
+  accelerationValue.OnFocusLost = function() 
+    local value = accelerationValue:TryParseNumber(1, 1, 1.4)
+    
+    if(value) then
+      self.MouseAcceleration:SetValueAndTiggerEvent(value)
+    end
+    
+    TextBox.OnFocusLost(accelerationValue)
+  end
+
+  self.MouseAcceleration:ReloadConfigValue()
 
   self.ScreenRes:SetItemList(ResHelper.DisplayModes)
 
   self.GFXOptionBindings = {}
 
+  self.GFXOptionBindings[1] = self.WindowMode:SetConfigBinding(kWindowModeOptionsKey, "windowed"):SetDelaySave(true)
 
-   self.GFXOptionBindings[1] = self.WindowMode:SetConfigBinding({{kFullscreenOptionsKey, true},
-                                                             {"borderless_window", false}}, self.WindowConfigConverter):SetDelaySave(true)
-
-
-   self.GFXOptionBindings[2] = self.ScreenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
-                                                                {kGraphicsYResolutionOptionsKey, 800,  "integer"}}, self.ResConfigConverter):SetDelaySave(true)
+  self.GFXOptionBindings[2] = self.ScreenRes:SetConfigBinding({{kGraphicsXResolutionOptionsKey, 1280, "integer"},
+                                                              {kGraphicsYResolutionOptionsKey, 800,  "integer"}}, self.ResConfigConverter):SetDelaySave(true)
 
   self.GFXOptionBindings[3] = self.VisualDetail.ConfigBinding
 
@@ -358,9 +446,9 @@ function OptionsPage:ApplyGFXChanges()
 end
 
 local windowedModes = {
-  {true,  false}, //Fullscreen
-  {false, false}, //Windowed
-  {false, true}, //Fullscreen windowed
+  "windowed", 
+  "fullscreen", 
+  "fullscreen-windowed",
 }
 
 function OptionsPage.WindowConfigConverter(fullscreen, indexOrBorderless)

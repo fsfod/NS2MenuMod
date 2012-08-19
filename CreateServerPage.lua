@@ -79,6 +79,8 @@ function CreateServerPage:Initialize()
     BasePage.Initialize(self, 600, 400, "Create Listen Server")
   end
   
+  MapList:Init()
+  
   BaseControl.Hide(self)
 
   local xoffset = 0
@@ -135,7 +137,7 @@ function CreateServerPage:Initialize()
 
   MapList:Init()
   
-  local map = self:CreateControl("ComboBox", {Width = 200, Height = 20, ItemList = MapList.Maps, LabelCreator = function(entry) return entry.name end})
+  local map = self:CreateControl("ComboBox", {Width = 290, Height = 23, ItemList = MapList.Maps, LabelCreator = function(entry) return entry.displayName or entry.name end})
     map:SetPoint("Top", xoffset, 150, "Top")
     map:SetConfigBinding("mapName", "", nil, self.MapValueConverter)
     map:SetLabel("Map:")
@@ -170,11 +172,6 @@ function CreateServerPage:Initialize()
     end)
   self:AddChild(playerLimit)
   
-  local lanGame = self:CreateControl("CheckBox", {Label = "Lan Game:", Checked = false })
-    lanGame:SetPoint("Top", -10+xoffset, 200, "Top")
-    lanGame:SetConfigBinding("lanGame", true)
-  self:AddChild(lanGame)
-  
   local create = self:CreateControl("UIButton", "Create", 200, 40)
     create:SetPoint("Bottom", xoffset, -50, "Bottom")
     create.ClickAction = {self.CreateServer, self}
@@ -185,9 +182,11 @@ end
 
 function CreateServerPage:CreateServer()
 
+  local name = Client.GetOptionString("serverName", "NS2 Server")
   local password      = Client.GetOptionString("serverPassword", "")
   local port          = Client.GetOptionInteger("serverPort", 27015)
   local maxPlayers    = Client.GetOptionInteger("playerLimit", 16)
+  
   
   local mapEntry = self.MapComboBox:GetSelectedItem()
   local mapName
@@ -202,7 +201,16 @@ function CreateServerPage:CreateServer()
     
     //vm is recreated so we can't call this here FullModsManager:MountEnabledMods()
 
-    if(Client.StartServer( mapName, password, port, maxPlayers )) then
+    local result = Client.StartServer(mapName, name, password, port, maxPlayers)
+    
+    if(not mapEntry.modId) then
+      result = Client.StartServer(mapName, name, password, port, maxPlayers)
+    else
+      result = Client.StartServer(mapEntry.modId, name, password, port, maxPlayers)
+    end
+    
+
+    if(result) then
       FullModsManager.ClientVMIsListenServer = true
       LeaveMenu()
     end
@@ -215,7 +223,7 @@ function CreateServerPage.MapValueConverter(entry, index)
   if(not index) then
     return MapList:GetFileEntryIndex(entry)
   else
-    return entry.fileName
+    return entry.fileName 
   end
 end
 

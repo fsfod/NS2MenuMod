@@ -50,11 +50,30 @@ function MapList:RefreshMapList()
     end
   end
   
+  self:AddModMaps(maps)
+  
   table.sort(maps, function(map1, map2) 
     return map1.name > map2.name
   end)
   
   self.Maps = maps
+end
+
+function MapList:AddModMaps(mapList)
+  
+  local numMods = Client.GetNumMods()
+  for i = 1, numMods do
+  
+      local state = Client.GetModState(i)
+      local name  = Client.GetModTitle(i)
+      local kind  = Client.GetModKind(i)
+      
+      if kind == Client.ModKind_Level and state == Client.ModVersionState_UpToDate then
+        table.insert(mapList, {modId = i, displayName = "Mod: "..name,  ["name"] = name, fileName = name..".level"})       
+      end
+  
+  end
+  
 end
 
 function MapList:GetFileEntryIndex(name)

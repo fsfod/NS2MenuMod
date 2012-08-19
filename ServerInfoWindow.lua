@@ -59,6 +59,9 @@ function ServerInfoWindow:Initialize(server, queryPort)
   BaseWindow.Initialize(self, 280, 410, "Server Info")
 
   self.DestroyOnClose = true
+  
+  //update while main menu is not shown
+  self.AlwaysUpdate = true
 
   self.LastRefresh = 0
 

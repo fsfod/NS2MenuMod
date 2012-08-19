@@ -81,7 +81,6 @@ function OptionsPageButton:Initialize(pageName, width, height)
 	 label:SetAnchor(GUIItem.Center, GUIItem.Middle)
 	 label:SetTextAlignmentX(GUIItem.Align_Center)
 	 label:SetTextAlignmentY(GUIItem.Align_Center)
-	self:AddGUIItemChild(label)
 	self.Label = label
 	
 	self:SetupHitRec()

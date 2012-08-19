@@ -18,12 +18,10 @@ function ModListEntry:Initialize(listview, width, height)
   local errorStatus = self:CreateFontString(22, "Left", 2, 0)
     errorStatus:SetColor(Color(1,0,0,1))
     errorStatus:SetTextAlignmentY(GUIItem.Align_Center)
-    self:AddGUIItemChild(errorStatus)
   self.ErrorStatus = errorStatus
   
   local modName = self:CreateFontString(22, "Left", height+30, 0)
     modName:SetTextAlignmentY(GUIItem.Align_Center)
-    self:AddGUIItemChild(modName)
   self.ModNameText = modName
 end
 
@@ -80,13 +78,11 @@ function SteamModListEntry:Initialize(listview, width, height)
 
   local modName = self:CreateFontString(22, "Left", 20, 0)
     modName:SetTextAlignmentY(GUIItem.Align_Center)
-    self:AddGUIItemChild(modName)
   self.ModNameText = modName
   
   local status = self:CreateFontString(22, "Left", 200, 0)
     //status:SetColor(Color(1,0,0,1))
     status:SetTextAlignmentY(GUIItem.Align_Center)
-    self:AddGUIItemChild(status)
   self.Status = status
   
   local install = self:CreateControl("UIButton", "Reinstall", 80, height)
