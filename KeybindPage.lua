@@ -307,7 +307,20 @@ function KeybindPage:Initialize()
   self.WarningString = warningString
 end
 
+local ModiferKeys = {
+  [InputKey.LeftAlt] = "LeftAlt",
+  [InputKey.RightAlt] = "RightAlt",
+        
+  [InputKey.LeftShift] = "LeftShift",
+  [InputKey.RightShift] = "RightShift",
+        
+  [InputKey.LeftControl] = "LeftControl",
+  [InputKey.RightControl] = "RightControl",
+}
+
 function KeybindPage:SetKeybind(BindName, key, down, keyIndex, modifer)
+
+  local keyNum = key
 
   if(key ~= InputKey.Escape) then
     key = InputKeyHelper:ConvertToKeyName(key, down)
@@ -331,7 +344,7 @@ function KeybindPage:SetKeybind(BindName, key, down, keyIndex, modifer)
     end
     
     if(KeyBindInfo.EngineProcessed[BindName]) then
-      Client.SetOptionString("input/"..BindName, key)
+      Client.SetOptionString("input/"..BindName, ModiferKeys[keyNum] or key)
     end
     
     self:SetKeybindsChanged()
