@@ -157,9 +157,9 @@ function MenuMainPage:Initialize()
   self:SetColor(Color(1,1,1, 0))
   
   self.Buttons = {}
-  
-  local logo = self:CreateControl("BaseControl", 717, 158)
-    logo:SetTexture("ui/logo.dds")
+ 
+  local logo = self:CreateControl("BaseControl", 1024*0.7, 301*0.7 /*717, 158*/)
+    logo:SetTexture("ui/menu/logo.dds")
     logo:SetPoint("Top", 0, -30, "Bottom")
   self:AddChild(logo)
   
