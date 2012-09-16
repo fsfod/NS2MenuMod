@@ -50,6 +50,15 @@ OptionsPage.ControlSetup = {
       ConfigDataBind = {ConfigPath = "kNicknameOptionsKey", DefaultValue = "NsPlayer"},
       kNicknameOptionsKey, "NsPlayer"
     },
+    
+    Hints = {
+      Type = "CheckBox",
+      Position = {"Top", 100, 40, "Top"},
+      Label = "Show Hints", 
+      Checked = true,
+      LabelOnLeft = true,
+      ConfigDataBind = {ConfigPath = "showHints", DefaultValue = true}
+    },
      
     SoundVolume = {
       Type = "Slider",
@@ -270,7 +279,7 @@ OptionsPage.ControlSetup = {
     
     MulticoreRendering = {
       Type = "CheckBox",
-      Position = {"Top", 240, 400, "Top"},
+      Position = {"Top", 220, 400, "Top"},
       Label = "Multicore Rendering",
       LabelOnLeft = true,
       Checked = true,
@@ -278,35 +287,44 @@ OptionsPage.ControlSetup = {
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_mt "..tostring(checked))
       end
-    },
-    
-/*
+    },  
+
    Reflections = {
       Type = "CheckBox",
-      Position = {"Top", 300, 400, "Top"},
+      Position = {"Top", 220, 435, "Top"},
       Label = "Reflections",
       LabelOnLeft = true,
-      Checked = false,
-      ConfigDataBind = {ConfigPath = "graphics/display/reflections", DefaultValue = false},
+      Checked = true,
+      ConfigDataBind = {ConfigPath = "graphics/display/reflections", DefaultValue = true},
+      CheckChanged = function(checked)
+        Shared.ConsoleCommand("r_reflect "..tostring(checked))
+      end
+    },
+    
+    AmbientOcclusion = {
+      Type = "CheckBox",
+      Position = {"Top", 220, 470, "Top"},
+      Label = "Ambient Occlusion",
+      LabelOnLeft = true,
+      Checked = true,
+      ConfigDataBind = {ConfigPath = "graphics/display/ambient-occlusion", DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_ao "..tostring(checked))
       end
     },
 
-    
- 
-    Reflections = {
+    TextureStreaming = {
       Type = "CheckBox",
-      Position = {"Top", 300, 400, "Top"},
-      Label = "Reflections",
+      Position = {"Top", 220, 505, "Top"},
+      Label = "Texture Streaming",
       LabelOnLeft = true,
       Checked = false,
-      ConfigDataBind = {ConfigPath = "graphics/display/reflections", DefaultValue = false},
+      ConfigDataBind = {ConfigPath = "graphics/texture-streaming", DefaultValue = true},
       CheckChanged = function(checked)
         Shared.ConsoleCommand("r_reflect "..tostring(checked))
       end
     },
-*/
+
 
     WindowMode = {
       Type = "ComboBox",

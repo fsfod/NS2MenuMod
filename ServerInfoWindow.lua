@@ -101,8 +101,6 @@ function ServerInfoWindow:Initialize(server, queryPort)
   self:AddChild(playerList)
   self.PlayerListView = playerList
 
-  self.PlayerCount = self:AddGUIItemChild(GUIManager:CreateTextItem())
-  
   local refreshButton = self:CreateControl("UIButton", "Refresh", 75, 24)
     refreshButton:SetPosition(8, 160)
     refreshButton.ClickAction = function() 

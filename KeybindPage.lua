@@ -246,7 +246,7 @@ function KeybindListEntry:SetData(data)
     self.GroupLabel:SetText("")
   else
     self.KeybindName:SetText("")
-    self.GroupLabel:SetText(data.Name)
+    self.GroupLabel:SetText(data.Label or data.Name)
   end
 
 end
@@ -298,6 +298,7 @@ function KeybindPage:Initialize()
   self:AddChild(resetButton)
 
   local warningString = GUIManager:CreateTextItem()
+    warningString:SetFontName("arial")
    warningString:SetColor(Color(0.3, 0, 0, 1))
    warningString:SetFontSize(25)
    warningString:SetTextAlignmentX(GUIItem.Align_Center)
