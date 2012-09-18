@@ -541,7 +541,7 @@ function ServerBrowserPage:SetPingFilter(maxping)
     self.MaxPing = nil
 	end
 
-	if(maxping ~= 0) then
+	if(maxping and maxping ~= 0) then
     self.MaxPing = maxping
     self.PingFilter = function(server) return server.Ping > maxping end
     self:AddFilter(self.PingFilter)
