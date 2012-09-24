@@ -5,6 +5,8 @@ if(not MainMenuMod) then
   
 MainMenuMod = {
   DisableMenuCinematic = true,
+  DisableMenuAmbientSound = false,
+  
   ServerBrowser_Settings = {},
   
   DefaultPages = {

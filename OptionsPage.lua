@@ -40,6 +40,9 @@ ControlClass('OptionsPage', BasePage)
 
 OptionsPage.PageName = "MainOptions"
 
+local kLoopingMenuSound = "sound/NS2.fev/common/menu_loop"
+local kWindowOpenSound = "sound/NS2.fev/common/open"
+
 OptionsPage.ControlSetup = {
     NickName = {
       Type = "TextBox",
@@ -58,6 +61,26 @@ OptionsPage.ControlSetup = {
       Checked = true,
       LabelOnLeft = true,
       ConfigDataBind = {ConfigPath = "showHints", DefaultValue = true}
+    },
+    
+    Hints = {
+      Type = "CheckBox",
+      Position = {"Top", 100, 60, "Top"},
+      Label = "Disable Menu Ambient Sound", 
+      Checked = false,
+      LabelOnLeft = true,
+      CheckChanged = function(checked)
+        if(checked) then
+          Shared.StopSound(nil, kLoopingMenuSound)
+        else
+          Shared.PlaySound(nil, kLoopingMenuSound)
+        end
+      end,
+      ConfigDataBind = {
+        TableKey = "DisableMenuAmbientSound", 
+        Table = MainMenuMod,
+        DefaultValue = false,
+      }
     },
      
     SoundVolume = {
@@ -253,18 +276,6 @@ OptionsPage.ControlSetup = {
       end
     },
     
-    ShadowFading = {
-      Type = "CheckBox",
-      Position = {"Top", 70, 360, "Top"},
-      Label = "Shadow Fading",
-      LabelOnLeft = true,
-      Checked = true,
-      ConfigDataBind = {ConfigPath = "graphics/display/shadow-fading", DefaultValue = true},
-      CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_shadowsfade "..tostring(checked))
-      end
-    },
-    
     Anisotropic = {
       Type = "CheckBox",
       Position = {"Top", 260, 360, "Top"},
@@ -309,7 +320,8 @@ OptionsPage.ControlSetup = {
       Checked = true,
       ConfigDataBind = {ConfigPath = "graphics/display/ambient-occlusion", DefaultValue = true},
       CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_ao "..tostring(checked))
+        //Shared.ConsoleCommand("r_ao "..tostring(checked))
+         Client.SetRenderSetting("ambient_occlusion", (checked and "on") or "off")
       end
     },
 

@@ -28,4 +28,5 @@ Dependencies = {
 SavedVaribles = {
   "KnownServers",
   "ServerBrowser_Settings",
+  "DisableMenuAmbientSound",
 }
