@@ -42,7 +42,7 @@ local InfoList = {
   "Address",
   "Map",
   "Ping",
-  "GameMode",
+  "GameTags",
   "Players",
 }
 
@@ -186,7 +186,7 @@ function ServerInfoWindow:ServerCallback(serverInfo)
   self.Ping:SetText("Ping: "..tostring(serverInfo.Ping))
   self.Players:SetText(string.format("Player: %i / %i", serverInfo.PlayerCount, serverInfo.MaxPlayers))
   
-  self.GameMode:SetText("GameMode: "..serverInfo.GameMode)
+  self.GameTags:SetText("GameTags: "..serverInfo.GameTag)
 end
 
 function ServerInfoWindow:PlayerCallback(playerList)

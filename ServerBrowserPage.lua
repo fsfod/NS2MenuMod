@@ -31,11 +31,11 @@ local function GetServerRecord(serverIndex)
     else
       playeryCount = playerCount.. " / "..maxPlayers
     end
+    
 
     return
         { 
             Name = Client.GetServerName(serverIndex),
-            GameMode = Client.GetServerGameMode(serverIndex),
             Map = GetTrimmedMapName(Client.GetServerMapName(serverIndex)),
             PlayerCount = playerCount,
             MaxPlayers = maxPlayers,
@@ -82,13 +82,6 @@ function ServerListEntry:Initialize(owner, width, height, fontSize, layout)
    //serverName:SetTextAlignmentX(GUIItem.Align_Min)
    serverName:SetTextAlignmentY(GUIItem.Align_Min)
   self.Name = serverName
-  
-  
-  local gameMode = self:CreateFontString(self.FontSize)
-   //gameMode:SetAnchor(GUIItem.Left, GUIItem.Center)
-   //gameMode:SetTextAlignmentX(GUIItem.Align_Min)
-   //gameMode:SetTextAlignmentY(GUIItem.Align_Center)
-  self.GameMode = gameMode
   
   local map = self:CreateFontString(self.FontSize)
    //map:SetAnchor(GUIItem.Left, GUIItem.Center)
@@ -183,7 +176,6 @@ function ServerListEntry:SetData(serverData)
   self.Passworded:SetIsVisible(serverData.Passworded)
 
   self.Name:SetText(serverData.Name)
-  self.GameMode:SetText(serverData.GameMode)
   self.Map:SetText(serverData.Map)
   self.PlayerCount:SetText(serverData[1])
   self.Ping:SetText(tostring(serverData.Ping))
@@ -252,7 +244,6 @@ ServerBrowserPage.ControlSetup = {
       TabList = {
         {Label = "",        Width = 20,  NameTag = "Passworded", ClickEnabled = false},
         {Label = "Name",    Width = 353},
-        {Label = "Game",    Width = 60 , NameTag = "GameMode"},
         {Label = "Map",     Width = 133},
         {Label = "Players", Width = 70,  NameTag = "PlayerCount", Ascending = true},
         {Label = "Ping",    Width = 47, MinWidth = 40},
@@ -340,7 +331,6 @@ ServerBrowserPage.Sorters = {
   Ping = true,
   Map = true,
   Name = true,
-  GameMode = true,
 }
 
 function ServerBrowserPage:Initialize()
@@ -662,7 +652,7 @@ end
 
 local function GetSortFunc(SortField, ascending)
 
-  if(SortField == "Map" or SortField == "Name" or SortField == "GameMode") then
+  if(SortField == "Map" or SortField == "Name") then
     if(ascending) then
       return function(e1, e2) 
         local s1, s2 = string.lower(e1[SortField]), string.lower(e2[SortField]) 
