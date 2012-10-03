@@ -50,7 +50,7 @@ OptionsPage.ControlSetup = {
       Height = 24,
       Position = {"Top", -76, 40, "Top"},
       Label = "Nickname",
-      ConfigDataBind = {ConfigPath = "kNicknameOptionsKey", DefaultValue = "NsPlayer"},
+      ConfigDataBind = {ConfigPath = kNicknameOptionsKey, DefaultValue = "NsPlayer"},
       kNicknameOptionsKey, "NsPlayer"
     },
     
