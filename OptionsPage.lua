@@ -236,7 +236,7 @@ OptionsPage.ControlSetup = {
       Checked = true,
       ConfigDataBind = {ConfigPath = "graphics/display/bloom", DefaultValue = true},
       CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_bloom "..tostring(checked))
+        Render_SyncRenderOptions()
       end
     },
     
@@ -248,7 +248,7 @@ OptionsPage.ControlSetup = {
       Checked = true,
       ConfigDataBind = {ConfigPath = "graphics/display/anti-aliasing", DefaultValue = true},
       CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_aa "..tostring(checked))
+        Render_SyncRenderOptions()
       end
     },
     
@@ -260,7 +260,7 @@ OptionsPage.ControlSetup = {
       Checked = true,
       ConfigDataBind = {ConfigPath = "graphics/display/atmospherics", DefaultValue = true},
       CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_atmospherics "..tostring(checked))
+        Render_SyncRenderOptions()
       end
     },
     
@@ -272,13 +272,13 @@ OptionsPage.ControlSetup = {
       Checked = true,
       ConfigDataBind = {ConfigPath = "graphics/display/shadows", DefaultValue = true},
       CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_shadows "..tostring(checked))
+        Render_SyncRenderOptions()
       end
     },
     
     Anisotropic = {
       Type = "CheckBox",
-      Position = {"Top", 260, 360, "Top"},
+      Position = {"Top", 190, 360, "Top"},
       Label = "Anisotropic Filtering",
       LabelOnLeft = true,
       Checked = true,
@@ -290,7 +290,7 @@ OptionsPage.ControlSetup = {
     
     MulticoreRendering = {
       Type = "CheckBox",
-      Position = {"Top", 220, 400, "Top"},
+      Position = {"Top", 190, 400, "Top"},
       Label = "Multicore Rendering",
       LabelOnLeft = true,
       Checked = true,
@@ -302,7 +302,7 @@ OptionsPage.ControlSetup = {
 
    Reflections = {
       Type = "CheckBox",
-      Position = {"Top", 220, 435, "Top"},
+      Position = {"Top", 190, 435, "Top"},
       Label = "Reflections",
       LabelOnLeft = true,
       Checked = true,
@@ -313,37 +313,37 @@ OptionsPage.ControlSetup = {
     },
     
     AmbientOcclusion = {
-      Type = "CheckBox",
-      Position = {"Top", 220, 470, "Top"},
+      Type = "ComboBox",
+      Width = 100, 
+      Height = 20,
+      Position = {"Top", 230, 470, "Top"}, 
+      ItemList = {"on", "medium", "high"},
+      ItemLabels = {"Off", "Medium", "High"},
       Label = "Ambient Occlusion",
-      LabelOnLeft = true,
-      Checked = true,
-      ConfigDataBind = {ConfigPath = "graphics/display/ambient-occlusion", DefaultValue = true},
-      CheckChanged = function(checked)
-        //Shared.ConsoleCommand("r_ao "..tostring(checked))
-         Client.SetRenderSetting("ambient_occlusion", (checked and "on") or "off")
+
+      ConfigDataBind = {ConfigPath = "graphics/display/ambient-occlusion", DefaultValue = "off"},
+      
+      ItemPicked = function(item, index)
+        Render_SyncRenderOptions()
       end
     },
-
+ 
     TextureStreaming = {
       Type = "CheckBox",
-      Position = {"Top", 220, 505, "Top"},
+      Position = {"Top", 190, 505, "Top"},
       Label = "Texture Streaming",
       LabelOnLeft = true,
       Checked = false,
-      ConfigDataBind = {ConfigPath = "graphics/texture-streaming", DefaultValue = true},
-      CheckChanged = function(checked)
-        Shared.ConsoleCommand("r_reflect "..tostring(checked))
-      end
+      ConfigDataBind = {ConfigPath = "graphics/texture-streaming", DefaultValue = false},
     },
-
 
     WindowMode = {
       Type = "ComboBox",
       Width = 185, 
       Height = 20, 
-      Position = {"Top", -180, 400, "TopLeft"},
-      ItemList = {"windowed", "fullscreen", "fullscreen-windowed"},
+      Position = {"Top", -180, 480, "TopLeft"},
+      ItemLabels = {"Windowed", "Windowed(Fullscreen)", "Fullscreen"},
+      ItemList = {"windowed", "fullscreen-windowed", "fullscreen"},
       Label = "Display Mode",
     },
     
@@ -351,7 +351,7 @@ OptionsPage.ControlSetup = {
       Type = "ComboBox",
       Width = 180,
       Height = 20,
-      Position = {"Top", -180, 440, "TopLeft"},
+      Position = {"Top", -180, 520, "TopLeft"},
       LabelCreator = "ResToString",
       Label = "Resolution",
       ItemList = {},
@@ -361,7 +361,7 @@ OptionsPage.ControlSetup = {
       Type = "ComboBox",
       Width = 200, 
       Height = 20,
-      Position = {"Top", -180, 480, "TopLeft"}, 
+      Position = {"Top", -180, 560, "TopLeft"}, 
       ItemList = "OptionsDialogUI_GetVisualDetailSettings",
       Label = "Visual Detail",
 
@@ -370,6 +370,7 @@ OptionsPage.ControlSetup = {
         DefaultValue = 0,
         DataType = "integer",
         DelaySave = true,
+        ItemLabels = {"Low", "Medium", "High"},
         ValueConverter = function(value, index)
           if(index) then
             return index-1
@@ -383,7 +384,7 @@ OptionsPage.ControlSetup = {
     ApplyGFX = {
       Type = "UIButton",
       Width = 150, 
-      Position = {"Top", -100, 520, "Top"}, 
+      Position = {"Top", -100, 600, "Top"}, 
       Label = "Apply Gfx Changes",
       ClickAction = "ApplyGFXChanges",
     },
@@ -391,7 +392,7 @@ OptionsPage.ControlSetup = {
 
 
 function OptionsPage:Initialize()
-  BasePage.Initialize(self, 600, 600, self.PageName, "Options")
+  BasePage.Initialize(self, 600, 700, self.PageName, "Options")
   BaseControl.Hide(self)
  
   ResHelper:Init()
@@ -456,14 +457,6 @@ function OptionsPage:ApplyGFXChanges()
   //visualDetail
   for i,binding in ipairs(self.GFXOptionBindings) do
     binding:SaveStoredValue()
-  end
-  
-  //clear borderless if its set before changing resolution so the engines values for Client.GetScreenWidth() and Client.GetScreenHeight() don't get inflated by the border size
-  if(GetIsBorderless) then
-    
-    if(not Client.GetOptionBoolean("graphics/display/fullscreen", false) and Client.GetOptionBoolean("borderless_window", false)) then
-      SetIsBorderless(false, false)
-    end
   end
 
   Client.ReloadGraphicsOptions()
