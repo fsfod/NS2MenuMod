@@ -55,7 +55,9 @@ ServerInfoWindow.ListSetup = {
   ItemHeight = PlayerListEntry.FontSize,
 }
 
-function ServerInfoWindow:Initialize(server, queryPort)
+ServerInfoWindow.RefreshRate = 10
+
+function ServerInfoWindow:Initialize(server, serverIndex)
   BaseWindow.Initialize(self, 280, 410, "Server Info")
 
   self.DestroyOnClose = true
@@ -75,6 +77,7 @@ function ServerInfoWindow:Initialize(server, queryPort)
     
     self[InfoList[i]] = text
   end
+  
 
   if(type(server) == "string") then
     self.ServerAddress = server
@@ -89,6 +92,8 @@ function ServerInfoWindow:Initialize(server, queryPort)
     self.ServerAddress = server.Address
  
     self.QueryPort = server.QueryPort
+    
+    self.ServerIndex = server.Index
   end
 
   self.Address:SetText("IP Address: "..self.ServerAddress)
@@ -186,7 +191,7 @@ function ServerInfoWindow:ServerCallback(serverInfo)
   self.Ping:SetText("Ping: "..tostring(serverInfo.Ping))
   self.Players:SetText(string.format("Player: %i / %i", serverInfo.PlayerCount, serverInfo.MaxPlayers))
   
-  self.GameTags:SetText("GameTags: "..serverInfo.GameTag)
+//  self.GameTags:SetText("GameTags: "..serverInfo.GameTag)
 end
 
 function ServerInfoWindow:PlayerCallback(playerList)
@@ -211,7 +216,7 @@ end
 
 function ServerInfoWindow:Update()
   
-  if(Client.GetTime()-self.LastRefresh > 10 and not self.RefreshActive) then
+  if(Client.GetTime()-self.LastRefresh > self.RefreshRate and not self.RefreshActive) then
     self:Refresh()
   end
 end
@@ -220,11 +225,42 @@ function ServerInfoWindow:Refresh()
 
   self.LastRefresh = Client.GetTime()
 
-  ServerInfo.QueryPlayerList(self.ServerAddress, self.QueryPort, self.PlayerCallbackFunc)
-  ServerInfo.QueryGameInfo(self.ServerAddress, self.QueryPort, self.ServerCallbackFunc)
+  local serverCount = Client.GetNumServers()
+  local serverInfo
+  
+  if(self.ServerIndex < serverCount) then
+    Client.RefreshServer(self.ServerIndex)
+    serverInfo = GetServerInfo(self.ServerIndex)
+  end
+  
+  if(not serverInfo or serverInfo.Address ~= self.OldServerInfo.Address) then
+    local oldAdress = self.OldServerInfo.Address
+    local newServerIndex
+    
+    for i=1,serverCount do
+      if(Client.GetServerAddress(i) == oldAdress) then
+        newServerIndex = i
+        break
+      end
+    end
+    
+    if(newServerIndex) then
+      self.ServerIndex = newServerIndex
+      serverInfo = GetServerInfo(newServerIndex)
+    else
+      serverInfo = nil
+      self.RefreshRate = 1
+    end
+  else
+    self.RefreshRate = 10
+  end
+  
+  if(serverInfo) then
+    self:ServerCallback(serverInfo)
+  end
 
-  self.ServerQueryActive = true
-  self.RefreshActive = true
+  //self.ServerQueryActive = true
+  //self.RefreshActive = true
 end
 
 

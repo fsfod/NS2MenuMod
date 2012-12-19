@@ -18,7 +18,16 @@ local headerFont = FontTemplate(19)
 headerFont:SetCenterAlignAndAnchor()
 
 
-local function GetServerRecord(serverIndex)
+function GetTrimmedMapName(mapName)
+
+    for trimmedName in string.gmatch(mapName, [[\/(.+)\.level]]) do
+        return trimmedName
+    end
+    
+    return mapName
+end
+
+function GetServerInfo(serverIndex)
     
     local playerCount = Client.GetServerNumPlayers(serverIndex)
     local maxPlayers = Client.GetServerMaxPlayers(serverIndex)
@@ -121,7 +130,7 @@ function ServerListEntry:OnClick(button, down)
     return
   end
 
-  if(button == InputKey.MouseButton1 and ServerInfo) then 
+  if(button == InputKey.MouseButton1) then 
     self.Owner:SetSelectedItem(self)
     
     //we were rightclicked so show a server info window for this entry
@@ -857,7 +866,7 @@ function ServerBrowserPage:OnlineUpdateList()
     NewCount = NewCount-self.CurrentCount
   
     for i=1,NewCount do
-			servers[i] = GetServerRecord(self.CurrentCount+(i-1))
+			servers[i] = GetServerInfo(self.CurrentCount+(i-1))
     end
   end
   

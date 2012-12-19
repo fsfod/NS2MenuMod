@@ -384,6 +384,8 @@ function KeybindPage:SetKeybindsChanged()
   //if(not KeybindMapper) then
     Client.ReloadKeyOptions()
   //end
+  
+  KeybindMod.SavedVaribles:Save()
 end
 
 function KeybindPage:ResetSelectedGroup()

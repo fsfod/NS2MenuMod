@@ -61,6 +61,11 @@ end
 
 function MapList:AddModMaps(mapList)
   
+  //hopefully this will get added back in some way
+  if(not Client.GetModKind) then
+    return
+  end
+  
   local numMods = Client.GetNumMods()
   for i = 1, numMods do
   

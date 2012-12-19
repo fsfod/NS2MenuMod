@@ -15,12 +15,12 @@ function ModListEntry:Initialize(listview, width, height)
     self:AddChild(button)
   self.Button = button
   
-  local errorStatus = self:CreateFontString(22, "Left", 2, 0)
+  local errorStatus = self:CreateFontString(20, "Left", 2, 0)
     errorStatus:SetColor(Color(1,0,0,1))
     errorStatus:SetTextAlignmentY(GUIItem.Align_Center)
   self.ErrorStatus = errorStatus
   
-  local modName = self:CreateFontString(22, "Left", height+30, 0)
+  local modName = self:CreateFontString(20, "Left", height+30, 0)
     modName:SetTextAlignmentY(GUIItem.Align_Center)
   self.ModNameText = modName
 end
@@ -37,7 +37,7 @@ function ModListEntry:SetData(modName)
   
   self.ModName = modName
   
-  if(errorValue < 0 or (self.ModManager == FullModsManager and errorValue > 0)) then
+  if(errorValue < 0) then
     self.ErrorStatus:SetIsVisible(true)
     self.ErrorStatus:SetText((errorValue ~= 0 and tostring(errorValue) or ""))
   else
@@ -68,6 +68,43 @@ end
 
 ControlClass('SteamModListEntry', BaseControl)
 
+SteamModListEntry.Layout = {
+    
+  Enabled = {
+    Type = "CheckBox",
+    Position = Vector(22, 0, 0),
+    CheckChanged = function(checked, self)
+      SteamModManager:SetModEnabled(self.Parent.ModInfo.ModIndex, checked)
+    end,
+    Label = "",
+    Height = 22,
+  },
+  
+  ModName = {
+    Type = "Text",
+    Position = Vector(60, 0, 0),
+    FontSize = 22,
+    Width = 260,
+  },
+ 
+  Status = {
+    Type = "Text",
+    Position = {"Left", 340, 0},
+    FontSize = 22,
+  },
+  
+  Active = {
+    Type = "Text",
+    Position = {"Left", 500, 0},
+    FontSize = 22,
+  },
+  
+  Subscribed = {
+    Type = "Text",
+    Position = {"Left", 630, 0},
+    FontSize = 22,
+  },  
+}
 
 function SteamModListEntry:Initialize(listview, width, height)
 
@@ -76,28 +113,10 @@ function SteamModListEntry:Initialize(listview, width, height)
 
   self:SetColor(Color(0,0,0,0))
 
-  local modName = self:CreateFontString(22, "Left", 20, 0)
-    modName:SetTextAlignmentY(GUIItem.Align_Center)
-  self.ModNameText = modName
-  
-  local status = self:CreateFontString(22, "Left", 200, 0)
-    //status:SetColor(Color(1,0,0,1))
-    status:SetTextAlignmentY(GUIItem.Align_Center)
-  self.Status = status
-  
-  local install = self:CreateControl("UIButton", "Reinstall", 80, height)
-    //status:SetColor(Color(1,0,0,1))
-    install:SetPosition(Vector(550, 0, 0))
-    install.ClickAction = {self.InstallMod, self}
-    self:AddChild(install)
-  self.Install = install
-end
+  self:CreatChildControlsFromTable(self.Layout)
 
-function SteamModListEntry:InstallMod()
-  
-  if(self.ModInfo and type(self.ModInfo) ~= "number") then
-    Client.InstallMod(self.ModInfo.ModIndex)
-  end
+  //self.ModName:SetTextAlignmentY(GUIItem.Align_Center)
+  //self.Status:SetTextAlignmentY(GUIItem.Align_Center)
 end
 
 function SteamModListEntry:SetData(modInfo)
@@ -109,31 +128,33 @@ function SteamModListEntry:SetData(modInfo)
   self.ModInfo = modInfo
  
   if(type(modInfo) == "number") then
-    self.ModNameText:SetText("Mod "..modInfo)
+    self.ModName:SetText("Mod "..modInfo)
     self.Status:SetText("Fetching Mod Details")
-    self.Install:Hide()
+    self.Enabled:Hide()
+    self.Active:SetText("")
+    self.Subscribed:SetText("")
   else
-    self.ModNameText:SetText(modInfo.Name)
+    self.ModName:SetText(modInfo.Name)
     
-    local status = SteamModManager:GetModStatus(modInfo.ModIndex)
+    local modIndex = modInfo.ModIndex
     
-    if(status == "Updating") then
-      local downloading, downloadedBytes, totalBytes = Client.GetModDownloadProgress(modInfo.ModIndex)
-      
-      if(not downloading or totalBytes == 0) then
-        status = "Updating %%0(0/?)"
-      else
-        status = string.format("Updating %i%%(%i/%ikb)", 100*(downloadedBytes/totalBytes), downloadedBytes/1000, totalBytes/1000)
-      end
-      
+    self.Enabled:Show()
+    self.Enabled:SetChecked(Client.GetIsModActive(modIndex))
+    
+    local status = Client.GetModState(modIndex)
+    
+    if(status == "downloading") then
+      status = SteamModManager:GetPrettyModUpdateProgress(modIndex)
+      self.Active:SetText("")
+      self.Subscribed:SetText("")
+    else
+      self.Active:SetText((SteamModManager:GetIsModActive(modIndex) and "Active") or "Not Active")
+      self.Subscribed:SetText((Client.GetIsSubscribedToMod(modIndex) and "Subscribed") or "Not Subscribed")
     end
     
-    if(status == "Not Installed") then
-      self.Install:SetLabel("Install")
-      self.Install:Show()
-    else
-      self.Install:Hide()
-      //self.Install:SetLabel("Reinstall")
+    //just leave the status blank if its not intresting
+    if(status == "available") then
+      status = ""
     end
     
     self.Status:SetText(status)
@@ -159,20 +180,20 @@ ModsPage.ControlSetup = {
     TabSpacing = 8,
     ExpandTabsToFit = true,
     TabPressed = "TabClicked",
-    ActiveTab = "ModLoader",
+    ActiveTab = "SteamModManager",
     TabList = {
       {Label = "Steam Workshop", NameTag = "SteamModManager"},
       {Label = "Internal", NameTag = "ModLoader"},
-      {Label = "Raw Mods", NameTag = "FullModsManager"},
     },
   },
 
   ModList = {
     Type = "ListView",
-    Position = Vector(20, 60, 0),
-    Width = 660,
-    Height = 440,
-    ItemHeight = 26,
+    Position = {"TopLeft", 20, 60},
+    Point2 = {"BottomRight", -20, -120},
+   // Width = 660,
+    //Height = 440,
+    ItemHeight = 20,
     ItemSpacing = 8,
     ItemClass = "ModListEntry",
     ItemsSelectable = false,
@@ -211,10 +232,17 @@ ModsPage.ControlSetup = {
     ClickAction = "UnsubscribeMod"
   },
   
+  RestartButton = {
+    Type = "UIButton",
+    Width = 130,
+    Position = {"BottomRight", -200, -56, "BottomRight"},
+    Label = "Restart", 
+    ClickAction = function() Client.RestartMain() end
+  },
 }
 
 function ModsPage:Initialize()
-  BasePage.Initialize(self, 700, 600, self.PageName, "Mods")
+  BasePage.Initialize(self, 800, 600, self.PageName, "Mods")
 
   self:Hide()
   self:CreatChildControlsFromTable(self.ControlSetup)
@@ -229,7 +257,7 @@ function ModsPage:Initialize()
   self.OpneFolder = openModsFolder
   
   
-  self:SetModList("ModLoader")
+  self:SetModList("SteamModManager")
 end
 
 function ModsPage:OpenFolder()
@@ -240,7 +268,10 @@ function ModsPage:TabClicked(tab)
   self:SetModList(tab.NameTag)
 end
 
+
 function ModsPage:Update()
+
+  SteamModManager:UpdateDownloadRates()
 
   if(self.ModManager ~= SteamModManager) then
     return
@@ -259,10 +290,6 @@ function ModsPage:Update()
   end
   
   local downloadsActive = true
-  
-  if(Shared.GetBuildNumber() > 210) then
-    downloadsActive = Client.GetModDownloadProgress()
-  end
   
   local listChanged = false
   
@@ -291,23 +318,19 @@ function ModsPage:SetModList(modManager)
  
   local list = {}
   
-  if(modManager == "ModLoader" or modManager == "FullModsManager") then
+  if(modManager == "ModLoader") then
     
     self.ModManager = _G[modManager]
     self.ModList:ChangeItemClass("ModListEntry", true)
     
-    self.EnableAllButton:Show()
-    self.DisableAllButton:Show()
     self.UnsubscribeButton:Hide()
     
   elseif(modManager == "SteamModManager") then
     
     self.ModManager = SteamModManager
     self.ModList:ChangeItemClass("SteamModListEntry", true)
-    
-    self.EnableAllButton:Hide()
-    self.DisableAllButton:Hide()
-    self.UnsubscribeButton:Show()
+    //disable the UnsubscribeButton until Client.SubscribeToMod works again
+    self.UnsubscribeButton:Hide()
   end
   
   self.ModList:SetDataList(list)
@@ -324,10 +347,10 @@ function ModsPage:RefreshModList(managerSwitched)
     return
   end
   
-  if(self.ModManager == SteamModManager and Client.GetNumModsInDownloadQueue() > 0) then
+  //if(self.ModManager == SteamModManager and Client.GetNumModsInDownloadQueue() > 0) then
     //dont refresh while prevent crash 
     //return
-  end
+  //end
 
   local list
   local modManager = self.ModManager
@@ -365,6 +388,7 @@ function ModsPage:UnsubscribeMod()
   local entry = self.ModList:GetSelectedIndexData()
   
   if(entry) then
+    
     Client.SubscribeToMod((type(entry) == "number" and entry) or entry.ModIndex, false)
     self:RefreshModList()
   end
@@ -372,20 +396,55 @@ end
 
 
 SteamModManager = SteamModManager or {
+  ModsUpdating = {},
+  ModEntrys = {},
+  LastModCount = 0,
+  ActiveFetchs = {},
+  ModNameLookup = {},
+  ActiveAtStartup = {},
+}
+
+SteamModManager.ModStates ={
+  getting_info    = "GETTING INFO",
+  downloading     = "DOWNLOADING",
+  unavailable     = "UNAVAILABLE",
+  available       = "AVAILABLE",
 }
 
 function SteamModManager:EnableAllMods()
+  for id=1,Client.GetNumMods() do
+    SafeCall(Client.SetModActive, id, true)
+  end
 end
 
 function SteamModManager:DisableAllMods()
+  for id=1,Client.GetNumMods() do
+    SafeCall(Client.SetModActive, id, false)
+  end
+end
+
+//returns weather a mod is active even it was changed to disabled this session
+function SteamModManager:GetIsModActive(modIndex)
+
+  local entry = self.ModEntrys[modIndex] 
+    
+  if(entry) then
+    return self.ActiveAtStartup[entry.Name] == true
+  end
+  
+  return false
+end
+
+function SteamModManager:SetModEnabled(modIndex, enabled)
+  Client.SetModActive(modIndex, enabled)
 end
 
 function SteamModManager:EnableMod(modIndex)
-  //Client.ActivateMod(modIndex)
+  Client.SetModActive(modIndex, true)
 end
 
 function SteamModManager:DisableMod(modIndex)
- // Client.ActivateMod(modIndex)
+  Client.SetModActive(modIndex, false)
 end
 
 function SteamModManager:RefreshModList()
@@ -396,6 +455,7 @@ function SteamModManager:RefreshModList()
   self.LastModCount = 0
   
   self.ActiveFetchs = {}
+  self.ModNameLookup = {}
 end
 
 function SteamModManager:CheckGetNewEntrys(modList)
@@ -448,23 +508,141 @@ function SteamModManager:CheckStateChanges()
 
   return changed
 end
+
+function SteamModManager:GetEstimatedUpdateTime()
   
+  for index,entry in pairs(self.ModsUpdating) do
+    
+  end
+end
+
+function SteamModManager:GetModDownloadTimeLeft(modIndex)
+  
+  local modinfo = self.ModEntrys[modIndex]
+  
+  if(not modinfo) then
+    error("GetModDownloadTimeLeft: Error no mod with that index")
+  end
+  
+  local downloading, downloadedBytes, totalBytes = Client.GetModDownloadProgress(modIndex)
+  
+  if(not downloading) then
+    return 0
+  end
+  
+  local rate = modInfo.DownloadRate
+  
+  return (totalBytes-downloadedBytes)/rate
+end
+
+function SteamModManager:GetPrettyModUpdateProgress(modIndex)
+  assert(type(modIndex) == "number")
+
+  local modInfo = self.ModEntrys[modIndex]
+  
+  if(not modInfo) then
+    error("GetModDownloadProgress: Error no mod with that index")
+  end
+  
+  local downloading, downloadedBytes, totalBytes = Client.GetModDownloadProgress(modIndex)
+  
+  if(not downloading) then
+    return "Queued For Download"
+  elseif(totalBytes == 0) then
+    return "Download Complete"
+  elseif(downloadedBytes == 0) then
+    return "Download Starting"
+  end
+  
+  local rate = modInfo.DownloadRate
+  
+  if(rate) then
+    rate = rate/1000
+  else
+    rate = 0
+  end
+  
+  local fmtString, downloaded, total
+  
+  if(totalBytes > 1000000) then
+    downloaded, total = downloadedBytes/1000000, totalBytes/1000000
+    fmtString = "Updating %.1f%%(%.3f/%.2fMB) %.2fKBs"
+  else
+    downloaded, total = downloadedBytes/1000, totalBytes/1000
+    fmtString = "Updating %.1f%%(%.1f/%.1fMB) %.2fKBs"
+  end
+        
+  return string.format(fmtString, 100*(downloadedBytes/totalBytes), downloaded, total, rate)
+end
+
+local MaxDownloadRateEntrys = 30
+local MinRateInterval = 0.2
+
+function SteamModManager:UpdateDownloadRates()
+  
+  for index,entry in pairs(self.ModsUpdating) do
+    local downloading, downloadedBytes, totalBytes = Client.GetModDownloadProgress(index)
+    
+    if(downloading) then
+      local t
+
+      if(entry.LastDownloadCheck) then
+        
+        t = Client.GetTime()-entry.LastDownloadCheck
+        
+        if(t > MinRateInterval) then
+          local rate = (downloadedBytes-entry.LastDownloadAmount)/t
+          
+          local rateCount = entry.DownloadRateCount
+          
+          local index = rateCount%MaxDownloadRateEntrys
+          
+          entry.DownloadRatesTotal = entry.DownloadRatesTotal+(rate - (entry.DownloadRates[index] or 0))
+          entry.DownloadRates[index] = rate
+          
+          entry.DownloadRate = entry.DownloadRatesTotal/math.min(rateCount, MaxDownloadRateEntrys)
+          entry.DownloadRateCount = entry.DownloadRateCount+1
+        end
+      else
+        entry.DownloadRateCount = 0
+        entry.DownloadRatesTotal = 0
+        entry.DownloadRates = {[0] = 0, 0}
+        entry.DownloadSize = totalBytes
+      end
+
+      if(not t or t > MinRateInterval) then
+        entry.LastDownloadAmount = downloadedBytes
+        entry.LastDownloadCheck = Client.GetTime()
+      end
+    else
+      self.ModsUpdating[index] = nil
+    end
+  end
+end
+
 function SteamModManager:BuildEntry(modIndex)
 
   local state = Client.GetModState(modIndex)
  
-  if(state == Client.ModVersionState_Updating or state == Client.ModVersionState_QueuedForUpdate) then
-    self.ModsUpdating[modIndex] = true
-
-    state = state
-  end
+  local name = Client.GetModTitle(modIndex)
 
   local entry = {
     ModIndex = modIndex,
-    Name = Client.GetModTitle(modIndex), 
+    Name = name, 
     State = self.ModStates[state],
-    ModKind = Client.GetModKind(modIndex), 
-  }
+    StartupState = state,
+    //ModKind = Client.GetModKind(modIndex), 
+  }  
+  
+  if(not self.ActiveAtStartup[name]) then
+    self.ActiveAtStartup[name] = Client.GetIsModActive(modIndex)
+  end
+  
+  self.ModNameLookup[name] = modIndex
+  
+  if(state == "downloading") then
+    self.ModsUpdating[modIndex] = entry
+  end
 
   self.ModEntrys[modIndex] = entry
   
@@ -477,7 +655,7 @@ function SteamModManager:GetNewModDetailsFetched()
 
   for modIndex,_ in pairs(self.ActiveFetchs) do
     
-    if(Client.ModDetailsAreKnown(modIndex)) then
+    if(Client.GetModState(modIndex) ~= "getting_info") then
       self.ActiveFetchs[modIndex] = nil
       fetched = fetched or {}
 
@@ -499,6 +677,24 @@ function SteamModManager:GetModList()
   return list
 end
 
+//name passed in is case senstive
+function SteamModManager:GetModIdForModName(modName)
+  
+  local modIndex = self.ModNameLookup[modName]
+  
+  if(not modIndex) then
+    return nil
+  end
+  
+  local name = Client.GetModTitle(modIndex)
+  
+  if(not name or name ~= modName) then
+    return nil
+  end
+  
+  return modIndex
+end
+
 function SteamModManager:GetModInfo(modIndex)
   //disabled, realName, errorValue
   
@@ -507,23 +703,23 @@ function SteamModManager:GetModInfo(modIndex)
 end
 
 function SteamModManager:GetModStatus(modIndex)
-  return self.ModStates[Client.GetModState(modIndex)]
+  local state = Client.GetModState(modIndex)
+  
+  return (state and self.ModStates[state]) or "??"
 end
 
 Event.Hook("LoadComplete", function()
   
   local modStates = {}
-  
-  SteamModManager.ModStates = modStates
-  
-  modStates[Client.ModVersionState_ErroneousInstall] = "Erroneous Install"
-  modStates[Client.ModVersionState_NotInstalled] = "Not Installed"
-  modStates[Client.ModVersionState_OutOfDate] = "Out of Date" 
-  modStates[Client.ModVersionState_Unknown] = "Unknown"
-  modStates[Client.ModVersionState_UnknownInstalled] = "Unknown Installed"
-  modStates[Client.ModVersionState_Updating] = "Updating"
-  modStates[Client.ModVersionState_QueuedForUpdate] = "Queued for Update"
-  modStates[Client.ModVersionState_UpToDate] = "Up to Date"
+
+ // modStates[Client.ModVersionState_ErroneousInstall] = "Erroneous Install"
+//  modStates[Client.ModVersionState_NotInstalled] = "Not Installed"
+//  modStates[Client.ModVersionState_OutOfDate] = "Out of Date" 
+//  modStates[Client.ModVersionState_Unknown] = "Unknown"
+//  modStates[Client.ModVersionState_UnknownInstalled] = "Unknown Installed"
+//  modStates[Client.ModVersionState_Updating] = "Updating"
+ // modStates[Client.ModVersionState_QueuedForUpdate] = "Queued for Update"
+ // modStates[Client.ModVersionState_UpToDate] = "Up to Date"
   
   local kind = {
     [Client.ModKind_Cosmetic] = "Cosmetic",
