@@ -44,13 +44,13 @@ function GetServerInfo(serverIndex)
 
     return
         { 
-            Name = Client.GetServerName(serverIndex),
-            Map = GetTrimmedMapName(Client.GetServerMapName(serverIndex)),
-            PlayerCount = playerCount,
-            MaxPlayers = maxPlayers,
-            Ping = Client.GetServerPing(serverIndex),
-            Passworded = Client.GetServerRequiresPassword(serverIndex),
-            Address = Client.GetServerAddress(serverIndex),
+            name = Client.GetServerName(serverIndex),
+            map = GetTrimmedMapName(Client.GetServerMapName(serverIndex)),
+            numPlayers = playerCount,
+            maxPlayers = maxPlayers,
+            ping = Client.GetServerPing(serverIndex),
+            requiresPassword = Client.GetServerRequiresPassword(serverIndex),
+            address = Client.GetServerAddress(serverIndex),
             Index = serverIndex,
             QueryPort = ServerList and ServerList:GetServerQueryPort(serverIndex),
             BotCount = botCount,
@@ -83,32 +83,18 @@ function ServerListEntry:Initialize(owner, width, height, fontSize, layout)
   local passwordIcon = self:CreateGUIItem()
     passwordIcon:SetSize(Vector(10,12, 0))
     passwordIcon:SetTexture("ui/passworded.dds")
-  self.Passworded = passwordIcon
+  self.requiresPassword = passwordIcon
   
   local serverName = self:CreateFontString(self.FontSize)
    serverName:SetPosition(Vector(18, 1, 0))
-   //serverName:SetAnchor(GUIItem.Left, GUIItem.Top)
-   //serverName:SetTextAlignmentX(GUIItem.Align_Min)
    serverName:SetTextAlignmentY(GUIItem.Align_Min)
-  self.Name = serverName
+  self.name = serverName
+
+  self.map = self:CreateFontString(self.FontSize)
   
-  local map = self:CreateFontString(self.FontSize)
-   //map:SetAnchor(GUIItem.Left, GUIItem.Center)
-   //map:SetTextAlignmentX(GUIItem.Align_Min)
-   //map:SetTextAlignmentY(GUIItem.Align_Center)
-  self.Map = map
+  self.numPlayers = self:CreateFontString(self.FontSize)
   
-  local playerCount = self:CreateFontString(self.FontSize)
-   //playerCount:SetAnchor(GUIItem.Left, GUIItem.Top)
-   //playerCount:SetTextAlignmentX(GUIItem.Align_Min)
-   //playerCount:SetTextAlignmentY(GUIItem.Align_Min)
-  self.PlayerCount = playerCount
-  
-  local ping = self:CreateFontString(self.FontSize)
-   //ping:SetAnchor(GUIItem.Left, GUIItem.Center)
-   //ping:SetTextAlignmentX(GUIItem.Align_Min)
-   //ping:SetTextAlignmentY(GUIItem.Align_Center)
-  self.Ping = ping
+  self.ping = self:CreateFontString(self.FontSize)
 
   local gameTag = self:CreateFontString(self.FontSize)
   self.GameTag = gameTag
@@ -165,7 +151,7 @@ function ServerListEntry:UpdateLayout(positionList)
     local control = self[name]
     control:SetPosition(offset)
     
-    if(name ~= "Passworded") then
+    if(name ~= "requiresPassword") then
       control:SetTextClipped(true, Widths[name]-self.ValueIndent, height)
     end
   end
@@ -182,24 +168,24 @@ function ServerListEntry:SetData(serverData)
 
   self.Data = serverData
 
-  self.Passworded:SetIsVisible(serverData.Passworded)
+  self.requiresPassword:SetIsVisible(serverData.requiresPassword)
 
-  self.Name:SetText(serverData.Name)
-  self.Map:SetText(serverData.Map)
-  self.PlayerCount:SetText(serverData[1])
-  self.Ping:SetText(tostring(serverData.Ping))
+  self.name:SetText(serverData.name)
+  self.map:SetText(serverData.map)
+  self.numPlayers:SetText(serverData[1])
+  self.ping:SetText(tostring(serverData.ping))
   self.GameTag:SetText(serverData.GameTag or "")
   
-  local ping = serverData.Ping
+  local ping = serverData.ping
   
   if(ping <= 100) then
-    self.Ping:SetColor(self.PingColour100)
+    self.ping:SetColor(self.PingColour100)
   elseif(ping > 600) then
-    self.Ping:SetColor(self.PingColourWorst)
+    self.ping:SetColor(self.PingColourWorst)
   elseif(ping > 250) then
-    self.Ping:SetColor(self.PingColour600)
+    self.ping:SetColor(self.PingColour600)
   elseif(ping > 100) then
-    self.Ping:SetColor(self.PingColour250)
+    self.ping:SetColor(self.PingColour250)
   end
 end
 
@@ -251,11 +237,11 @@ ServerBrowserPage.ControlSetup = {
       end,
       
       TabList = {
-        {Label = "",        Width = 20,  NameTag = "Passworded", ClickEnabled = false},
-        {Label = "Name",    Width = 353},
-        {Label = "Map",     Width = 133},
-        {Label = "Players", Width = 70,  NameTag = "PlayerCount", Ascending = true},
-        {Label = "Ping",    Width = 47, MinWidth = 40},
+        {Label = "",        Width = 20,  NameTag = "requiresPassword", ClickEnabled = false},
+        {Label = "Name",    Width = 353, NameTag = "name"},
+        {Label = "Map",     Width = 133, NameTag = "map"},
+        {Label = "Players", Width = 70,  NameTag = "numPlayers", Ascending = true},
+        {Label = "Ping",    Width = 47,  NameTag = "ping", MinWidth = 40},
         {Label = "Tags",    Width = 100, NameTag = "GameTag"},
       }
     },
@@ -329,17 +315,17 @@ ServerBrowserPage.ControlSetup = {
     Position = {"BottomLeft", 300, -15, "BottomLeft"},
   },
   
-//  Resize = {
-//    Type = "ResizeButton",
-//    Position = {"BottomRight", 0, 0},
-//  },  
+  Resize = {
+    Type = "ResizeButton",
+    Position = {"BottomRight", 0, 0},
+  },  
 }
 
 ServerBrowserPage.Sorters = {
-  PlayerCount = true,
-  Ping = true,
-  Map = true,
-  Name = true,
+  numPlayers = true,
+  ping = true,
+  map = true,
+  name = true,
 }
 
 function ServerBrowserPage:Initialize()
@@ -461,14 +447,14 @@ function ServerBrowserPage:Hide()
 end
 
 function ServerBrowserPage:ColumnClicked(tab)
-  self:SetServerSorting(tab.NameTag, not tab.Ascending)
+  self:SetServerSorting(tab.NameTag or tab.Label, not tab.Ascending, tab)
 end
 
 function ServerBrowserPage:SetNotFullFilter(filter)
   
   if(filter) then
     self.FullFiltered = function(server) 
-      return server.PlayerCount >= server.MaxPlayers 
+      return server.numPlayers >= server.maxPlayers 
     end
     
     self:AddFilter(self.FullFiltered)
@@ -482,7 +468,7 @@ function ServerBrowserPage:SetEmptyServersFilter(filter)
   
   if(filter) then
     self.EmptyFiltered = function(server) 
-      return server.PlayerCount == 0 
+      return server.numPlayers == 0 
     end
     
     self:AddFilter(self.EmptyFiltered)
@@ -542,7 +528,7 @@ function ServerBrowserPage:SetPingFilter(maxping)
 
 	if(maxping and maxping ~= 0) then
     self.MaxPing = maxping
-    self.PingFilter = function(server) return server.Ping > maxping end
+    self.PingFilter = function(server) return server.ping > maxping end
     self:AddFilter(self.PingFilter)
   end
   
@@ -559,7 +545,7 @@ function ServerBrowserPage:SetMapFilter(map)
 	if(map ~= nil or map == "") then
 	  map = map:lower()
 
-    self.MapFilter = function(server) return string.find(server.Map:lower(), map) == nil end
+    self.MapFilter = function(server) return string.find(server.map:lower(), map) == nil end
     self:AddFilter(self.MapFilter)
   end
   
@@ -661,7 +647,7 @@ end
 
 local function GetSortFunc(SortField, ascending)
 
-  if(SortField == "Map" or SortField == "Name") then
+  if(SortField == "map" or SortField == "name") then
     if(ascending) then
       return function(e1, e2) 
         local s1, s2 = string.lower(e1[SortField]), string.lower(e2[SortField]) 
@@ -682,7 +668,7 @@ local function GetSortFunc(SortField, ascending)
        return s1 > s2
       end
     end
-  elseif(SortField == "PlayerCount" or SortField == "Ping") then
+  elseif(SortField == "numPlayers" or SortField == "ping") then
     if(ascending) then
       return function(e1, e2) 
         local n1, n2 = e1[SortField], e2[SortField]
@@ -707,17 +693,21 @@ local function GetSortFunc(SortField, ascending)
   end
 end
 
-function ServerBrowserPage:SetServerSorting(serverField, ascending)
+function ServerBrowserPage:SetServerSorting(serverField, ascending, tab)
   
-  if(not self.Sorters[serverField]) then
+  local sortField = (tab and tab.SortField) or serverField
+  
+  if(not self.Sorters[sortField]) then
     return
   end  
 
+  //save the sort column and direction
   self.Settings.SortColumn = serverField
   self.Settings.SortIsAscending = ascending
-  self.ServerHeader:SetTabSortDirection(serverField, ascending)
-  
-  self.SortFunction = GetSortFunc(serverField, ascending)
+
+  self.ServerHeader:SetTabSortDirection(tab or serverField, ascending)
+    
+  self.SortFunction = GetSortFunc(sortField, ascending)
   self:SortList()
 end
 
@@ -790,8 +780,8 @@ function ServerBrowserPage:WriteFoundServerList()
 end
 
 function ServerBrowserPage:OfflineRefresh()
-  ServerList:CancelRefresh()
-  ServerInfo.CancelActiveQuerys()
+  //ServerList:CancelRefresh()
+  //ServerInfo.CancelActiveQuerys()
   
   self.ServerListUpdater = self.OfflineUpdateList
   
@@ -799,7 +789,7 @@ function ServerBrowserPage:OfflineRefresh()
   
   self.SingleQueryResults = {}
   
-  local callbackFunc = function(serverInfo, arg2, arg3)
+  local callbackFunc = function(serverInfo)
     
     if(not self.SingleQueryCount) then
       //were no longer intested in single query results if self.SingleRequestCount is nil or false
@@ -813,19 +803,17 @@ function ServerBrowserPage:OfflineRefresh()
       return
     end
     
-    if(serverInfo.BotCount ~= 0) then
-      serverInfo[1] = string.format("%i(bots %i)/%i", serverInfo.PlayerCount, serverInfo.BotCount, serverInfo.MaxPlayers)
-    else
-      serverInfo[1] = serverInfo.PlayerCount.. " / "..serverInfo.MaxPlayers
-    end
-        
+ 
+    serverInfo[1] = serverInfo.numPlayers.. " / "..serverInfo.maxPlayers
+      
     self.SingleQueryResults[#self.SingleQueryResults+1] = serverInfo
     
     serverInfo.Index = (self.SingleQueryCount-self.FailedQueryCount)-1
   end
   
+  //TODO thottle this or do it in batchs
   for i,server in ipairs(MainMenuMod.KnownServers) do
-    ServerInfo.QueryGameInfo(server[1], server[2], callbackFunc)
+    Client.RefreshServer(server[1], callbackFunc)
   end
 
   self.SingleQueryCount = 0
@@ -897,13 +885,17 @@ function ServerBrowserPage:Update()
   
   local time = Client.GetTime()
   
-  if(not NewServers) then
+  if(NewServers == nil) then
     if(self.CurrentCount == 0 and self.ServerListUpdater ~= self.OfflineUpdateList and (time-self.LastUpdate) > self.FallbackToOfflineListTimeOut and
        MainMenuMod.KnownServers and #MainMenuMod.KnownServers > 0) then
        
       self:OfflineRefresh()
     end
    return
+  end
+
+  if(NewServers == nil) then
+    return
   end
 
   self.LastUpdate = time

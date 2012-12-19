@@ -89,7 +89,9 @@ function ServerInfoWindow:Initialize(server, serverIndex)
     self.OldServerInfo = server
 
     self.ServerInfo = server
-    self.ServerAddress = server.Address
+    self.ServerAddress = server.address
+ 
+    
  
     self.QueryPort = server.QueryPort
     
@@ -165,7 +167,7 @@ function ServerInfoWindow:ServerCallback(serverInfo)
 
   self.OldServerInfo = serverInfo
 
-  self.ServerFull = serverInfo.PlayerCount >= serverInfo.MaxPlayers
+  self.ServerFull = serverInfo.numPlayers >= serverInfo.maxPlayers
 
   if(self.ServerFull) then
     self.RetryButton:Show()
@@ -186,10 +188,10 @@ function ServerInfoWindow:ServerCallback(serverInfo)
   
   self.ServerQueryActive = false    
   
-  self.ServerName:SetText("Name: "..serverInfo.Name)
-  self.Map:SetText("Map: "..GetTrimmedMapName(serverInfo.Map))
-  self.Ping:SetText("Ping: "..tostring(serverInfo.Ping))
-  self.Players:SetText(string.format("Player: %i / %i", serverInfo.PlayerCount, serverInfo.MaxPlayers))
+  self.ServerName:SetText("Name: "..serverInfo.name)
+  self.Map:SetText("Map: "..GetTrimmedMapName(serverInfo.name))
+  self.Ping:SetText("Ping: "..tostring(serverInfo.ping))
+  self.Players:SetText(string.format("Player: %i / %i", serverInfo.numPlayers, serverInfo.maxPlayers))
   
 //  self.GameTags:SetText("GameTags: "..serverInfo.GameTag)
 end
@@ -224,36 +226,11 @@ end
 function ServerInfoWindow:Refresh()
 
   self.LastRefresh = Client.GetTime()
-
-  local serverCount = Client.GetNumServers()
   local serverInfo
   
-  if(self.ServerIndex < serverCount) then
-    Client.RefreshServer(self.ServerIndex)
-    serverInfo = GetServerInfo(self.ServerIndex)
-  end
+  self.RefreshRate = 10
   
-  if(not serverInfo or serverInfo.Address ~= self.OldServerInfo.Address) then
-    local oldAdress = self.OldServerInfo.Address
-    local newServerIndex
-    
-    for i=1,serverCount do
-      if(Client.GetServerAddress(i) == oldAdress) then
-        newServerIndex = i
-        break
-      end
-    end
-    
-    if(newServerIndex) then
-      self.ServerIndex = newServerIndex
-      serverInfo = GetServerInfo(newServerIndex)
-    else
-      serverInfo = nil
-      self.RefreshRate = 1
-    end
-  else
-    self.RefreshRate = 10
-  end
+  Client.RefreshServer(self.ServerAddress, function(info) self:ServerCallback(info) end)
   
   if(serverInfo) then
     self:ServerCallback(serverInfo)
