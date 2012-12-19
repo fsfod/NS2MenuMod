@@ -77,8 +77,6 @@ function MainMenuMod:MainMenu_SetAlertMessage(msg)
 
   //self.MainMenu.MainPage:UpdateButtons()
   //self.MainMenu:ShowMessage(msg)
-
-  MainMenu_Loaded()
 end
 
 function MainMenuMod:ShowMenu()
